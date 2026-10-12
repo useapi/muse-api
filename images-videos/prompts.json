@@ -1,0 +1,69 @@
+{
+  "inputs": [
+    {
+      "name": "bmw",
+      "url": "https://demo.useapi.net/discord-cdn-proxy/?https://media.discordapp.net/attachments/1239264794394234985/1559040377594314903/muse-input-motorcycle.jpeg"
+    },
+    {
+      "name": "rider",
+      "url": "https://demo.useapi.net/discord-cdn-proxy/?https://media.discordapp.net/attachments/1239264794394234985/1559040401510240267/muse-input-redhead.jpeg"
+    },
+    {
+      "name": "beach",
+      "url": "https://demo.useapi.net/discord-cdn-proxy/?https://media.discordapp.net/attachments/1239264794394234985/1559040372041187328/muse-input-beach.jpeg"
+    },
+    {
+      "name": "old-photo",
+      "url": "https://demo.useapi.net/discord-cdn-proxy/?https://media.discordapp.net/attachments/1239264794394234985/1559040387203731456/muse-input-oldphoto.jpeg"
+    },
+    {
+      "name": "pink-hair",
+      "url": "https://demo.useapi.net/discord-cdn-proxy/?https://media.discordapp.net/attachments/1239264794394234985/1559040392316325888/muse-input-pinkhair.jpeg"
+    }
+  ],
+  "steps": [
+    {
+      "name": "portrait",
+      "type": "image",
+      "prompt": "Vertical 9:16 full-body portrait photo: a confident young woman biker with long wavy fiery red hair, green eyes and freckles, in a worn black leather jacket, dark jeans and boots, standing in a rain-soaked neon alley at dusk, looking straight at the camera, cinematic lighting, photorealistic."
+    },
+    {
+      "name": "bmw-noir",
+      "type": "image",
+      "prompt": "In exactly 16:9 aspect ratio (landscape), a cinematic photo of a vintage 1920s black BMW motorcycle with white pinstripes, spoked wheels and a brown leather saddle, parked on wet cobblestones at night in San Francisco, the Golden Gate Bridge glowing through fog in the distance, neo-noir moonlight, reflections on the wet street, shot on 35mm film."
+    },
+    {
+      "name": "beach-ride",
+      "type": "image",
+      "image_1": "bmw",
+      "image_2": "rider",
+      "image_3": "beach",
+      "prompt": "In exactly 16:9 aspect ratio (landscape), a cinematic photo: the woman from image_2 (her face, long wavy red hair, light blue top and jeans) riding the exact vintage motorcycle from image_1 along the shoreline of the beach in image_3, the front wheel cutting through the shallow surf and throwing spray, bright afternoon sun, her hair streaming in the wind, photorealistic. Use the beach, rocks and Golden Gate Bridge from image_3 as the background exactly as photographed: same position, same orientation, not mirrored or redrawn. Keep her face and the motorcycle's design exactly as in the images."
+    },
+    {
+      "name": "surf",
+      "type": "video",
+      "image_1": "beach-ride",
+      "prompt": "Animate image_1 into a cinematic video in exactly 16:9 aspect ratio (landscape): she rides the vintage motorcycle along the shoreline, the front wheel slices through the shallow waves and sends spray flying, the old engine roars, she raises one fist and shouts with a laugh: \"Nothing beats this view!\" The camera tracks alongside her. The beach, the rocks and the Golden Gate Bridge stay exactly as in image_1 (same orientation). Keep her face and the motorcycle exactly as in image_1."
+    },
+    {
+      "name": "restored",
+      "type": "image",
+      "image_1": "old-photo",
+      "prompt": "Restore the old photograph image_1 as a high-quality modern photo: remove the scratches, dust, stains, fading and grain, recover sharp detail in the face, hair and fabric, and colorize it naturally (warm natural skin tones, dark brown hair, ivory tulle shawl, a soft pink rose with green leaves, a muted warm background). Keep the exact same person, expression, pose, framing and crop, and the same portrait aspect ratio as image_1 (3:4, 685×900): do not crop, extend or reframe it."
+    },
+    {
+      "name": "portrait-video",
+      "type": "video",
+      "image_1": "restored",
+      "prompt": "Animate image_1 into a video with the same portrait frame: the young woman slowly lifts her eyes to the camera, her smile widens, she gently touches the rose on her shoulder and says softly: \"It has been a hundred years... and you still remember me.\" A light breeze moves a few strands of her hair, soft window light, the camera stays still with a very slow push-in. Keep her face exactly as in image_1."
+    },
+    {
+      "name": "swap",
+      "type": "video",
+      "video_1": "surf",
+      "image_1": "pink-hair",
+      "prompt": "Edit video_1: replace the rider with the woman from image_1 (her face, pink hair in two buns, colorful makeup and tattoos), and keep everything else the same: the motorcycle, the beach, the waves and spray, the Golden Gate Bridge, the light, the camera move and the timing. Instead of the original line she shouts: \"Catch me if you can, San Francisco!\" Keep the 16:9 frame and the same length."
+    }
+  ]
+}

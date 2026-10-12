@@ -1,0 +1,9 @@
+{
+  "name": "muse-api",
+  "version": "1.0.0",
+  "description": "Runnable examples for the Muse API by useapi.net: images and 10-second videos with sound from Meta's Muse agent (muse.ai) on your own Muse account, plus an agent skill.",
+  "author": "useapi.net",
+  "license": "MIT",
+  "type": "module",
+  "homepage": "https://useapi.net/docs/api-muse-v1"
+}
