@@ -1,4 +1,4 @@
-# Muse API examples (useapi.net): Meta Muse image and video generation
+# Meta Muse API examples (useapi.net): AI video and image generation on muse.ai
 
 Runnable examples for the [Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) by [useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api): make images and 10-second videos with sound using **Muse (muse.ai)**, Meta's AI agent, through a REST API that runs on your own Muse account. Combine up to 9 photos into one picture, restore and colorize old photos, animate a still with spoken dialogue, and replace a person in a video. Every file Muse makes is an asset id the next job takes as an input, so edits chain with no downloads or re-uploads. The free Muse plan works.
 
