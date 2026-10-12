@@ -29,7 +29,7 @@ Each example's README lists its options. Every endpoint is documented in the [Mu
 - **Does the free Muse plan work?** Yes. Muse meters each account weekly, as a percent used. On the free plan a video used 2 to 3 percent of the week and an image 0 to 1 percent in our tests, so one free account makes roughly 30 to 50 videos or several hundred images a week. Paid Muse plans have larger allowances. See [usage limits](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api#usage-limits).
 - **What does it cost?** A flat [$15/month](https://useapi.net/docs/subscription?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) to useapi.net, which covers every useapi.net API and adds 3 Muse accounts per subscription. There is no per-image or per-video charge from us.
 - **How do I set the aspect ratio, length or resolution?** In the prompt: there are no parameters for them. Write `in exactly 16:9 aspect ratio`. Every video is about 10 seconds at about 720p, with sound, and lines written in quotes are spoken.
-- **Can I use my own photos and videos?** Yes. Upload them (up to 8.6 MB each) and pass the `assetId` as `image_1`..`image_9`, `video_1`..`video_3` or `audio_1`..`audio_3`. All inputs of one job must be on the same Muse account.
+- **Can I use my own photos and videos?** Yes. Upload them (up to 8.6 MB each) and pass the `assetId` as `image_1`..`image_9`; video jobs also take `video_1`..`video_3` and `audio_1`..`audio_3`. All inputs of one job must be on the same Muse account.
 - **Is this Meta's official API?** No. useapi.net is an independent, third-party API that is not affiliated with or endorsed by Meta. It runs on a Muse account you own and add yourself.
 
 ## 中文说明
