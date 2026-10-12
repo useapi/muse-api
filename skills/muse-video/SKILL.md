@@ -89,7 +89,7 @@ jq -r '.result.assets[0].assetId' job.json                                # the 
 |---|---|
 | `image.sh "<prompt>" [image_1..9=<assetId>]` | generate + wait + download an image, prints the `.webp` path |
 | `video.sh "<prompt>" [image_1..9= video_1..3= audio_1..3=]` | generate + wait + download a video, prints the `.mp4` path |
-| `upload.sh <file>` | upload jpeg/png/webp/mp4/mov/webm/mp3/wav/m4a/ogg up to 8.6 MB, prints the `assetId` |
+| `upload.sh <file>` | upload jpeg/png/webp/mp4/mov/webm/mp3/wav/m4a/ogg up to 50 MB, prints the `assetId` |
 | `generate.sh image\|video "<prompt>" [key=value ...]` | also `replyUrl`, `replyRef`; prints the job id |
 | `wait-job.sh <jobid>` | polls until done, prints the job record; exits 1 on a failed job with a hint |
 | `download.sh <job.json\|-\|assetId> [OUT_DIR] [NAME]` | saves `muse_<type>_<time>.<webp\|mp4>`, prints the path |

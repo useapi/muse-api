@@ -4,14 +4,14 @@
 # The file goes into the Muse workspace of the account (USEAPI_EMAIL, or a healthy account picked by the API);
 # nothing is stored at useapi.net. Uploads are free (no Muse allowance) and idempotent: the same file on the
 # same account always gets the same assetId, so this is safe to run again.
-# Formats: jpeg, png, webp, mp4, mov, webm, mp3, wav, m4a, ogg. At most 8,600,000 bytes.
+# Formats: jpeg, png, webp, mp4, mov, webm, mp3, wav, m4a, ogg. At most 52,428,800 bytes (50 MB).
 # All inputs of one job must be on the same account, so set USEAPI_EMAIL when the user has several.
 # Docs: https://useapi.net/docs/api-muse-v1/post-muse-assets
 source "$(dirname "$0")/_common.sh"
 FILE="${1:?Usage: upload.sh <file>}"
 [ -f "$FILE" ] || { echo "No such file: $FILE" >&2; exit 1; }
 SIZE=$(wc -c < "$FILE" | tr -d ' ')
-[ "$SIZE" -le 8600000 ] || { echo "$FILE is $SIZE bytes; Muse uploads take at most 8,600,000 bytes. Make it smaller first." >&2; exit 1; }
+[ "$SIZE" -le 52428800 ] || { echo "$FILE is $SIZE bytes; Muse uploads take at most 52,428,800 bytes (50 MB). Make it smaller first." >&2; exit 1; }
 
 # The MIME type from the file's content when `file` is available (a .jpeg can really be a WebP), else from the extension
 MIME=""
@@ -33,7 +33,7 @@ if [ -n "${USEAPI_EMAIL:-}" ]; then P="assets?email=$(enc "$USEAPI_EMAIL")"; fi
 # An upload is free and idempotent, so a network error, 502 or 503 is retried (3 tries, 10 s apart)
 for TRY in 1 2 3; do
   OUT=$(mktemp)
-  CODE=$(acurl -sS --max-time 320 -o "$OUT" -w '%{http_code}' -X POST "$API/$P" -H "Content-Type: $MIME" --data-binary @"$FILE") || true
+  CODE=$(acurl -sS --max-time 600 -o "$OUT" -w '%{http_code}' -X POST "$API/$P" -H "Content-Type: $MIME" --data-binary @"$FILE") || true
   CODE="${CODE:-000}"
   case "$CODE" in
     000|502|503) if [ "$TRY" -lt 3 ]; then log "POST /assets -> HTTP $CODE, retry $TRY of 2 in 10 s"; rm -f "$OUT"; sleep 10; continue; fi ;;

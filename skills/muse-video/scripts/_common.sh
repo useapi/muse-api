@@ -50,7 +50,7 @@ hint() {
       fi ;;
     404) echo "Hint: the Muse account is not added (check USEAPI_EMAIL, or https://useapi.net/docs/start-here/setup-muse), the job does not exist, or the file is no longer in the account's Muse workspace." >&2 ;;
     410) echo "Hint: the job is older than 7 days; job records are kept for 7 days. Its files are still in the Muse workspace if you have their assetIds." >&2 ;;
-    411|413) echo "Hint: uploads are the raw file, at most 8,600,000 bytes." >&2 ;;
+    411|413) echo "Hint: uploads are the raw file, at most 52,428,800 bytes (50 MB)." >&2 ;;
     412) echo "Hint: the account's weekly Muse allowance is used up. account.sh shows quota.resetsAt. Use another account or wait. Nothing was made." >&2 ;;
     429) echo "Hint: the account is running its maxJobs, or Muse is limiting it for about a minute. Nothing was made: it is safe to send once more after a minute. Do not loop on it." >&2 ;;
     502) echo "Hint: Muse made a file the API could not read, or did not accept the message (or, for an upload/download, did not store/send the file: retry that). For a job, do not resubmit automatically: report the jobid to useapi.net support." >&2 ;;

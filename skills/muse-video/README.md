@@ -48,7 +48,7 @@ IMG=$(./scripts/upload.sh grandma.jpg)
 |---|---|
 | `scripts/image.sh` | Generate, wait and download an image in one command: prompt (and optional input images) in, `.webp` out |
 | `scripts/video.sh` | The same for a 10-second video with sound: `.mp4` out |
-| `scripts/upload.sh` | Upload your own image, video or audio file (up to 8.6 MB), print its `assetId` |
+| `scripts/upload.sh` | Upload your own image, video or audio file (up to 50 MB), print its `assetId` |
 | `scripts/generate.sh` | Start an image or video job, print the job id |
 | `scripts/wait-job.sh` | Poll the job until it is done, print the final record |
 | `scripts/download.sh` | Download the finished file by job record or `assetId` |
