@@ -1,6 +1,6 @@
 # Meta Muse images and 10-second videos with sound — Muse API (Node.js & Python)
 
-📖 Full walkthrough: **[How to Generate AI Images and Videos with the Muse API](https://useapi.net/docs/articles/muse-images-videos?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)** — October 12, 2026
+📖 Full walkthrough: **[How to Generate AI Videos and Images with the Meta Muse API](https://useapi.net/docs/articles/muse-images-videos?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)** — October 12, 2026
 
 Make images and 10-second videos with sound with Muse (muse.ai), Meta's AI agent, through the [Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) by [useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api): three photos (a vintage BMW motorcycle, a red-haired rider, the beach below the Golden Gate Bridge) become one picture of her riding through the surf, the picture becomes a video in which she shouts a line, and a woman from a fourth photo then replaces her in that video. Along the way it makes two images from text, and restores and colorizes a hundred-year-old portrait that then looks up and speaks.
 
