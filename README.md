@@ -30,6 +30,7 @@ Each example's README lists its options. Every endpoint is documented in the [Mu
 - **What does it cost?** A flat [$15/month](https://useapi.net/docs/subscription?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) to useapi.net, which covers every useapi.net API and adds 3 Muse accounts per subscription. There is no per-image or per-video charge from us.
 - **How do I set the aspect ratio, length or resolution?** In the prompt: there are no parameters for them. Write `in exactly 16:9 aspect ratio`. Every video is about 10 seconds at about 720p, with sound, and lines written in quotes are spoken.
 - **Can I use my own photos and videos?** Yes. Upload them (up to 50 MB each) and pass the `assetId` as `image_1`..`image_9`; video jobs also take `video_1`..`video_3` and `audio_1`..`audio_3`. All inputs of one job must be on the same Muse account.
+- **Where does Muse work?** As of October 12, 2026, Muse is available in the US and Canada, to adults 18 and over, and Meta is adding countries. Create the Muse account there. Once it is added, you can call the API from anywhere, because the calls go to useapi.net.
 - **Is this Meta's official API?** No. useapi.net is an independent, third-party API that is not affiliated with or endorsed by Meta. It runs on a Muse account you own and add yourself.
 
 ## 中文说明
@@ -39,6 +40,7 @@ Each example's README lists its options. Every endpoint is documented in the [Mu
 - 使用你自己的 Muse 账号，免费版即可。Muse 按周计算额度：免费版每个视频约占每周额度的 2% 到 3%，每张图片约 0% 到 1%。
 - 没有画幅、时长、分辨率参数，全部写在提示词里，例如 `in exactly 16:9 aspect ratio`。视频约 10 秒、约 720p，引号里的台词会被说出来。
 - 价格：useapi.net 每月 15 美元（含所有 API），不按图片或视频计费。
+- 截至 2026 年 10 月 12 日，Muse 只在美国和加拿大开放（年满 18 岁），Muse 账号需要在这两个国家注册；绑定后可以在任何地方调用 API。
 - useapi.net 是独立的第三方 API，与 Meta 无关联。
 
 中文教程（多图合成、老照片修复、视频换人，含 curl 示例）：[如何通过 Muse API 用 Meta Muse 生成 AI 图片和带配音的视频](https://useapi.net/docs/articles/muse-api-zh?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)。完整文档：[Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)。
