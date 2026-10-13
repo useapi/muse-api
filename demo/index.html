@@ -532,7 +532,22 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
      ====================================================================== */
 
   const $ = id => document.getElementById(id);
-  const enc = encodeURIComponent;
+  /* Every id that goes into a URL path (chat, approval, widget, permission, asset, account email) passes through here. Browsers
+     collapse "." and ".." path segments before sending, so an id like ".." would turn DELETE /accounts/{email}/permissions/..
+     into DELETE /accounts/{email} and delete the account. Such ids (and ones with "/" or "\", also percent-encoded) are refused
+     with a 400-style error that the calling action shows in its own message area; nothing is sent. */
+  const pathId = value => {
+    const raw = String(value === undefined || value === null ? '' : value);
+    let decoded = raw;
+    try {
+      decoded = decodeURIComponent(raw);
+    } catch (err) {
+      /* not valid percent-encoding: the browser will not decode it either, so the raw value is what counts */
+    }
+    const bad = v => v === '' || v === '.' || v === '..' || /[\\/]/.test(v);
+    if (bad(raw) || bad(decoded)) throw Object.assign(new Error(`Refused an unsafe id in the URL: "${raw}"`), { status: 400 });
+    return encodeURIComponent(raw);
+  };
   /* Account emails are shown masked (first and last three characters of the name, then the domain: "car…ond@gmail.com"). The real
      email stays in the account picker's value and in every API call. */
   const maskEmail = email => {
@@ -645,8 +660,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
   const itemBlob = item => {
     const key = itemKey(item);
     if (!state.blobs.has(key)) {
-      const url = item.assetId ? `${API}/assets/${enc(item.assetId)}` : API + '/files/content' + query({ email: state.email, path: item.path });
-      const pending = fetch(url, { headers: authHeaders() }).then(async res => {
+      const pending = Promise.resolve().then(() => fetch(item.assetId ? `${API}/assets/${pathId(item.assetId)}` : API + '/files/content' + query({ email: state.email, path: item.path }), { headers: authHeaders() })).then(async res => {
         if (!res.ok) await readJson(res);
         return res.blob();
       });
@@ -902,7 +916,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     noteCheck(email);
     renderUsage();
     try {
-      const a = await api('GET', `/accounts/${enc(email)}`);
+      const a = await api('GET', `/accounts/${pathId(email)}`);
       state.accounts[email] = Object.assign({}, state.accounts[email], a, { quotaError: a.quotaError || '' });
     } catch (err) {
       state.accounts[email] = Object.assign({}, state.accounts[email], { quotaError: err.message });
@@ -1094,7 +1108,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     if (!await confirmInline(msg, 'Delete this chat on Muse?', 'Delete')) return;
     showMsg(msg, 'Deleting…');
     try {
-      await api('DELETE', `/chats/${enc(c.chatId)}`);
+      await api('DELETE', `/chats/${pathId(c.chatId)}`);
       const known = state.chats.get(c.chatId);
       if (known) {
         known.gone = true;
@@ -1312,7 +1326,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
   /* GET /chats/{chatId}: title, status, each message's files (for the Files panel) and the approvals still waiting in this chat. */
   const loadChatDetails = async chat => {
     try {
-      const data = await api('GET', `/chats/${enc(chat.id)}`);
+      const data = await api('GET', `/chats/${pathId(chat.id)}`);
       if (chat.gone) return;
       setHeader(chat, data.title || chat.title || 'Untitled chat', chat.status || data.status || '');
       /* A file-only message (empty text) belongs under the agent answer before it, unless a message of yours comes in between
@@ -1678,7 +1692,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     /* a resume while the dot is green (idle, reconnect, a first quick retry) stays silent */
     if (!chat.live) setConn(chat, 'connecting', 'Connecting', chat.lastId ? `Resuming after event ${chat.lastId}` : 'Opening the stream');
     try {
-      const res = await fetch(`${API}/chats/${enc(chat.id)}/stream`, { headers: authHeaders({ 'Last-Event-ID': String(chat.lastId) }), signal: controller.signal });
+      const res = await fetch(`${API}/chats/${pathId(chat.id)}/stream`, { headers: authHeaders({ 'Last-Event-ID': String(chat.lastId) }), signal: controller.signal });
       if (!res.ok) await readJson(res);
       chat.refused429 = false;
       await readSse(res.body, (id, data) => {
@@ -1875,7 +1889,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
         if (isCurrent(chat)) markCurrent(chat.id);
         goLive(chat);
       } else {
-        const r = await api('POST', `/chats/${enc(chat.id)}/messages`, body);
+        const r = await api('POST', `/chats/${pathId(chat.id)}/messages`, body);
         if (state.email !== email) return;
         messageId = r.messageId;
         goLive(chat);
@@ -1909,7 +1923,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     if (!chat.id) return;
     setBusy($('mu-stop'), true);
     try {
-      const r = await api('POST', `/chats/${enc(chat.id)}/cancel`);
+      const r = await api('POST', `/chats/${pathId(chat.id)}/cancel`);
       setActivity(chat, r.cancelled ? 'Stopped.' : 'Nothing was running.', false);
     } catch (err) {
       if (err.status === 404) chatGone(chat);
@@ -1992,7 +2006,7 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     for (const c of controls) c.disabled = true;
     showMsg(msg, 'Sending…');
     try {
-      await api('POST', `/chats/${enc(chat.id)}/widgets/${enc(w.widgetId)}`, answer);
+      await api('POST', `/chats/${pathId(chat.id)}/widgets/${pathId(w.widgetId)}`, answer);
       if (answer.option !== undefined) {
         buttons[answer.option].classList.add('mu-chosen');
         buttons[answer.option].setAttribute('aria-pressed', 'true');
@@ -2057,7 +2071,7 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     for (const b of c.buttons) b.disabled = true;
     showMsg(c.msg, 'Sending your answer…');
     try {
-      await api('POST', `/chats/${enc(chatId)}/approvals/${enc(approvalId)}`, { decision: option.decision });
+      await api('POST', `/chats/${pathId(chatId)}/approvals/${pathId(approvalId)}`, { decision: option.decision });
       finishCard(c, `You chose "${option.label || option.decision}". Muse continues.`, 'ok');
     } catch (err) {
       if (err.status === 409 || err.status === 404) finishCard(c, err.message, 'error');
@@ -2119,7 +2133,7 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     if (!await confirmInline(msg, 'Delete this file from Muse?', 'Delete')) return;
     showMsg(msg, 'Deleting…');
     try {
-      await api('DELETE', `/assets/${enc(asset.assetId)}`);
+      await api('DELETE', `/assets/${pathId(asset.assetId)}`);
       card.remove();
       if (!$('mu-grid').children.length) showMsg($('mu-f-state'), 'No files match these filters.');
     } catch (err) {
@@ -2371,7 +2385,7 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
 
   /* --- Permissions tab --- */
   const MODES = { allow: 'Allow', ask: 'Ask (removes the rule)', deny: 'Deny' };
-  const accountPath = () => `/accounts/${enc(state.email)}`;
+  const accountPath = () => `/accounts/${pathId(state.email)}`;
 
   /* GET /accounts/{email}/permissions and GET /accounts/{email}/approvals, read side by side. */
   const loadPerms = async () => {
@@ -2385,7 +2399,7 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     $('mu-p-decided').textContent = '';
     showMsg($('mu-p-defaults-msg'), '');
     for (const id of ['mu-p-rules-state', 'mu-p-pending-state', 'mu-p-decided-state']) showMsg($(id), 'Loading…');
-    const [perms, approvals] = await Promise.allSettled([api('GET', `${accountPath()}/permissions`), api('GET', `${accountPath()}/approvals${query({ limit: 50 })}`)]);
+    const [perms, approvals] = await Promise.allSettled([(async () => api('GET', `${accountPath()}/permissions`))(), (async () => api('GET', `${accountPath()}/approvals${query({ limit: 50 })}`))()]);
     /* a newer refresh started meanwhile: only the newest one fills the tables */
     if (email !== state.email || seq !== state.permsSeq) return;
     if (perms.status === 'fulfilled') renderPermissions(perms.value);
@@ -2440,7 +2454,7 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     select.disabled = true;
     showMsg(msg, 'Saving…');
     try {
-      const res = await api('POST', `${accountPath()}/permissions/${enc(r.permissionId)}`, { mode: select.value });
+      const res = await api('POST', `${accountPath()}/permissions/${pathId(r.permissionId)}`, { mode: select.value });
       if (res.removed) {
         row.remove();
         showMsg($('mu-p-rules-state'), 'Rule removed: Muse asks again next time.', 'ok');
@@ -2461,7 +2475,7 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     if (!await confirmInline(msg, 'Remove this rule?', 'Remove')) return;
     showMsg(msg, 'Removing…');
     try {
-      await api('DELETE', `${accountPath()}/permissions/${enc(r.permissionId)}`);
+      await api('DELETE', `${accountPath()}/permissions/${pathId(r.permissionId)}`);
       row.remove();
       showMsg($('mu-p-rules-state'), $('mu-p-rules').children.length ? 'Rule removed.' : 'Rule removed. No rules left.', 'ok');
     } catch (err) {
