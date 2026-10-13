@@ -117,7 +117,7 @@ Every failed request or failed job prints the API's error and a one-line hint:
 - `401`: wrong token. `404`: the account is not added, or the file is no longer in the Muse workspace. `410`: the job is older than 7 days.
 - `403` on a job: **Muse refused** on content grounds (its own words are in the message), or asked for a confirmation. Running the same prompt again will not help: rephrase or change the inputs. `403` on a request: the id belongs to another API token.
 - `412`: the account's weekly allowance is used up. Use another account (`account.sh`) or wait for `resetsAt`.
-- `429`: the account is running its `maxJobs` (default 2), or Muse is limiting it for about a minute. Nothing was made: send once more after a minute. Never loop on it.
+- `429`: the account is running its `maxJobs` (default 10), or Muse is limiting it for about a minute. Nothing was made: send once more after a minute. Never loop on it.
 - `503`: **nothing was made**: Muse could not be reached, or Muse failed this time and said so ("the video worker glitched out before it rendered anything"). Running the same request again is safe and usually works.
 - `502`: Muse made a file the API could not read. Do not resubmit automatically: tell the user and report the job id to useapi.net support.
 - `504`: Muse did not finish in time, but **it may have made the file**. Check `GET /jobs/<jobid>?history=true` and ask the user before running it again.
