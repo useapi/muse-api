@@ -1,10 +1,11 @@
-# Meta Muse API examples (useapi.net): AI video and image generation on muse.ai
+# Meta Muse API examples (useapi.net): AI video, images and agent chat on muse.ai
 
 Runnable examples for the [Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) by [useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api): make images and 10-second videos with sound using **Muse (muse.ai)**, Meta's AI agent, through a REST API that runs on your own Muse account. Combine up to 9 photos into one picture, restore and colorize old photos, animate a still with spoken dialogue, and replace a person in a video. Every file Muse makes is an asset id the next job takes as an input, so edits chain with no downloads or re-uploads. The free Muse plan works.
 
 | Example | What it does | Tutorial | Tutorial date |
 |---|---|---|---|
 | [`images-videos/`](./images-videos) | Three photos become one picture of a rider on a vintage motorcycle in the surf, the picture becomes a 10-second video in which she shouts a line, and a woman from a fourth photo replaces her in that video. Also two images from text, and a hundred-year-old portrait restored, colorized and brought to life. Node.js and Python | [How to Generate AI Videos and Images with the Meta Muse API](https://useapi.net/docs/articles/muse-images-videos?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) | October 12, 2026 |
+| [`demo/`](./demo) | **Live chat app**: one self-contained HTML page that chats with the Muse agent through the API, with answers streamed live, files and cards, approvals, several live chats at once, workspace files and the agent's permissions. Open the [live demo](https://useapi.net/demos/muse/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) or open `demo/index.html` locally. Vanilla JS, no build | [Chat Streaming Guide](https://useapi.net/docs/api-muse-v1/chat-streaming-guide?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) | October 12, 2026 |
 | [`skills/muse-video/`](./skills/muse-video) | **Agent skill** for Claude Code, Codex and other coding agents: ask for an image or a clip and the agent makes it with Muse (text to image, photo compositing, old-photo restoration, talking photos, person swap in a video) and downloads the `.webp` or `.mp4`, never paying twice for a request. Install: `npx skills add useapi/muse-api --skill muse-video`. Bash, curl, jq | [SKILL.md](./skills/muse-video/SKILL.md) | October 12, 2026 |
 
 ## Quick start

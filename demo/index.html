@@ -1,0 +1,2685 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Muse API demo</title>
+<meta name="description" content="A browser chat client for the useapi.net Muse API: streamed chat, approvals, files and agent permissions, in one HTML file.">
+<!--
+  Muse API demo (useapi.net): one file of plain HTML, CSS and JavaScript. No framework, no build step, no dependencies.
+  Open it in a browser, paste your useapi.net API token, pick a Muse account.
+  Docs: https://useapi.net/docs/api-muse-v1   Source: https://github.com/useapi/muse-api/tree/main/demo
+  Live: https://useapi.net/demos/muse/ serves this exact file.
+-->
+<style>
+/* The page: the app fills the browser window (100dvh keeps the composer above a phone's toolbars) */
+html, body { margin: 0; height: 100%; background: #f6f7fb; }
+@media (prefers-color-scheme: dark) { html, body { background: #14151b; } }
+</style>
+<style>
+/* ===== Theme: every color is a variable, light by default, dark from prefers-color-scheme ===== */
+.mu-app {
+  --mu-bg: #f6f7fb; --mu-panel: #ffffff; --mu-sunk: #eff1f6; --mu-border: #dfe2ea; --mu-text: #1e2230; --mu-muted: #687086;
+  --mu-accent: #7253ed; --mu-accent-soft: rgba(114, 83, 237, 0.12); --mu-on-accent: #ffffff;
+  --mu-user: #ebe6fd; --mu-agent: #ffffff; --mu-danger: #c42b3b; --mu-danger-soft: rgba(196, 43, 59, 0.1);
+  --mu-ok: #18794a; --mu-warn: #9a5b00; --mu-warn-soft: #fff6e3; --mu-warn-border: #f0c97a;
+  --mu-shadow: 0 1px 2px rgba(20, 22, 40, 0.06), 0 4px 16px rgba(20, 22, 40, 0.06);
+  --mu-left: 240px; --mu-right: 220px;
+}
+@media (prefers-color-scheme: dark) {
+  .mu-app {
+    --mu-bg: #14151b; --mu-panel: #1c1e26; --mu-sunk: #252833; --mu-border: #31354a; --mu-text: #e7e8f0; --mu-muted: #9aa1b6;
+    --mu-accent: #9d86ff; --mu-accent-soft: rgba(157, 134, 255, 0.16); --mu-on-accent: #14151b;
+    --mu-user: #2e2856; --mu-agent: #1f2129; --mu-danger: #ff7a86; --mu-danger-soft: rgba(255, 122, 134, 0.12);
+    --mu-ok: #57d095; --mu-warn: #f2bd61; --mu-warn-soft: #2e2615; --mu-warn-border: #6b5220;
+    --mu-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.25);
+  }
+}
+/* ===== Base (scoped to the app, and strong enough to override a host page's content styles) ===== */
+.mu-app { container-type: inline-size; display: flex; flex-direction: column; height: 100vh; height: 100dvh; background: var(--mu-bg); color: var(--mu-text); overflow: hidden; font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; text-align: left; }
+.mu-app *, .mu-app *::before, .mu-app *::after { box-sizing: border-box; }
+#mu-app button, #mu-app input, #mu-app select, #mu-app textarea { font: inherit; color: inherit; margin: 0; }
+#mu-app p { margin: 0 0 0.6em; }
+#mu-app h3 { margin: 0; font-size: 14px; font-weight: 650; line-height: 1.3; }
+#mu-app ul, #mu-app ol { margin: 0.3em 0 0.6em; padding-left: 1.4em; list-style: revert; }
+#mu-app li { position: static; margin: 0.15em 0; }
+#mu-app li::before { content: none; }
+#mu-app table { display: table; width: 100%; min-width: 0; border-collapse: collapse; margin: 0; }
+#mu-app th, #mu-app td { min-width: 0; padding: 8px 10px; background: transparent; border: 0; border-bottom: 1px solid var(--mu-border); font-size: 13px; vertical-align: top; text-align: left; }
+#mu-app th { color: var(--mu-muted); font-weight: 600; font-size: 12px; }
+#mu-app code { font: 12.5px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--mu-sunk); border: 0; border-radius: 4px; padding: 0.1em 0.35em; }
+#mu-app pre { max-width: 100%; background: var(--mu-sunk); border-radius: 8px; padding: 10px; overflow-x: auto; margin: 0.4em 0; overflow-wrap: normal; }
+#mu-app .mu-text a, #mu-app .mu-text code { overflow-wrap: anywhere; }
+#mu-app pre code { padding: 0; background: none; }
+#mu-app a { color: var(--mu-accent); }
+.mu-sr { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.mu-app :focus-visible { outline: 2px solid var(--mu-accent); outline-offset: 2px; }
+.mu-muted { color: var(--mu-muted); }
+.mu-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; overflow-wrap: anywhere; }
+/* ===== Controls ===== */
+.mu-app input[type=password], .mu-app input[type=url], .mu-app input[type=text], .mu-app select, .mu-app textarea { background: var(--mu-panel); border: 1px solid var(--mu-border); border-radius: 8px; padding: 6px 10px; min-height: 34px; }
+.mu-app select { padding-right: 6px; max-width: 100%; }
+.mu-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 34px; padding: 6px 14px; border: 1px solid var(--mu-border); border-radius: 8px; background: var(--mu-panel); color: var(--mu-text); font-weight: 600; cursor: pointer; white-space: nowrap; text-decoration: none; }
+.mu-btn:hover { border-color: var(--mu-accent); }
+.mu-btn:disabled { opacity: 0.5; cursor: default; border-color: var(--mu-border); }
+.mu-btn-primary { background: var(--mu-accent); border-color: var(--mu-accent); color: var(--mu-on-accent); }
+.mu-btn-danger { color: var(--mu-danger); }
+.mu-btn-danger.mu-btn-solid { background: var(--mu-danger); border-color: var(--mu-danger); color: #fff; }
+.mu-btn-sm { min-height: 28px; padding: 3px 10px; font-size: 12.5px; }
+.mu-icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--mu-muted); cursor: pointer; font-size: 15px; padding: 0; }
+.mu-icon-btn:hover { background: var(--mu-sunk); color: var(--mu-text); }
+.mu-busy { position: relative; color: transparent !important; }
+.mu-busy::after { content: ""; position: absolute; width: 14px; height: 14px; border: 2px solid var(--mu-muted); border-top-color: transparent; border-radius: 50%; animation: mu-spin 0.8s linear infinite; }
+.mu-btn-primary.mu-busy::after { border-color: var(--mu-on-accent); border-top-color: transparent; }
+.mu-file-btn { position: relative; }
+.mu-file-btn:focus-within { outline: 2px solid var(--mu-accent); outline-offset: 2px; }
+.mu-check { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--mu-muted); white-space: nowrap; cursor: pointer; }
+.mu-pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 650; background: var(--mu-sunk); color: var(--mu-muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; flex: 0 1 auto; min-width: 0; }
+.mu-pill-running { background: var(--mu-accent-soft); color: var(--mu-accent); }
+.mu-pill-completed { color: var(--mu-ok); }
+.mu-pill-interrupted, .mu-pill-failed, .mu-pill-denied, .mu-pill-user_denied { color: var(--mu-danger); }
+.mu-pill-pending_user_confirmation, .mu-pill-pending { background: var(--mu-warn-soft); color: var(--mu-warn); }
+.mu-pill-approved, .mu-pill-user_confirmed { color: var(--mu-ok); }
+.mu-badge { display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 999px; font-size: 10.5px; font-weight: 700; background: rgba(255, 255, 255, 0.25); text-transform: uppercase; letter-spacing: 0.03em; }
+.mu-item-msg { font-size: 12.5px; color: var(--mu-muted); }
+.mu-item-msg:empty { display: none; }
+.mu-msg-error { color: var(--mu-danger) !important; }
+.mu-msg-ok { color: var(--mu-ok) !important; }
+.mu-confirm { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px 8px; margin-top: 6px; border-radius: 8px; background: var(--mu-danger-soft); font-size: 12.5px; }
+.mu-confirm span { flex: 1 1 120px; }
+.mu-state { padding: 14px; text-align: center; color: var(--mu-muted); font-size: 13px; }
+.mu-state:empty { display: none; }
+.mu-more { display: block; margin: 8px auto 14px; }
+/* ===== Top bar ===== */
+.mu-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 14px; background: var(--mu-panel); border-bottom: 1px solid var(--mu-border); }
+.mu-brand { display: flex; align-items: center; gap: 8px; font-weight: 700; white-space: nowrap; }
+.mu-logo { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; background: var(--mu-accent); color: var(--mu-on-accent); font-size: 12px; }
+.mu-connect { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1 1 auto; min-width: 0; }
+.mu-connect input[type=password] { flex: 1 1 180px; min-width: 0; max-width: 300px; }
+.mu-top > .mu-tabs { margin-left: auto; }
+.mu-acct { display: flex; flex-direction: column; gap: 2px; flex: 0 1 380px; min-width: min(220px, 100%); }
+#mu-account { width: 100%; min-width: 0; }
+.mu-usage { display: flex; align-items: center; gap: 2px; min-width: 0; font-size: 11.5px; color: var(--mu-muted); }
+.mu-usage[hidden] { display: none; }
+.mu-usage-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mu-link-btn:disabled { opacity: 0.4; cursor: default; background: transparent; }
+.mu-tabs { display: flex; gap: 2px; max-width: 100%; padding: 3px; border-radius: 10px; background: var(--mu-sunk); overflow-x: auto; scrollbar-width: none; }
+.mu-tab { flex: none; border: 0; background: transparent; padding: 5px 14px; border-radius: 8px; cursor: pointer; color: var(--mu-muted); font-weight: 650; white-space: nowrap; }
+.mu-doclink { font-size: 12.5px; font-weight: 600; color: var(--mu-accent); text-decoration: none; white-space: nowrap; }
+.mu-doclink:hover { text-decoration: underline; }
+.mu-narrow-only { display: none !important; }
+.mu-tab[aria-selected=true] { background: var(--mu-panel); color: var(--mu-text); box-shadow: var(--mu-shadow); }
+.mu-top-msg { padding: 8px 14px; font-size: 13px; background: var(--mu-accent-soft); border-bottom: 1px solid var(--mu-border); }
+.mu-top-msg.mu-msg-error { background: var(--mu-danger-soft); }
+.mu-tabpanel { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.mu-tabpanel[hidden] { display: none; }
+.mu-scroll { overflow: auto; }
+/* ===== Chat tab: three resizable columns ===== */
+.mu-cols { flex: 1; min-height: 0; display: grid; grid-template-columns: var(--mu-left) 8px minmax(240px, 1fr) 8px var(--mu-right); }
+.mu-cols.mu-files-closed { grid-template-columns: var(--mu-left) 8px minmax(240px, 1fr); }
+.mu-files-closed > [data-side=right], .mu-files-closed > #mu-pane-files { display: none; }
+.mu-pane { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--mu-panel); }
+.mu-pane-head { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 8px 12px; border-bottom: 1px solid var(--mu-border); }
+.mu-pane-head h3 { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mu-pane-body { flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; }
+.mu-split { position: relative; background: var(--mu-bg); border-left: 1px solid var(--mu-border); border-right: 1px solid var(--mu-border); cursor: col-resize; touch-action: none; }
+.mu-split::after { content: ""; position: absolute; left: 2px; top: 50%; width: 2px; height: 36px; margin-top: -18px; border-radius: 2px; background: var(--mu-border); }
+.mu-split:hover::after, .mu-split:focus-visible::after, .mu-split.mu-dragging::after { background: var(--mu-accent); }
+.mu-chat-list { padding: 6px; min-width: 0; }
+.mu-chat-item { position: relative; min-width: 0; border-radius: 9px; margin-bottom: 2px; }
+.mu-chat-item:hover { background: var(--mu-sunk); }
+.mu-chat-item.mu-current { background: var(--mu-accent-soft); }
+.mu-chat-open { display: block; width: 100%; min-width: 0; padding: 8px 34px 8px 10px; border: 0; background: transparent; text-align: left; cursor: pointer; border-radius: 9px; }
+.mu-chat-title { display: block; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mu-chat-meta { display: flex; align-items: center; gap: 6px; min-width: 0; margin-top: 2px; font-size: 11.5px; color: var(--mu-muted); white-space: nowrap; overflow: hidden; }
+.mu-chat-date { flex: none; margin-left: auto; }
+.mu-chat-state { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+.mu-chat-state.mu-stale .mu-pill { background: var(--mu-sunk); color: var(--mu-muted); }
+.mu-clock { position: relative; flex: none; width: 10px; height: 10px; border: 1.5px solid var(--mu-muted); border-radius: 50%; }
+.mu-clock::before, .mu-clock::after { content: ""; position: absolute; left: 3px; bottom: 3px; background: var(--mu-muted); border-radius: 1px; }
+.mu-clock::before { width: 1.5px; height: 3.5px; }
+.mu-clock::after { width: 3px; height: 1.5px; }
+.mu-live-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--mu-ok); box-shadow: 0 0 0 2px var(--mu-accent-soft); }
+.mu-list-caption { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 6px 12px 0; font-size: 11.5px; color: var(--mu-muted); }
+.mu-live-pick { display: flex; flex-basis: 100%; align-items: center; gap: 4px; white-space: nowrap; }
+.mu-app .mu-live-pick select { min-height: 22px; padding: 0 2px; border-radius: 6px; font-size: 11.5px; }
+.mu-widget-unknown { padding: 8px 10px; border: 1px dashed var(--mu-border); border-radius: 8px; background: var(--mu-sunk); }
+.mu-widget-unknown-title { font-size: 12px; font-weight: 600; color: var(--mu-muted); }
+.mu-list-caption[hidden] { display: none; }
+.mu-link-btn { padding: 0 4px; border: 0; border-radius: 6px; background: transparent; color: var(--mu-accent); font-size: 13px; line-height: 1.4; cursor: pointer; }
+.mu-link-btn:hover { background: var(--mu-sunk); }
+.mu-chat-item > .mu-icon-btn { position: absolute; top: 6px; right: 4px; width: 26px; height: 26px; font-size: 12px; opacity: 0; }
+.mu-chat-item:hover > .mu-icon-btn, .mu-chat-item > .mu-icon-btn:focus-visible, .mu-chat-item.mu-current > .mu-icon-btn { opacity: 1; }
+.mu-chat-item > .mu-item-msg, .mu-chat-item > .mu-confirm { margin: 0 6px 6px; }
+.mu-convo { background: var(--mu-bg); }
+.mu-convo-title { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
+.mu-convo-title h3 { flex: 0 1 auto; }
+.mu-files-toggle { flex: none; }
+.mu-files-toggle[aria-expanded=true] { border-color: var(--mu-accent); color: var(--mu-accent); }
+.mu-count { display: inline-block; min-width: 18px; padding: 0 5px; border-radius: 999px; background: var(--mu-accent); color: var(--mu-on-accent); font-size: 10.5px; line-height: 16px; text-align: center; }
+.mu-count:empty { display: none; }
+.mu-conn { display: inline-flex; flex: none; align-items: center; gap: 5px; font-size: 11.5px; color: var(--mu-muted); white-space: nowrap; }
+.mu-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--mu-muted); }
+.mu-conn-live .mu-dot { background: var(--mu-ok); box-shadow: 0 0 0 3px rgba(24, 121, 74, 0.18); }
+.mu-conn-connecting .mu-dot, .mu-conn-retry .mu-dot { background: var(--mu-warn); animation: mu-pulse 1.2s ease-in-out infinite; }
+.mu-conn-off .mu-dot { background: var(--mu-danger); }
+.mu-log { flex: 1; min-height: 0; overflow-y: auto; padding: 16px; }
+.mu-msgs { display: flex; flex-direction: column; gap: 10px; }
+#mu-app .mu-pinned:not(:empty) { margin-top: 10px; }
+.mu-empty { margin: auto; max-width: 340px; padding: 40px 10px; text-align: center; color: var(--mu-muted); }
+.mu-msg { min-width: 0; max-width: min(680px, 90%); padding: 9px 13px; border-radius: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+.mu-user { align-self: flex-end; background: var(--mu-user); border-bottom-right-radius: 4px; }
+.mu-user .mu-text { white-space: pre-wrap; }
+.mu-assistant { align-self: flex-start; background: var(--mu-agent); border: 1px solid var(--mu-border); border-bottom-left-radius: 4px; }
+.mu-pending { opacity: 0.6; }
+.mu-role { margin-bottom: 2px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--mu-muted); }
+.mu-text > :last-child { margin-bottom: 0 !important; }
+.mu-text .mu-h { margin: 0.4em 0 0.3em; font-weight: 700; }
+.mu-typing .mu-text::after { content: "\258D"; margin-left: 1px; color: var(--mu-accent); animation: mu-blink 1s steps(2) infinite; }
+.mu-media:empty, .mu-widgets:empty { display: none; }
+.mu-widgets { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.mu-widget { display: flex; flex-direction: column; gap: 6px; }
+.mu-widget .mu-btn, .mu-approval .mu-btn { max-width: 100%; white-space: normal; text-align: left; overflow-wrap: anywhere; }
+.mu-widget-text { font-size: 13px; color: var(--mu-muted); }
+.mu-widget-frame { display: block; width: 100%; height: 20px; border: 0; background: transparent; }
+.mu-msg.mu-wide { width: min(680px, 90%); }
+.mu-widget-form { display: flex; gap: 6px; }
+.mu-widget-form input { flex: 1; min-width: 0; }
+.mu-btn.mu-chosen, .mu-btn.mu-chosen:disabled { opacity: 1; background: var(--mu-accent); border-color: var(--mu-accent); color: var(--mu-on-accent); }
+.mu-media { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.mu-figure { margin: 0; }
+.mu-figure .mu-preview { min-height: 140px; }
+.mu-figure .mu-preview img, .mu-figure .mu-preview video { max-height: 360px; }
+.mu-figcap { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 12px; color: var(--mu-muted); }
+.mu-figcap span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mu-note-line { align-self: center; max-width: 90%; padding: 3px 10px; border-radius: 999px; background: var(--mu-sunk); color: var(--mu-muted); font-size: 12px; text-align: center; }
+.mu-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.mu-chips:empty { display: none; }
+.mu-chip { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 2px 4px 2px 10px; border-radius: 999px; background: var(--mu-sunk); border: 1px solid var(--mu-border); font-size: 12px; }
+.mu-chip > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mu-chip .mu-icon-btn { width: 20px; height: 20px; font-size: 11px; }
+.mu-chip-error { border-color: var(--mu-danger); color: var(--mu-danger); }
+.mu-chip-uploading { opacity: 0.7; }
+.mu-msg .mu-chips { margin-top: 6px; }
+.mu-msg .mu-chip { background: rgba(255, 255, 255, 0.35); padding-right: 10px; }
+/* approval cards */
+.mu-approval { align-self: stretch; min-width: 0; max-width: 680px; overflow-wrap: anywhere; padding: 12px 14px; border: 1px solid var(--mu-warn-border); border-left: 4px solid var(--mu-warn); border-radius: 10px; background: var(--mu-warn-soft); }
+.mu-approval-title { font-weight: 700; }
+.mu-approval p { margin: 2px 0 6px !important; }
+.mu-app .mu-details { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 6px 0; font-size: 12.5px; }
+.mu-app .mu-details dt { grid-column: 1; margin: 0; color: var(--mu-muted); font-weight: 500; text-align: left; }
+.mu-app .mu-details dt::after { content: none; }
+.mu-app .mu-details dd { grid-column: 2; margin: 0; overflow-wrap: anywhere; }
+.mu-countdown { font-size: 12px; color: var(--mu-warn); font-weight: 600; }
+.mu-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.mu-actions:empty { display: none; }
+.mu-approval-done { border-left-color: var(--mu-border); background: var(--mu-panel); }
+.mu-approval .mu-item-msg { margin-top: 6px; }
+/* status bar + composer */
+.mu-statusbar { display: flex; align-items: center; gap: 8px; min-height: 30px; padding: 4px 16px; font-size: 12.5px; color: var(--mu-muted); border-top: 1px solid var(--mu-border); background: var(--mu-panel); }
+.mu-statusbar span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mu-spinner { flex: none; width: 12px; height: 12px; border: 2px solid var(--mu-accent); border-top-color: transparent; border-radius: 50%; animation: mu-spin 0.8s linear infinite; }
+.mu-spinner[hidden] { display: none; }
+.mu-composer { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--mu-border); background: var(--mu-panel); }
+.mu-composer textarea { width: 100%; min-height: 44px; max-height: 180px; resize: none; line-height: 1.45; }
+.mu-composer-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.mu-composer-row .mu-item-msg { flex: 1 1 120px; }
+.mu-grow { flex: 1; }
+/* files: the chat's panel and the Files tab grid share one card */
+.mu-file-list { display: flex; flex-direction: column; gap: 10px; padding: 10px; }
+.mu-file { display: flex; flex-direction: column; gap: 6px; padding: 8px; border: 1px solid var(--mu-border); border-radius: 10px; background: var(--mu-panel); min-width: 0; }
+.mu-file-name { font-weight: 600; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mu-file-meta { font-size: 11.5px; color: var(--mu-muted); }
+.mu-file .mu-actions { margin-top: 0; gap: 4px; }
+.mu-preview { position: relative; display: flex; align-items: center; justify-content: center; min-height: 110px; border-radius: 8px; background: var(--mu-sunk); overflow: hidden; color: var(--mu-muted); font-size: 12px; }
+.mu-preview img, .mu-preview video { display: block; width: 100%; max-height: 200px; object-fit: contain; }
+.mu-preview audio { width: 100%; margin: 8px; }
+.mu-loading { background: linear-gradient(90deg, var(--mu-sunk) 0%, var(--mu-border) 50%, var(--mu-sunk) 100%); background-size: 200% 100%; animation: mu-shimmer 1.4s ease-in-out infinite; }
+.mu-toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--mu-border); background: var(--mu-panel); }
+.mu-toolbar label:not(.mu-btn) { display: flex; flex-direction: column; gap: 2px; font-size: 11.5px; font-weight: 600; color: var(--mu-muted); }
+.mu-url-form { display: flex; gap: 6px; flex: 1 1 260px; }
+.mu-url-form input { flex: 1; min-width: 0; }
+.mu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; padding: 14px 16px; }
+.mu-grid:empty { display: none; }
+/* workspace browser */
+.mu-tabs.mu-viewbar { display: inline-flex; margin: 12px 16px 0; }
+.mu-crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; min-width: 0; font-size: 13px; }
+.mu-crumb { border: 0; background: transparent; padding: 3px 6px; border-radius: 6px; color: var(--mu-accent); font-weight: 600; cursor: pointer; overflow-wrap: anywhere; }
+.mu-crumb:hover { background: var(--mu-sunk); }
+.mu-crumb[aria-current] { color: var(--mu-text); cursor: default; background: transparent; }
+.mu-crumb-sep { color: var(--mu-muted); }
+.mu-app input.mu-ext { flex: 0 0 90px; width: 90px; }
+.mu-ws { display: flex; align-items: flex-start; gap: 14px; padding: 12px 16px; }
+.mu-ws-list { flex: 1 1 360px; min-width: 0; }
+.mu-ws-name { display: flex; align-items: flex-start; gap: 8px; max-width: 100%; padding: 0; border: 0; background: transparent; color: inherit; font-weight: 600; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
+.mu-ws-name:hover { color: var(--mu-accent); }
+.mu-ws-icon { flex: none; width: 20px; text-align: center; }
+.mu-ws-path { display: block; font-weight: 400; font-size: 11.5px; }
+.mu-ws-sel td { background: var(--mu-accent-soft) !important; }
+.mu-nowrap { white-space: nowrap; }
+.mu-ws-preview { position: sticky; top: 0; flex: 1 1 320px; min-width: 0; max-width: 520px; border: 1px solid var(--mu-border); border-radius: 10px; background: var(--mu-panel); overflow: hidden; }
+.mu-ws-preview[hidden] { display: none; }
+.mu-ws-preview-body { max-height: 65vh; overflow: auto; padding: 10px; }
+#mu-app .mu-ws-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; max-height: none; }
+/* permissions */
+.mu-perms { display: flex; flex-direction: column; gap: 14px; padding: 16px; }
+.mu-card { padding: 14px 16px; border: 1px solid var(--mu-border); border-radius: 12px; background: var(--mu-panel); box-shadow: var(--mu-shadow); }
+.mu-card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.mu-card-head h3 { flex: 1; }
+.mu-defaults { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 14px; }
+.mu-defaults label { display: flex; flex-direction: column; gap: 2px; font-size: 12px; font-weight: 600; color: var(--mu-muted); }
+.mu-note { margin: 10px 0 0 !important; padding: 8px 10px; border-radius: 8px; background: var(--mu-warn-soft); color: var(--mu-text); font-size: 12.5px; }
+.mu-table-wrap { overflow-x: auto; }
+.mu-approval-list { display: flex; flex-direction: column; gap: 10px; }
+/* Phones and narrow windows (a container query on the app's own width, so it also works inside a docs page): the conversation
+   fills the screen (composer always in view), the chat list and the chat's files slide in as drawers from the left and the right */
+@container (max-width: 640px) {
+  .mu-cols { position: relative; display: flex; flex-direction: column; }
+  .mu-split { display: none; }
+  .mu-convo { flex: 1; min-height: 0; }
+  #mu-pane-chats, #mu-pane-files { position: absolute; top: 0; bottom: 0; z-index: 5; width: min(86%, 320px); box-shadow: var(--mu-shadow); display: none; }
+  #mu-pane-chats { left: 0; border-right: 1px solid var(--mu-border); }
+  #mu-pane-files { right: 0; border-left: 1px solid var(--mu-border); }
+  .mu-cols.mu-chats-open #mu-pane-chats, .mu-cols:not(.mu-files-closed) #mu-pane-files { display: flex; }
+  .mu-narrow-only { display: inline-flex !important; }
+  .mu-top { padding: 8px 10px; gap: 6px 8px; }
+  .mu-connect { flex: 1 1 100%; }
+  .mu-connect input[type=password] { max-width: none; }
+  .mu-acct { flex: 1 1 100%; }
+  .mu-tabs { order: 5; width: 100%; }
+  .mu-tabs:not(.mu-viewbar) .mu-tab { flex: 1 0 auto; }
+  .mu-pane-head { padding: 6px 8px; gap: 6px; }
+  .mu-log { padding: 12px 10px; }
+  .mu-msg { max-width: 94%; }
+  .mu-ws { flex-direction: column; padding: 10px; }
+  .mu-ws-preview { position: static; width: 100%; max-width: none; }
+  .mu-toolbar { padding: 10px; }
+  .mu-perms { padding: 10px; }
+}
+@keyframes mu-spin { to { transform: rotate(360deg); } }
+@keyframes mu-blink { 50% { opacity: 0; } }
+@keyframes mu-pulse { 50% { opacity: 0.35; } }
+@keyframes mu-shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+@media (prefers-reduced-motion: reduce) { .mu-app *, .mu-app *::before, .mu-app *::after { animation: none !important; } }
+</style>
+</head>
+<body>
+<div id="mu-app" class="mu-app">
+  <header class="mu-top">
+    <div class="mu-brand"><span class="mu-logo" aria-hidden="true">M</span>Muse API demo <a class="mu-doclink" href="https://useapi.net/docs/api-muse-v1">Docs</a> <a class="mu-doclink" href="https://github.com/useapi/muse-api/tree/main/demo" target="_blank" rel="noopener noreferrer" title="This page's source code on GitHub">Source code</a></div>
+    <form id="mu-connect-form" class="mu-connect">
+      <label class="mu-sr" for="mu-token">useapi.net API token</label>
+      <input id="mu-token" type="password" placeholder="useapi.net API token" autocomplete="off" spellcheck="false">
+      <label class="mu-check" title="Keeps the token in this browser tab (sessionStorage) until the tab closes"><input id="mu-remember" type="checkbox">Remember</label>
+      <button id="mu-connect" class="mu-btn mu-btn-primary" type="submit">Connect</button>
+    </form>
+    <label class="mu-sr" for="mu-account">Muse account</label>
+    <div class="mu-acct">
+      <select id="mu-account" disabled><option value="">No account loaded</option></select>
+      <div class="mu-usage" hidden><span id="mu-usage-text" class="mu-usage-text"></span><button id="mu-usage-check" class="mu-link-btn" type="button" aria-label="Check the account's usage now" title="Check usage now">&#x21bb;</button></div>
+    </div>
+    <div class="mu-tabs" role="tablist" aria-label="Demo sections">
+      <button id="mu-tab-chat" class="mu-tab" type="button" role="tab" aria-controls="mu-panel-chat" aria-selected="true">Chat</button>
+      <button id="mu-tab-files" class="mu-tab" type="button" role="tab" aria-controls="mu-panel-files" aria-selected="false" tabindex="-1">Files</button>
+      <button id="mu-tab-perms" class="mu-tab" type="button" role="tab" aria-controls="mu-panel-perms" aria-selected="false" tabindex="-1">Permissions</button>
+    </div>
+  </header>
+  <div id="mu-top-msg" class="mu-top-msg" role="status" aria-live="polite" hidden></div>
+  <section id="mu-panel-chat" class="mu-tabpanel" role="tabpanel" aria-labelledby="mu-tab-chat">
+    <div id="mu-cols" class="mu-cols">
+      <aside id="mu-pane-chats" class="mu-pane" aria-label="Chats">
+        <div class="mu-pane-head">
+          <h3>Chats</h3>
+          <button id="mu-chats-close" class="mu-icon-btn mu-narrow-only" type="button" aria-label="Close the chat list" title="Close">&#x2715;</button>
+          <button id="mu-new-chat" class="mu-btn mu-btn-sm mu-btn-primary" type="button">New chat</button>
+        </div>
+        <div class="mu-pane-body">
+          <div id="mu-chats-caption" class="mu-list-caption" hidden><span id="mu-chats-age"></span> &middot; <button id="mu-refresh-chats" class="mu-link-btn" type="button" aria-label="Refresh the chat list and statuses" title="Refresh">&#x21bb;</button><label class="mu-live-pick" title="How many chats keep a live stream open (the least recently opened one closes first)">Live chats <select id="mu-live-max"></select></label></div>
+          <div id="mu-chat-list" class="mu-chat-list" role="list"></div>
+          <div id="mu-chats-state" class="mu-state" role="status">Connect to see your chats.</div>
+          <button id="mu-chats-more" class="mu-btn mu-btn-sm mu-more" type="button" hidden>Load more</button>
+        </div>
+      </aside>
+      <div class="mu-split" data-side="left" role="separator" tabindex="0" aria-orientation="vertical" aria-controls="mu-pane-chats" aria-label="Resize the chat list (arrow keys)"></div>
+      <section class="mu-pane mu-convo" aria-label="Conversation">
+        <div class="mu-pane-head">
+          <button id="mu-chats-toggle" class="mu-icon-btn mu-narrow-only" type="button" aria-controls="mu-pane-chats" aria-expanded="false" aria-label="Show the chat list" title="Chats">&#x2630;</button>
+          <div class="mu-convo-title"><h3 id="mu-chat-title">New chat</h3><span id="mu-chat-status" class="mu-pill" hidden></span></div>
+          <span id="mu-conn" class="mu-conn" role="status"><span class="mu-dot"></span><span id="mu-conn-text">Offline</span></span>
+          <button id="mu-reconnect" class="mu-icon-btn" type="button" title="Reconnect the stream" aria-label="Reconnect the stream" disabled>&#x21bb;</button>
+          <button id="mu-files-toggle" class="mu-btn mu-btn-sm mu-files-toggle" type="button" aria-controls="mu-pane-files" aria-expanded="true" title="Show or hide this chat's files">Files <span id="mu-files-count" class="mu-count"></span></button>
+        </div>
+        <div id="mu-log" class="mu-log" tabindex="0" aria-label="Messages">
+        </div>
+        <div class="mu-statusbar" role="status" aria-live="polite"><span id="mu-spinner" class="mu-spinner" hidden></span><span id="mu-activity">Ready</span></div>
+        <div class="mu-composer">
+          <div id="mu-attachments" class="mu-chips" aria-label="Attached files"></div>
+          <label class="mu-sr" for="mu-input">Message</label>
+          <textarea id="mu-input" rows="2" placeholder="Message Muse. Enter sends, Shift+Enter adds a line."></textarea>
+          <div class="mu-composer-row">
+            <label class="mu-btn mu-btn-sm mu-file-btn">Attach files<input id="mu-attach" class="mu-sr" type="file" multiple></label>
+            <span id="mu-composer-msg" class="mu-item-msg" role="status"></span>
+            <button id="mu-stop" class="mu-btn" type="button" disabled>Stop</button>
+            <button id="mu-send" class="mu-btn mu-btn-primary" type="button">Send</button>
+          </div>
+        </div>
+      </section>
+      <div class="mu-split" data-side="right" role="separator" tabindex="0" aria-orientation="vertical" aria-controls="mu-pane-files" aria-label="Resize the files panel (arrow keys)"></div>
+      <aside id="mu-pane-files" class="mu-pane" aria-label="Files in this chat">
+        <div class="mu-pane-head"><h3 id="mu-chat-files-title">Files in this chat</h3><button id="mu-files-close" class="mu-icon-btn mu-narrow-only" type="button" aria-label="Close the files panel" title="Close">&#x2715;</button></div>
+        <div class="mu-pane-body">
+          <div id="mu-chat-files"></div>
+          <div id="mu-chat-files-state" class="mu-state">Images, videos and audio Muse makes in this chat show up here.</div>
+        </div>
+      </aside>
+    </div>
+  </section>
+  <section id="mu-panel-files" class="mu-tabpanel mu-scroll" role="tabpanel" aria-labelledby="mu-tab-files" hidden>
+    <div class="mu-tabs mu-viewbar" role="tablist" aria-label="File views">
+      <button id="mu-view-media" class="mu-tab" type="button" role="tab" aria-controls="mu-media-view" aria-selected="true">Media</button>
+      <button id="mu-view-ws" class="mu-tab" type="button" role="tab" aria-controls="mu-ws-view" aria-selected="false" tabindex="-1">Workspace</button>
+    </div>
+    <div id="mu-media-view" role="tabpanel" aria-labelledby="mu-view-media">
+    <div class="mu-toolbar">
+      <label>Type<select id="mu-f-type"><option value="">All types</option><option value="image">Images</option><option value="video">Videos</option><option value="audio">Audio</option></select></label>
+      <label>Origin<select id="mu-f-origin"><option value="">All origins</option><option value="uploaded">Uploaded</option><option value="generated">Generated</option><option value="made">Made by the agent</option></select></label>
+      <button id="mu-f-refresh" class="mu-btn" type="button">Refresh</button>
+      <span class="mu-grow"></span>
+      <label class="mu-btn mu-btn-primary mu-file-btn">Upload files<input id="mu-f-upload" class="mu-sr" type="file" multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm,audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/x-m4a,audio/ogg"></label>
+      <form id="mu-f-url-form" class="mu-url-form">
+        <label class="mu-sr" for="mu-f-url">File URL to upload</label>
+        <input id="mu-f-url" type="url" placeholder="Upload from a public https URL" spellcheck="false">
+        <button class="mu-btn" type="submit">Upload URL</button>
+      </form>
+    </div>
+    <div id="mu-f-msg" class="mu-state" role="status"></div>
+    <div id="mu-grid" class="mu-grid" role="list"></div>
+    <div id="mu-f-state" class="mu-state" role="status">Connect to see the account's files.</div>
+    <button id="mu-f-more" class="mu-btn mu-btn-sm mu-more" type="button" hidden>Load more</button>
+    </div>
+    <div id="mu-ws-view" role="tabpanel" aria-labelledby="mu-view-ws" hidden>
+      <div class="mu-toolbar">
+        <nav id="mu-ws-crumbs" class="mu-crumbs" aria-label="Folder path"></nav>
+        <span class="mu-grow"></span>
+        <form id="mu-ws-search" class="mu-url-form" role="search">
+          <label class="mu-sr" for="mu-ws-name">File name contains</label>
+          <input id="mu-ws-name" type="text" placeholder="Name contains" spellcheck="false">
+          <label class="mu-sr" for="mu-ws-ext">Extensions, comma separated</label>
+          <input id="mu-ws-ext" class="mu-ext" type="text" placeholder="pdf,csv" spellcheck="false">
+          <button class="mu-btn" type="submit">Search</button>
+        </form>
+        <button id="mu-ws-refresh" class="mu-btn" type="button">Refresh</button>
+        <label class="mu-btn mu-btn-primary mu-file-btn">Upload here<input id="mu-ws-upload" class="mu-sr" type="file" multiple></label>
+      </div>
+      <div id="mu-ws-msg" class="mu-state" role="status"></div>
+      <div class="mu-ws">
+        <div class="mu-ws-list">
+          <div class="mu-table-wrap"><table><thead><tr><th scope="col">Name</th><th scope="col">Size</th><th scope="col">Modified</th><th scope="col"><span class="mu-sr">Actions</span></th></tr></thead><tbody id="mu-ws-rows"></tbody></table></div>
+          <div id="mu-ws-state" class="mu-state" role="status">Connect to browse the workspace.</div>
+          <button id="mu-ws-more" class="mu-btn mu-btn-sm mu-more" type="button" hidden>Load more</button>
+        </div>
+        <aside id="mu-ws-preview" class="mu-ws-preview" aria-label="File preview" hidden>
+          <div class="mu-pane-head"><h3 id="mu-ws-preview-title">Preview</h3><button id="mu-ws-preview-close" class="mu-icon-btn" type="button" aria-label="Close preview" title="Close">&#x2715;</button></div>
+          <div id="mu-ws-preview-body" class="mu-ws-preview-body"></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+  <section id="mu-panel-perms" class="mu-tabpanel mu-scroll" role="tabpanel" aria-labelledby="mu-tab-perms" hidden>
+    <div class="mu-perms">
+      <div class="mu-card">
+        <div class="mu-card-head"><h3>Defaults</h3><button id="mu-p-refresh" class="mu-btn mu-btn-sm" type="button">Refresh</button></div>
+        <div class="mu-defaults">
+          <label>Web<select id="mu-p-web"><option value="auto_allow">Ask for some actions</option><option value="always_ask">Always ask</option></select></label>
+          <label>Connected apps<select id="mu-p-connectors"><option value="auto_allow">Ask for some actions</option><option value="always_ask">Always ask</option></select></label>
+          <button id="mu-p-save" class="mu-btn mu-btn-primary" type="button">Save defaults</button>
+          <span id="mu-p-defaults-msg" class="mu-item-msg" role="status"></span>
+        </div>
+        <p class="mu-note">With "Ask for some actions" (auto_allow), Muse may act on your connected apps, for example send an email, without asking first. Choose "Always ask" to answer every request yourself.</p>
+      </div>
+      <div class="mu-card">
+        <div class="mu-card-head"><h3>Rules</h3></div>
+        <div class="mu-table-wrap"><table><thead><tr><th scope="col">Type</th><th scope="col">Rule</th><th scope="col">Target</th><th scope="col">Mode</th><th scope="col"><span class="mu-sr">Actions</span></th></tr></thead><tbody id="mu-p-rules"></tbody></table></div>
+        <div id="mu-p-rules-state" class="mu-state" role="status">Connect to see the agent's rules.</div>
+      </div>
+      <div class="mu-card">
+        <div class="mu-card-head"><h3>Waiting for an answer</h3></div>
+        <div id="mu-p-pending" class="mu-approval-list"></div>
+        <div id="mu-p-pending-state" class="mu-state" role="status"></div>
+      </div>
+      <div class="mu-card">
+        <div class="mu-card-head"><h3>Answered</h3></div>
+        <div class="mu-table-wrap"><table><thead><tr><th scope="col">Request</th><th scope="col">Status</th><th scope="col">Decision</th><th scope="col">When</th><th scope="col">Chat</th></tr></thead><tbody id="mu-p-decided"></tbody></table></div>
+        <div id="mu-p-decided-state" class="mu-state" role="status"></div>
+      </div>
+    </div>
+  </section>
+</div>
+<script>
+/*
+  Muse API demo. Base URL: api.useapi.net/v1/muse. Every call sends the header Authorization: Bearer <API token>.
+
+  API calls used:
+    GET    /accounts                                      the Muse accounts on this token (account picker)
+    GET    /accounts/{email}                              one account with its usage read fresh from Muse (usage line, throttled)
+    GET    /chats?email=&limit=&cursor=                   the chat list, paged (Load more)
+    POST   /chats                                         start a chat {message, files, email}
+    GET    /chats/{chatId}                                title, status, messages[].files, pendingApprovals
+    DELETE /chats/{chatId}                                delete a chat
+    GET    /chats/{chatId}/stream                         the live chat as Server-Sent Events, resumed with Last-Event-ID
+                                                          (one stream per live chat, up to the "Live chats" setting; idle and
+                                                          reconnect events resume silently; 429 = too many open streams)
+    POST   /chats/{chatId}/messages                       send a message {message, files}, also while Muse is answering
+                                                          (files: asset ids and workspace paths, named image_1…, file_1… for the agent)
+    POST   /chats/{chatId}/cancel                         stop the running turn
+    POST   /chats/{chatId}/approvals/{approvalId}         answer a permission request {decision}
+    POST   /chats/{chatId}/widgets/{widgetId}             answer a quick-reply widget {option} or {text}
+    GET    /assets?email=&type=&origin=&limit=&cursor=    the account's files (Files tab)
+    POST   /assets?email=                                 upload: raw file bytes, or JSON {url}
+    GET    /assets/{assetId}                              download a file (previews and Download buttons)
+    DELETE /assets/{assetId}                              delete a file
+    GET    /files?email=&path=                            list a folder of the account's Muse workspace (Workspace view)
+    GET    /files/content?email=&path=                    download a workspace file (previews and Download)
+    GET    /files/search?email=&name=&extensions=&path=   find workspace files by name and extension
+    POST   /files?email=&path=                            upload a file to a workspace path (replaces an existing file)
+    DELETE /files?email=&path=                            delete a workspace file
+    GET    /accounts/{email}/permissions                  the agent's defaults and standing rules
+    POST   /accounts/{email}/permissions                  change the defaults {web, connectors}
+    POST   /accounts/{email}/permissions/{permissionId}   change one rule's mode {mode}
+    DELETE /accounts/{email}/permissions/{permissionId}   remove one rule
+    GET    /accounts/{email}/approvals                    the agent's pending and answered approvals
+
+  Text that comes from the API is always set with textContent, never innerHTML. The one exception is an html widget, Muse's own
+  little page (a chart), which runs in a sandboxed iframe that cannot reach this page, the token or the API.
+
+  The script is in ordered sections: 1 config and state, 2 helpers, 3 API client, 4 previews, 5 accounts and usage, 6 chat list,
+  7 chat state and rendering, 8 streams, 9 sending / widgets / approvals, 10 Files / Workspace / Permissions tabs, 11 layout and boot.
+*/
+(() => {
+  /* ======================================================================
+     1. Config and state
+     ====================================================================== */
+  const API = 'https://api.useapi.net/v1/muse';
+  const TOKEN_KEY = 'muse-demo-token';
+  const UPLOAD_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/quicktime', 'video/webm', 'audio/mpeg', 'audio/wav', 'audio/x-wav', 'audio/mp4', 'audio/x-m4a', 'audio/ogg'];
+  const AUTO_PREVIEW_BYTES = 30 * 1024 * 1024;
+
+  /* One object per chat opened in this page session, kept in state.chats by chatId: its conversation and Files panel nodes
+     (view, filesList), the last stream event id (lastId), its status and status-bar line. Switching back to a chat puts these
+     nodes back in the page and resumes the stream after lastId. */
+  const newChatState = chatId => {
+    const msgs = el('div', { class: 'mu-msgs' });
+    const pinned = el('div', { class: 'mu-msgs mu-pinned' });
+    return {
+      id: chatId, lastId: 0, controller: null, retryTimer: 0, retries: 0, refused429: false, wanted: false, usedAt: 0, conn: { kind: 'off', text: 'Offline', detail: '' }, ended: '', error: '', errorStatus: 0,
+      status: '', title: '', activity: 'Ready', busy: false, live: false, follow: true,
+      view: el('div', { class: 'mu-view' }, [msgs, pinned]), msgs, pinned, anchor: null, filesList: el('div', { class: 'mu-file-list', role: 'list' }),
+      fresh: false, created: '', gone: false, lastEventAt: 0,
+      bubbles: new Map(), cards: new Map(), resolved: new Map(), files: new Map(), fileCards: new Map(), fileHosts: new Map(), shown: new Set(), shownAssets: new Set(),
+      widgets: new Set(), laterWidgets: new Map(), laterFiles: new Map(), lastAssistant: null
+    };
+  };
+  const state = {
+    token: '', email: '', accounts: {},
+    chat: null, chats: new Map(), liveMax: 5, sending: false, filesSeq: 0, permsSeq: 0, chatsCursor: null, chatsAt: 0, chatsSeq: 0, chatsLoading: false, listTimer: 0,
+    attachments: [], blobs: new Map(), urls: new Map(),
+    filesCursor: null, loaded: { files: false, perms: false, ws: false }, permCards: [],
+    ws: { path: 'workspace', search: null, selected: '' }
+  };
+
+  /* ======================================================================
+     2. Helpers: DOM, formatting, masking
+     ====================================================================== */
+
+  const $ = id => document.getElementById(id);
+  const enc = encodeURIComponent;
+  /* Account emails are shown masked (first and last three characters of the name, then the domain: "car…ond@gmail.com"). The real
+     email stays in the account picker's value and in every API call. */
+  const maskEmail = email => {
+    const at = email.lastIndexOf('@');
+    const name = at > 0 ? email.slice(0, at) : email;
+    const masked = name.length <= 6 ? `${name[0] || ''}\u2026` : `${name.slice(0, 3)}\u2026${name.slice(-3)}`;
+    return at > 0 ? masked + email.slice(at) : masked;
+  };
+  /* Mask the token's account emails wherever they appear in a message (API errors can name the account). */
+  const maskEmails = text => {
+    let out = String(text || '');
+    for (const email of Object.keys(state.accounts || {})) out = out.split(email).join(maskEmail(email));
+    return out;
+  };
+
+  /* Build an element: props are attributes ("text" is textContent, "on…" are listeners), children are nodes or plain strings. */
+  const el = (tag, props, children) => {
+    const node = document.createElement(tag);
+    for (const [key, value] of Object.entries(props || {})) {
+      if (value === undefined || value === null || value === false) continue;
+      if (key === 'text') node.textContent = value;
+      else if (key === 'class') node.className = value;
+      else if (key === 'value') node.value = value;
+      else if (key.startsWith('on')) node.addEventListener(key.slice(2), value);
+      else node.setAttribute(key, value === true ? '' : value);
+    }
+    for (const child of [].concat(children === undefined ? [] : children)) if (child !== null && child !== undefined && child !== false) node.append(child);
+    return node;
+  };
+  const showMsg = (node, text, kind) => {
+    node.textContent = maskEmails(text);
+    node.classList.toggle('mu-msg-error', kind === 'error');
+    node.classList.toggle('mu-msg-ok', kind === 'ok');
+  };
+  const setBusy = (button, busy) => {
+    button.disabled = busy;
+    button.classList.toggle('mu-busy', busy);
+    button.setAttribute('aria-busy', busy ? 'true' : 'false');
+  };
+  const fmtBytes = n => n === null || n === undefined ? '' : n < 1024 ? `${n} B` : n < 1048576 ? `${Math.round(n / 1024)} KB` : `${(n / 1048576).toFixed(1)} MB`;
+  const fmtClock = ms => new Date(ms).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  const fmtDate = iso => iso ? new Date(iso).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '';
+  /* Compact date for lists: the time today, "Oct 11" this year, "Oct 11, 2025" before. */
+  const fmtShort = iso => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const now = new Date();
+    if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    return d.toLocaleDateString([], d.getFullYear() === now.getFullYear() ? { month: 'short', day: 'numeric' } : { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+  /* Muse's raw statuses as words people use. Anything unknown becomes Title Case. */
+  const STATUS_LABELS = { pending_user_confirmation: 'Waiting for approval', running: 'Running', completed: 'Done', interrupted: 'Stopped', user_confirmed: 'Approved', user_denied: 'Denied', approved: 'Approved', denied: 'Denied', timed_out: 'Timed out', expired: 'Expired', pending: 'Waiting', failed: 'Failed', cancelled: 'Cancelled' };
+  const statusLabel = status => STATUS_LABELS[status] || String(status || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  const ACTIVITY_LABELS = { 'Needs approval': 'Waiting for your approval' };
+  const fmtLeft = s => s >= 3600 ? `${Math.floor(s / 3600)}h ${Math.floor(s % 3600 / 60)}m` : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  /* An asset id ends with "-<type>:<file name>". Files the agent saved elsewhere carry their folder with "~" between parts. */
+  const fileNameOf = ref => ref.startsWith('workspace/') ? ref.split('/').pop() : ref.replace(/^.*-(image|video|audio):/, '').split('~').pop();
+  const typeOf = assetId => (/-(image|video|audio):/.exec(assetId) || [])[1] || 'file';
+  const query = params => {
+    const q = new URLSearchParams();
+    for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== null && v !== '') q.set(k, v);
+    const s = q.toString();
+    return s ? `?${s}` : '';
+  };
+  const topMsg = (text, kind) => {
+    const node = $('mu-top-msg');
+    node.hidden = !text;
+    showMsg(node, text, kind);
+  };
+
+  /* Ask for confirmation inside the page (no window.confirm): a small bar with the question, the action and Cancel. */
+  const confirmInline = (host, question, yesLabel) => new Promise(resolve => {
+    const cls = host.className;
+    host.className = 'mu-confirm';
+    host.textContent = '';
+    const done = ok => {
+      host.className = cls;
+      host.textContent = '';
+      host.onkeydown = null;
+      resolve(ok);
+    };
+    const no = el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Cancel', onclick: () => done(false) });
+    host.append(el('span', { text: question }), el('button', { type: 'button', class: 'mu-btn mu-btn-sm mu-btn-danger mu-btn-solid', text: yesLabel, onclick: () => done(true) }), no);
+    host.onkeydown = e => { if (e.key === 'Escape') done(false); };
+    no.focus();
+  });
+
+  /* ======================================================================
+     3. API client: JSON calls, file bytes, uploads, downloads
+     ====================================================================== */
+
+  const authHeaders = extra => Object.assign({ Authorization: `Bearer ${state.token}` }, extra || {});
+  /* A non-2xx answer becomes an Error carrying the HTTP status and the API's own error text. */
+  const readJson = async res => {
+    const data = res.status === 204 ? {} : await res.json().catch(() => ({}));
+    if (!res.ok) throw Object.assign(new Error(`${res.status}: ${data.error || res.statusText || 'request failed'}`), { status: res.status });
+    return data;
+  };
+  /* Every JSON call goes through here: method, path under the base URL, optional JSON body. */
+  const api = async (method, path, body) => {
+    const init = { method, headers: authHeaders(body === undefined ? {} : { 'Content-Type': 'application/json' }) };
+    if (body !== undefined) init.body = JSON.stringify(body);
+    return readJson(await fetch(API + path, init));
+  };
+
+  /* A file is an item: {assetId} (media) or {path} (any workspace file). One Blob per item, so a preview and a Download share one download. */
+  const itemKey = item => item.assetId || `file:${item.path}`;
+  const itemName = item => item.assetId ? fileNameOf(item.assetId) : item.path.split('/').pop();
+  /* GET /assets/{assetId} for media, GET /files/content?email=&path= for a workspace file: the bytes, fetched with the token. */
+  const itemBlob = item => {
+    const key = itemKey(item);
+    if (!state.blobs.has(key)) {
+      const url = item.assetId ? `${API}/assets/${enc(item.assetId)}` : API + '/files/content' + query({ email: state.email, path: item.path });
+      const pending = fetch(url, { headers: authHeaders() }).then(async res => {
+        if (!res.ok) await readJson(res);
+        return res.blob();
+      });
+      pending.catch(() => state.blobs.delete(key));
+      state.blobs.set(key, pending);
+    }
+    return state.blobs.get(key);
+  };
+  const itemUrl = item => {
+    const key = itemKey(item);
+    if (!state.urls.has(key)) {
+      const pending = itemBlob(item).then(blob => URL.createObjectURL(blob));
+      pending.catch(() => state.urls.delete(key));
+      state.urls.set(key, pending);
+    }
+    return state.urls.get(key);
+  };
+  /* A file that changed (same id, new bytes): drop the cached download so the next preview fetches it again. Its blob URL is not
+     revoked, because a preview already on the page may still be playing from it. */
+  const refreshItem = key => {
+    state.urls.delete(key);
+    state.blobs.delete(key);
+  };
+  /* A file that is gone: drop the cached download and free its blob URL */
+  const forgetItem = key => {
+    const url = state.urls.get(key);
+    if (url) url.then(u => URL.revokeObjectURL(u), () => 0);
+    state.urls.delete(key);
+    state.blobs.delete(key);
+  };
+  const forgetBlobs = () => {
+    for (const pending of state.urls.values()) pending.then(url => URL.revokeObjectURL(url), () => 0);
+    state.urls.clear();
+    state.blobs.clear();
+  };
+
+  /* POST /assets?email=…: the raw file as the body and its MIME type as Content-Type. Answers {assetId, email, type, mime, bytes}. */
+  const uploadFile = async file => {
+    if (!UPLOAD_TYPES.includes(file.type)) throw new Error(`${file.name}: ${file.type || 'this file type'} is not supported`);
+    const res = await fetch(API + '/assets' + query({ email: state.email }), { method: 'POST', headers: authHeaders({ 'Content-Type': file.type }), body: file });
+    return readJson(res);
+  };
+
+  /* POST /files?email=&path=: the raw file as the body, saved at that workspace path. An existing file there is replaced. */
+  const uploadToWorkspace = async (file, path) => {
+    const res = await fetch(API + '/files' + query({ email: state.email, path }), { method: 'POST', headers: authHeaders({ 'Content-Type': file.type || 'application/octet-stream' }), body: file });
+    return readJson(res);
+  };
+  const safeName = name => name.split('/').join('_').replace(/[\u0000-\u001f]/g, '_');
+  /* The /files calls are newer than the rest: a server without them answers "Endpoint not found", or the browser blocks the call. */
+  const filesError = err => (err.status === 404 && /Endpoint not found/.test(err.message)) || err instanceof TypeError ? 'The workspace file API (/files) is not available on this server yet.' : err.message;
+
+  /* Save a file: download it (with the token) as a Blob, then click a temporary link named after the file. */
+  const downloadItem = async (item, button, msg) => {
+    setBusy(button, true);
+    try {
+      const url = URL.createObjectURL(await itemBlob(item));
+      const link = el('a', { href: url, download: itemName(item) });
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    } catch (err) {
+      showMsg(msg, item.assetId ? err.message : filesError(err), 'error');
+    } finally {
+      setBusy(button, false);
+    }
+  };
+
+  /* ======================================================================
+     4. Media previews and file cards (chat Files panel and Files tab)
+     ====================================================================== */
+
+  const whenVisible = (node, run) => {
+    if (!('IntersectionObserver' in window)) return run();
+    const io = new IntersectionObserver(entries => {
+      if (entries.some(e => e.isIntersecting)) {
+        io.disconnect();
+        run();
+      }
+    }, { rootMargin: '200px' });
+    io.observe(node);
+  };
+  /* A preview box: the image, video or audio from a blob URL once it scrolls into view. Large files wait for a click. */
+  const preview = asset => {
+    const box = el('div', { class: 'mu-preview' });
+    const load = async () => {
+      box.textContent = '';
+      box.classList.add('mu-loading');
+      try {
+        const url = await itemUrl(asset);
+        const media = asset.type === 'image' ? el('img', { src: url, alt: itemName(asset) }) : el(asset.type === 'audio' ? 'audio' : 'video', { src: url, controls: true, preload: 'metadata' });
+        box.append(media);
+      } catch (err) {
+        box.append(el('span', { class: 'mu-msg-error', text: err.message }));
+      } finally {
+        box.classList.remove('mu-loading');
+      }
+    };
+    if (asset.bytes > AUTO_PREVIEW_BYTES) box.append(el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: `Load preview (${fmtBytes(asset.bytes)})`, onclick: load }));
+    else whenVisible(box, load);
+    return box;
+  };
+
+  /* A file card, used by the chat's Files panel and the Files tab: preview, name, details and actions. */
+  const fileCard = (asset, options) => {
+    const msg = el('div', { class: 'mu-item-msg', role: 'status' });
+    const name = fileNameOf(asset.assetId);
+    const meta = [asset.type || typeOf(asset.assetId), fmtBytes(asset.bytes), asset.origin, fmtDate(asset.created)].filter(Boolean).join(' · ');
+    const download = el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Download', 'aria-label': `Download ${name}` });
+    download.addEventListener('click', () => downloadItem(asset, download, msg));
+    const actions = el('div', { class: 'mu-actions' }, [
+      download,
+      el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: options.tab ? 'Use in chat' : 'Use in next message', title: 'Attach this file to your next message', onclick: () => useInMessage({ ref: asset.assetId, name, type: asset.type || typeOf(asset.assetId) }, msg) })
+    ]);
+    const card = el('div', { class: 'mu-file', role: 'listitem' }, [preview(asset), el('div', { class: 'mu-file-name', title: name, text: name }), el('div', { class: 'mu-file-meta', text: meta }), actions, msg]);
+    if (options.tab) {
+      actions.append(
+        el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Copy id', onclick: () => copyId(asset.assetId, msg) }),
+        el('button', { type: 'button', class: 'mu-btn mu-btn-sm mu-btn-danger', text: 'Delete', 'aria-label': `Delete ${name}`, onclick: () => deleteAsset(asset, card, msg) })
+      );
+    }
+    return card;
+  };
+
+  /* ======================================================================
+     5. Accounts and usage: token, account picker, live usage line, tabs
+     ====================================================================== */
+
+  /* Keep the token in sessionStorage (this tab only) when "Remember" is ticked, otherwise forget it */
+  const rememberToken = () => {
+    try {
+      if ($('mu-remember').checked && state.token) sessionStorage.setItem(TOKEN_KEY, state.token);
+      else sessionStorage.removeItem(TOKEN_KEY);
+    } catch (err) { /* storage can be blocked: the token then lives in the field only */ }
+  };
+
+  /* GET /accounts: the Muse accounts added to this token, keyed by email, with health and weekly usage. */
+  const connect = async () => {
+    state.token = $('mu-token').value.trim();
+    if (!state.token) return topMsg('Enter your useapi.net API token first.', 'error');
+    rememberToken();
+    setBusy($('mu-connect'), true);
+    topMsg('Loading accounts…');
+    try {
+      const accounts = await api('GET', '/accounts');
+      const emails = Object.keys(accounts);
+      state.accounts = accounts;
+      const select = $('mu-account');
+      select.textContent = '';
+      for (const email of emails) select.append(el('option', Object.assign({ value: email }, accountLabel(email))));
+      select.disabled = !emails.length;
+      if (!emails.length) return topMsg('This token has no Muse account yet. Add one with POST /accounts (see Setup Muse).', 'error');
+      topMsg('');
+      const keep = emails.includes(state.email) ? state.email : emails[0];
+      select.value = keep;
+      selectAccount(keep);
+    } catch (err) {
+      topMsg(err.status === 401 || err.status === 403 ? `${err.message}. Check the API token.` : err.message, 'error');
+    } finally {
+      setBusy($('mu-connect'), false);
+    }
+  };
+
+  /* GET /accounts gives the usage stored when the account was added or last checked. GET /accounts/{email} reads it fresh from
+     Muse — but when Muse refuses the session that call signs in again, and frequent sign-ins trip Meta's security checkpoint.
+     So the demo checks:
+     - when an account is picked, at most once per 10 minutes per account (the time is remembered in this browser);
+     - on ↻, then the button rests 30 s;
+     - every 5 minutes while an answer runs in one of the live chats (only while the tab is visible, and only for chats whose
+       stream sent something in the last 15 minutes, so a status that never ended cannot keep the timer going);
+     - once about 20 s after an answer ends, to show what the answer used.
+     The automatic checks (the last two) keep at least 3 minutes apart per account.
+     The remembered check times are keyed by a short hash of the email, so no email is stored in the browser. */
+  const USAGE_KEY = 'muse-demo-usage-checks';
+  const USAGE_EVERY = 10 * 60 * 1000;
+  const USAGE_AUTO_EVERY = 5 * 60 * 1000;
+  const USAGE_AUTO_GAP = 3 * 60 * 1000;
+  const USAGE_ACTIVE_WINDOW = 15 * 60 * 1000;
+  /* FNV-1a: a short, stable key for an email */
+  const emailKey = email => {
+    let h = 0x811c9dc5;
+    for (const ch of email.toLowerCase()) h = Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0;
+    return h.toString(36);
+  };
+  const usageChecks = (() => {
+    try {
+      localStorage.removeItem('muse-demo-usage-checked');
+      return JSON.parse(localStorage.getItem(USAGE_KEY) || '{}') || {};
+    } catch (err) {
+      return {};
+    }
+  })();
+  const lastCheck = email => usageChecks[emailKey(email)] || 0;
+  const noteCheck = email => {
+    usageChecks[emailKey(email)] = Date.now();
+    try {
+      localStorage.setItem(USAGE_KEY, JSON.stringify(usageChecks));
+    } catch (err) { /* storage blocked: remembered until the page closes */ }
+  };
+  /* per account: a check in flight (busy) and the ↻ rest */
+  const usageState = { busy: new Set(), restUntil: new Map(), timer: 0, auto: 0, afterTurn: 0 };
+  const fmtReset = iso => iso ? new Date(iso).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }) : '';
+  /* The picker's option: masked email · health · 52%, with the full detail in its tooltip */
+  const accountLabel = email => {
+    const a = state.accounts[email] || {};
+    const q = a.quota || {};
+    const hasUsed = q.percentUsed !== undefined && q.percentUsed !== null;
+    const health = a.health && a.health !== 'OK' ? a.health : '';
+    return {
+      text: [maskEmail(email), health, hasUsed ? `${q.percentUsed}%` : ''].filter(Boolean).join(' · '),
+      title: [maskEmail(email), health, hasUsed ? `${q.percentUsed}% of the week's quota used` : '', q.resetsAt ? `resets ${fmtReset(q.resetsAt)}` : '', q.tier || ''].filter(Boolean).join(' · ')
+    };
+  };
+  /* The line under the picker: "52% of weekly use · resets Wed 3:00 PM · checked 10:31 PM ↻", or "usage unavailable" */
+  const renderUsage = () => {
+    const email = state.email;
+    const box = document.querySelector('.mu-usage');
+    box.hidden = !email;
+    if (!email) return;
+    const a = state.accounts[email] || {};
+    const q = a.quota || {};
+    const checked = lastCheck(email);
+    const busy = usageState.busy.has(email);
+    const text = $('mu-usage-text');
+    const problem = a.quotaError || a.error;
+    if (busy) text.textContent = 'Checking usage…';
+    else if (problem) text.textContent = 'usage unavailable';
+    let full = '';
+    if (!busy && !problem && q.percentUsed !== undefined && q.percentUsed !== null) {
+      const reset = q.resetsAt ? `resets ${fmtReset(q.resetsAt)}` : '';
+      full = [`${q.percentUsed}% of weekly use`, reset, checked ? `checked ${fmtClock(checked)}` : q.readAt ? `as of ${fmtClock(Date.parse(q.readAt))}` : ''].filter(Boolean).join(' · ');
+      text.textContent = full;
+      /* too long for the space: the short form, never a cut-off line (the full one is in the tooltip) */
+      if (text.scrollWidth > text.clientWidth) text.textContent = [`${q.percentUsed}% used`, reset].filter(Boolean).join(' · ');
+    } else if (!busy && !problem) text.textContent = 'usage not known yet';
+    text.title = maskEmails(problem || [full, q.tier, q.quotaStatus].filter(Boolean).join(' · '));
+    $('mu-usage-check').disabled = busy || Date.now() < (usageState.restUntil.get(email) || 0);
+    const option = [...$('mu-account').options].find(o => o.value === email);
+    if (option) Object.assign(option, accountLabel(email));
+    if ($('mu-account').value === email) $('mu-account').title = option ? option.title : '';
+  };
+  /* GET /accounts/{email}: the account with its usage read fresh from Muse ({quota}), or {quotaError, session: 'unknown'} */
+  /* mode: 'select' (account picked), 'auto' (the 5-minute timer or an answer ended) or 'demand' (↻) */
+  const checkUsage = async (email, mode) => {
+    if (!email || usageState.busy.has(email)) return;
+    /* a time in the future (the computer's clock was changed) counts as never */
+    const last = lastCheck(email) > Date.now() ? 0 : lastCheck(email);
+    if (mode === 'select' && Date.now() - last < USAGE_EVERY) return;
+    if (mode === 'auto' && Date.now() - last < USAGE_AUTO_GAP) return;
+    if (mode === 'demand' && Date.now() < (usageState.restUntil.get(email) || 0)) return;
+    usageState.busy.add(email);
+    noteCheck(email);
+    renderUsage();
+    try {
+      const a = await api('GET', `/accounts/${enc(email)}`);
+      state.accounts[email] = Object.assign({}, state.accounts[email], a, { quotaError: a.quotaError || '' });
+    } catch (err) {
+      state.accounts[email] = Object.assign({}, state.accounts[email], { quotaError: err.message });
+    } finally {
+      usageState.busy.delete(email);
+      usageState.restUntil.set(email, Date.now() + 30000);
+      clearTimeout(usageState.timer);
+      usageState.timer = setTimeout(renderUsage, 30000);
+      if (email === state.email) renderUsage();
+    }
+  };
+
+  /* The 5-minute timer runs only while the tab is visible and an answer runs (or waits for approval) in one of the live chats
+     that streamed something in the last 15 minutes */
+  const answerRunning = () => [...state.chats.values()].some(c => (c.wanted || isCurrent(c)) && (c.status === 'running' || c.status === 'pending_user_confirmation') && Date.now() - c.lastEventAt < USAGE_ACTIVE_WINDOW);
+  const scheduleUsageTimer = () => {
+    const wanted = !!state.email && document.visibilityState === 'visible' && answerRunning();
+    if (!wanted) {
+      clearTimeout(usageState.auto);
+      usageState.auto = 0;
+    } else if (!usageState.auto) usageState.auto = setTimeout(() => {
+      usageState.auto = 0;
+      checkUsage(state.email, 'auto');
+      scheduleUsageTimer();
+    }, USAGE_AUTO_EVERY);
+  };
+  /* An answer ended: one check about 20 s later, to show what it used (several answers ending together share it) */
+  const usageAfterTurn = () => {
+    clearTimeout(usageState.afterTurn);
+    usageState.afterTurn = setTimeout(() => {
+      if (document.visibilityState === 'visible') checkUsage(state.email, 'auto');
+    }, 20000);
+  };
+
+  /* Everything below the top bar belongs to one account: switching accounts starts each tab fresh. */
+  const selectAccount = email => {
+    state.email = email;
+    const option = $('mu-account').selectedOptions[0];
+    $('mu-account').title = option ? option.title : '';
+    renderUsage();
+    checkUsage(email, 'select');
+    for (const chat of [...state.chats.values()]) dropChat(chat);
+    state.chatsAt = 0;
+    $('mu-chat-list').textContent = '';
+    forgetBlobs();
+    state.attachments = [];
+    renderAttachments();
+    startNewChat();
+    state.loaded = { files: false, perms: false, ws: false };
+    state.ws = { path: 'workspace', search: null, selected: '' };
+    $('mu-ws-preview').hidden = true;
+    loadChats(true);
+    const tab = currentTab();
+    if (tab === 'files') loadFilesView();
+    if (tab === 'perms') loadPerms();
+  };
+
+  const TABS = ['chat', 'files', 'perms'];
+  const currentTab = () => TABS.find(t => $(`mu-tab-${t}`).getAttribute('aria-selected') === 'true');
+  const showTab = name => {
+    for (const t of TABS) {
+      const on = t === name;
+      $(`mu-tab-${t}`).setAttribute('aria-selected', on ? 'true' : 'false');
+      $(`mu-tab-${t}`).tabIndex = on ? 0 : -1;
+      $(`mu-panel-${t}`).hidden = !on;
+    }
+    if (!state.email) return;
+    if (name === 'files') loadFilesView();
+    if (name === 'perms' && !state.loaded.perms) loadPerms();
+  };
+
+  /* ======================================================================
+     6. Chat list: last-known statuses, live dots, refresh
+     ====================================================================== */
+
+  /* The list shows each chat's status as of the last GET /chats ("last checked", greyed with a clock). Live chats (the one shown
+     and the others still streaming, section 8) show the status from their own stream instead, with a green dot while connected. */
+  const statusPill = (status, title) => status ? el('span', { class: `mu-pill mu-pill-${status}`, text: statusLabel(status), title: title || statusLabel(status) }) : null;
+  /* The caption says what is real-time and what is not: chats with a live stream (green dot) vs the rest, as of the last list check */
+  const renderListAge = () => {
+    $('mu-chats-caption').hidden = !state.chatsAt;
+    if (!state.chatsAt) return;
+    const live = liveChats().filter(c => c.live).length;
+    const age = $('mu-chats-age');
+    age.title = 'Chats with a green dot are live: their status updates in real time. The others show their status as of the last check; press ↻ to check again.';
+    age.replaceChildren(
+      el('span', { class: 'mu-live-dot', 'aria-hidden': 'true' }),
+      ` ${live} live · others ${state.chatsLoading ? 'checking…' : `as of ${fmtClock(state.chatsAt)}`}`);
+  };
+
+  /* One list entry's status: live for the open chat and the other live chats (green dot while connected), last-known (greyed,
+     with when it was checked) for the others. */
+  const renderItemStatus = item => {
+    queueMicrotask(renderListAge);
+    const known = state.chats.get(item.dataset.id);
+    const chat = known && (isCurrent(known) || known.wanted) ? known : null;
+    const open = !!chat;
+    const status = open && chat.status ? chat.status : item.dataset.status;
+    const box = item.querySelector('.mu-chat-state');
+    const checked = `Last checked ${fmtClock(Number(item.dataset.checked) || Date.now())}`;
+    box.className = open ? 'mu-chat-state' : 'mu-chat-state mu-stale';
+    box.textContent = '';
+    if (!open && status) box.append(el('span', { class: 'mu-clock', 'aria-hidden': 'true', title: checked }));
+    if (status) box.append(statusPill(status, open ? '' : `${statusLabel(status)} · ${checked}`));
+    if (open && chat.live) box.append(el('span', { class: 'mu-live-dot', role: 'img', title: 'Live', 'aria-label': 'Live' }));
+  };
+  const renderListStatuses = () => {
+    for (const item of $('mu-chat-list').children) renderItemStatus(item);
+  };
+
+  /* GET /chats: the account's chats, newest first. cursor (from the previous page) continues the list (Load more).
+     A reset reads the first page again and swaps the list in one go, so it never blinks empty. */
+  const loadChats = async reset => {
+    const email = state.email;
+    const list = $('mu-chat-list');
+    const more = $('mu-chats-more');
+    const seq = ++state.chatsSeq;
+    more.hidden = true;
+    if (!list.children.length) showMsg($('mu-chats-state'), 'Loading chats…');
+    state.chatsLoading = true;
+    renderListAge();
+    try {
+      const page = await api('GET', '/chats' + query({ email, limit: 30, cursor: reset ? null : state.chatsCursor }));
+      if (email !== state.email || seq !== state.chatsSeq) return;
+      const at = Date.now();
+      const chat = state.chat;
+      for (const c of page.chats) {
+        const known = state.chats.get(c.chatId);
+        if (!known) continue;
+        if (c.title) known.title = c.title;
+        if (c.status && !isCurrent(known) && !known.wanted) known.status = c.status;
+      }
+      if (chat.id && chat.title) $('mu-chat-title').textContent = chat.title;
+      const shown = reset ? new Set() : new Set([...list.children].map(n => n.dataset.id));
+      const items = page.chats.filter(c => !shown.has(c.chatId)).map(c => chatItem(c, at));
+      if (reset) {
+        /* a chat started here a moment ago may not be listed yet: keep it on top */
+        if (chat.id && chat.fresh && !chat.gone && !page.chats.some(c => c.chatId === chat.id)) items.unshift(chatItem({ chatId: chat.id, title: chat.title, status: chat.status, created: chat.created }, at));
+        list.replaceChildren(...items);
+      } else list.append(...items);
+      state.chatsCursor = page.cursor || null;
+      state.chatsAt = at;
+      more.hidden = !state.chatsCursor;
+      showMsg($('mu-chats-state'), list.children.length ? '' : 'No chats yet. Write a message to start one.');
+    } catch (err) {
+      if (email === state.email) showMsg($('mu-chats-state'), err.message, 'error');
+    } finally {
+      if (seq === state.chatsSeq) {
+        state.chatsLoading = false;
+        renderListAge();
+      }
+    }
+  };
+
+  /* Muse names a chat a little after it starts: until then a chat started here keeps its first message as the title */
+  const titleOf = c => c.title || (state.chats.get(c.chatId) || {}).title || 'Untitled chat';
+
+  const chatItem = (c, checked) => {
+    const msg = el('div', { class: 'mu-item-msg', role: 'status' });
+    const item = el('div', { class: 'mu-chat-item', role: 'listitem', 'data-id': c.chatId, 'data-status': c.status || '', 'data-checked': String(checked || Date.now()) });
+    const open = el('button', { type: 'button', class: 'mu-chat-open', onclick: () => openChat(c.chatId, c) }, [
+      el('span', { class: 'mu-chat-title', text: titleOf(c) }),
+      el('span', { class: 'mu-chat-meta' }, [el('span', { class: 'mu-chat-state' }), el('span', { class: 'mu-chat-date', text: fmtShort(c.updated || c.created), title: fmtDate(c.updated || c.created) })])
+    ]);
+    const del = el('button', { type: 'button', class: 'mu-icon-btn', text: '✕', title: 'Delete chat', 'aria-label': `Delete chat ${c.title || ''}`, onclick: () => deleteChat(c, item, msg) });
+    item.append(open, del, msg);
+    if (state.chat && state.chat.id === c.chatId) {
+      item.classList.add('mu-current');
+      open.setAttribute('aria-current', 'true');
+    }
+    renderItemStatus(item);
+    return item;
+  };
+  /* The chat list entry for a chatId (null when the chat is not on the loaded pages) */
+  const listItemOf = chatId => [...$('mu-chat-list').children].find(n => n.dataset.id === chatId);
+  /* Highlight the shown chat in the list and refresh every entry's live / last-known status */
+  const markCurrent = chatId => {
+    for (const item of $('mu-chat-list').children) {
+      const on = item.dataset.id === chatId;
+      item.classList.toggle('mu-current', on);
+      if (on) item.firstChild.setAttribute('aria-current', 'true');
+      else item.firstChild.removeAttribute('aria-current');
+    }
+    renderListStatuses();
+  };
+
+  /* DELETE /chats/{chatId}: deletes the chat on Muse. Muse refuses while a turn is still running (Stop it first). */
+  const deleteChat = async (c, item, msg) => {
+    if (!await confirmInline(msg, 'Delete this chat on Muse?', 'Delete')) return;
+    showMsg(msg, 'Deleting…');
+    try {
+      await api('DELETE', `/chats/${enc(c.chatId)}`);
+      const known = state.chats.get(c.chatId);
+      if (known) {
+        known.gone = true;
+        dropChat(known);
+      }
+      if (state.chat.id === c.chatId) startNewChat();
+      item.remove();
+      if (!$('mu-chat-list').children.length) showMsg($('mu-chats-state'), 'No chats yet. Write a message to start one.');
+    } catch (err) {
+      showMsg(msg, err.message, 'error');
+    }
+  };
+
+  /* ======================================================================
+     7. Chat state and rendering: one in-memory object per chat, bubbles, Markdown, files
+     ====================================================================== */
+
+  /* True for the chat on screen (only it drives the header, status bar and scroll position) */
+  const isCurrent = chat => state.chat === chat;
+  const scrollLog = chat => {
+    if (isCurrent(chat) && chat.follow) $('mu-log').scrollTop = $('mu-log').scrollHeight;
+  };
+  /* The status bar line under the conversation, kept per chat. */
+  const setActivity = (chat, text, busy) => {
+    chat.activity = text;
+    if (busy !== undefined) chat.busy = busy;
+    if (!isCurrent(chat)) return;
+    $('mu-activity').textContent = text;
+    $('mu-spinner').hidden = !chat.busy;
+  };
+  /* A chat's stream state: a one-word state, the detail in a tooltip (the header shows the open chat's). */
+  const setConn = (chat, kind, text, detail) => {
+    chat.live = kind === 'live';
+    chat.conn = { kind, text, detail: detail || text };
+    if (isCurrent(chat)) renderConn(chat);
+    const item = chat.id && listItemOf(chat.id);
+    if (item) renderItemStatus(item);
+  };
+  /* Show a chat's stream state in the header (called for the chat on screen only) */
+  const renderConn = chat => {
+    $('mu-conn').className = `mu-conn mu-conn-${chat.conn.kind}`;
+    $('mu-conn-text').textContent = chat.conn.text;
+    $('mu-conn').title = chat.conn.detail;
+  };
+  const setHeader = (chat, title, status) => {
+    if (title) chat.title = title;
+    if (title && isCurrent(chat)) $('mu-chat-title').textContent = title;
+    if (status !== undefined) setChatStatus(chat, status);
+  };
+  const setChatStatus = (chat, status) => {
+    chat.status = status || '';
+    chat.busy = status === 'running';
+    scheduleUsageTimer();
+    const item = chat.id && listItemOf(chat.id);
+    if (item) renderItemStatus(item);
+    if (!isCurrent(chat)) return;
+    const pill = $('mu-chat-status');
+    pill.hidden = !status;
+    pill.className = `mu-pill mu-pill-${status}`;
+    pill.textContent = status ? statusLabel(status) : '';
+    pill.title = pill.textContent;
+    $('mu-spinner').hidden = !chat.busy;
+    updateComposer();
+  };
+  /* Enable Send / Stop / Reconnect for the chat on screen */
+  const updateComposer = () => {
+    const chat = state.chat;
+    $('mu-send').disabled = !state.email;
+    $('mu-stop').disabled = !chat.id;
+    $('mu-stop').classList.toggle('mu-btn-danger', chat.status === 'running');
+    $('mu-reconnect').disabled = !chat.id;
+  };
+  const logNote = (chat, rawText, kind) => {
+    const text = maskEmails(rawText);
+    const last = chat.msgs.lastElementChild;
+    if (last && last.classList.contains('mu-note-line') && last.textContent === text) return;
+    const note = el('div', { class: 'mu-note-line', text });
+    if (kind === 'error') note.classList.add('mu-msg-error');
+    chat.msgs.append(note);
+    scrollLog(chat);
+  };
+
+  /* Show a chat: its conversation is shown (and the others hidden) and its Files panel goes in, exactly as they were left, at the
+     same scroll position. The chat that was shown keeps its nodes, its last event id and its status in state.chats, and stays
+     live in the background while it is one of the last state.liveMax chats opened. */
+  const showChat = chat => {
+    const old = state.chat;
+    const log = $('mu-log');
+    if (old && old !== chat) {
+      saveScroll(old);
+      /* an unsent new chat is not kept (it is put back if its first message still turns it into a chat) */
+      if (!old.id) old.view.remove();
+    }
+    state.chat = chat;
+    renderConn(chat);
+    /* Every visited chat's conversation stays in the page, hidden when not shown: moving an iframe out of the page reloads it
+       (an html widget would restart and re-measure its height), and media would load again. */
+    if (chat.view.parentNode !== log) log.append(chat.view);
+    followResize.observe(chat.view);
+    for (const view of log.children) view.hidden = view !== chat.view;
+    $('mu-chat-files').replaceChildren(chat.filesList);
+    $('mu-chat-title').textContent = chat.title || (chat.id ? 'Chat' : 'New chat');
+    setChatStatus(chat, chat.status);
+    setActivity(chat, chat.activity, chat.busy);
+    updateFilesHeader(chat);
+    markCurrent(chat.id);
+    updateComposer();
+    restoreScroll(chat);
+  };
+  /* Scroll position per chat. At the bottom (within 40 px) the chat follows new content, also content that grows later (an html
+     widget measuring itself, an image loading). Elsewhere it remembers the first message in view and how far down it was, and
+     comes back to that same message. */
+  const atBottom = () => {
+    const log = $('mu-log');
+    return log.scrollHeight - log.scrollTop - log.clientHeight < 40;
+  };
+  const saveScroll = chat => {
+    const log = $('mu-log');
+    chat.follow = atBottom();
+    const top = log.getBoundingClientRect().top;
+    const node = [...chat.msgs.children, ...chat.pinned.children].find(n => n.getBoundingClientRect().bottom > top);
+    chat.anchor = node ? { node, offset: node.getBoundingClientRect().top - top } : null;
+  };
+  const restoreScroll = chat => {
+    const log = $('mu-log');
+    if (chat.follow || !chat.anchor || !chat.anchor.node.isConnected) log.scrollTop = chat.follow ? log.scrollHeight : 0;
+    else log.scrollTop += chat.anchor.node.getBoundingClientRect().top - log.getBoundingClientRect().top - chat.anchor.offset;
+    scrollMemo.top = log.scrollTop;
+  };
+  /* Content of the shown chat changed size (a widget grew, media loaded): stay at the bottom when following */
+  const followResize = new ResizeObserver(() => {
+    if (state.chat && state.chat.follow) $('mu-log').scrollTop = $('mu-log').scrollHeight;
+  });
+  /* Scrolling up stops the following, scrolling back to the bottom follows again. A scroll that moves down without reaching the
+     bottom keeps following: that is the browser keeping the view steady while content above grows (scroll events come before the
+     resize step that brings the view back to the bottom). */
+  const scrollMemo = { top: 0, before: 0, followBefore: true, movedAt: 0 };
+  const onLogScroll = () => {
+    const log = $('mu-log');
+    if (focusMemo.stolen) {
+      /* the scroll a widget caused by focusing itself (below): put the view back where it was */
+      focusMemo.stolen = false;
+      log.scrollTop = state.chat && state.chat.follow ? log.scrollHeight : scrollMemo.top;
+      return;
+    }
+    if (state.chat) {
+      /* remembered for a moment, in case this scroll turns out to be a widget taking the focus (the blur may come after it) */
+      Object.assign(scrollMemo, { before: scrollMemo.top, followBefore: state.chat.follow, movedAt: Date.now() });
+      state.chat.follow = atBottom() || (state.chat.follow && log.scrollTop >= scrollMemo.top);
+    }
+    scrollMemo.top = log.scrollTop;
+  };
+  /* An html widget can focus itself when it loads (a game that wants the arrow keys). The browser then scrolls the conversation
+     to it, and your typing goes into the widget. A focus that comes within 3 s of the widget loading, and not from your pointer
+     or the Tab key, is undone: focus goes back to where it was and the view to where it was. Clicking into it later works. */
+  const focusMemo = { last: null, hovered: null, tabAt: 0, stolen: false, timer: 0 };
+  /* the page's focused element is updated after the blur event: look a moment later */
+  const onWindowBlur = () => setTimeout(undoWidgetFocus, 0);
+  const undoWidgetFocus = () => {
+    const frame = document.activeElement;
+    if (!frame || !frame.classList.contains('mu-widget-frame') || frame === focusMemo.hovered || Date.now() - focusMemo.tabAt < 1000) return;
+    if (Date.now() - Number(frame.dataset.loadedAt || Date.now()) > 3000) return;
+    focusMemo.stolen = true;
+    clearTimeout(focusMemo.timer);
+    focusMemo.timer = setTimeout(() => {
+      focusMemo.stolen = false;
+    }, 500);
+    if (focusMemo.last && focusMemo.last.isConnected) focusMemo.last.focus({ preventScroll: true });
+    else frame.blur();
+    /* the browser may already have scrolled to the widget: go back */
+    const log = $('mu-log');
+    if (state.chat && Date.now() - scrollMemo.movedAt < 500) {
+      state.chat.follow = scrollMemo.followBefore;
+      log.scrollTop = state.chat.follow ? log.scrollHeight : scrollMemo.before;
+    }
+  };
+  /* Forget a chat: stop its stream and countdowns and drop it from memory (deleted, or another account picked). */
+  const dropChat = chat => {
+    chat.wanted = false;
+    closeStream(chat);
+    chat.view.remove();
+    followResize.unobserve(chat.view);
+    for (const c of chat.cards.values()) clearInterval(c.timer);
+    state.chats.delete(chat.id);
+    scheduleUsageTimer();
+  };
+  /* An empty, unsaved chat: it gets its id (and a stream) when its first message is sent */
+  const startNewChat = () => {
+    const chat = newChatState(null);
+    chat.msgs.append(el('div', { class: 'mu-empty', text: state.email ? 'New chat. Write a message below to start it.' : 'Paste your API token and press Connect, then open a chat or write a message.' }));
+    setConn(chat, 'off', 'Offline', 'No chat open');
+    showChat(chat);
+  };
+
+  /* Open a chat. The first time in this page session the stream replays the whole conversation (Last-Event-ID 0) and
+     GET /chats/{chatId} adds the files, widgets and pending approvals. A chat opened before is shown from memory at once and its
+     stream resumes after its last event id, so only what happened meanwhile comes in. */
+  const openChat = (chatId, summary) => {
+    showChatsDrawer(false);
+    if (state.chat.id === chatId) return goLive(state.chat);
+    let chat = state.chats.get(chatId);
+    const first = !chat;
+    if (first) {
+      chat = newChatState(chatId);
+      chat.title = summary && summary.title || '';
+      chat.status = summary && summary.status || '';
+      chat.activity = 'Loading the conversation…';
+      state.chats.set(chatId, chat);
+    }
+    showChat(chat);
+    goLive(chat);
+    if (first) loadChatDetails(chat);
+  };
+
+  /* GET /chats/{chatId}: title, status, each message's files (for the Files panel) and the approvals still waiting in this chat. */
+  const loadChatDetails = async chat => {
+    try {
+      const data = await api('GET', `/chats/${enc(chat.id)}`);
+      if (chat.gone) return;
+      setHeader(chat, data.title || chat.title || 'Untitled chat', chat.status || data.status || '');
+      /* A file-only message (empty text) belongs under the agent answer before it, unless a message of yours comes in between
+         (then it gets a bubble of its own), which is where the stream puts it too. A bubble the stream has not shown yet is
+         waited for (laterFiles), so nothing is placed out of order. */
+      let previous = '';
+      for (const m of data.messages || []) {
+        if (m.role !== 'assistant') {
+          previous = '';
+          continue;
+        }
+        for (const f of m.files || []) {
+          if (typeof f !== 'object') continue;
+          addChatFile(chat, f);
+          const file = Object.assign({ messageId: m.messageId }, f);
+          const key = chat.bubbles.has(m.messageId) || !previous ? m.messageId : previous;
+          const host = chat.bubbles.get(key);
+          if (host) showFile(chat, file, host);
+          else chat.laterFiles.set(key, (chat.laterFiles.get(key) || []).concat(file));
+        }
+        for (const w of m.widgets || []) showWidget(chat, Object.assign({ messageId: m.messageId }, w), true);
+        if (m.text) previous = m.messageId;
+      }
+      for (const a of data.pendingApprovals || []) showApproval(chat, a, true);
+    } catch (err) {
+      if (err.status === 404) chatGone(chat);
+      else logNote(chat, err.message, 'error');
+    }
+  };
+
+  /* One bubble per messageId: the stream's text deltas, files and the final text all land in it. Your own messages are keyed
+     "user:<messageId>", so an agent event can never take over a user bubble (and the bubble from Send and the stream's message
+     event are the same one). */
+  const bubble = (chat, messageId, role) => {
+    let b = chat.bubbles.get(messageId);
+    if (!b) {
+      const empty = chat.msgs.querySelector('.mu-empty');
+      if (empty) empty.remove();
+      const body = el('div', { class: 'mu-text' });
+      const widgets = el('div', { class: 'mu-widgets' });
+      const media = el('div', { class: 'mu-media' });
+      const node = el('div', { class: `mu-msg mu-${role}` }, [el('div', { class: 'mu-role', text: role === 'user' ? 'You' : 'Muse' }), body, widgets, media]);
+      b = { key: messageId, node, body, widgets, media, text: '', frame: 0, filesShown: false };
+      chat.bubbles.set(messageId, b);
+      chat.msgs.append(node);
+      /* the latest agent answer after your latest message (a message of yours starts a new answer) */
+      chat.lastAssistant = role === 'assistant' ? b : null;
+      for (const w of chat.laterWidgets.get(messageId) || []) showWidget(chat, w, false);
+      chat.laterWidgets.delete(messageId);
+      for (const f of chat.laterFiles.get(messageId) || []) showFile(chat, f, b);
+      chat.laterFiles.delete(messageId);
+    }
+    return b;
+  };
+  /* Re-render an agent message at most once per frame while deltas stream in. */
+  const setAgentText = (chat, b, text) => {
+    b.text = text;
+    if (b.frame) return;
+    b.frame = requestAnimationFrame(() => {
+      b.frame = 0;
+      renderMarkdown(b.body, b.text);
+      scrollLog(chat);
+    });
+  };
+
+  /* A small Markdown subset (paragraphs, headings, lists, code blocks, **bold**, `code`, links) built as DOM nodes, so no API text is ever parsed as HTML. */
+  const renderMarkdown = (box, text) => {
+    box.textContent = '';
+    let list = null;
+    let para = null;
+    let code = null;
+    for (const line of text.split('\n')) {
+      if (line.trim().startsWith('```')) {
+        if (code) code = null;
+        else {
+          list = null;
+          para = null;
+          code = el('code');
+          box.append(el('pre', {}, code));
+        }
+        continue;
+      }
+      if (code) {
+        code.append(line + '\n');
+        continue;
+      }
+      if (!line.trim()) {
+        list = null;
+        para = null;
+        continue;
+      }
+      const heading = /^#{1,4}\s+(.*)$/.exec(line);
+      const item = /^\s*(?:[-*•]|\d+[.)])\s+(.*)$/.exec(line);
+      if (heading) {
+        list = null;
+        para = null;
+        box.append(inlineMarkdown(el('div', { class: 'mu-h' }), heading[1]));
+      } else if (item) {
+        para = null;
+        if (!list) {
+          list = el(/^\s*\d/.test(line) ? 'ol' : 'ul');
+          box.append(list);
+        }
+        list.append(inlineMarkdown(el('li'), item[1]));
+      } else {
+        list = null;
+        if (para) para.append(el('br'));
+        else {
+          para = el('p');
+          box.append(para);
+        }
+        inlineMarkdown(para, line);
+      }
+    }
+  };
+  const inlineMarkdown = (node, text) => {
+    const re = /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\(https?:[^)\s]+\))/g;
+    let at = 0;
+    let m;
+    while ((m = re.exec(text))) {
+      node.append(text.slice(at, m.index));
+      const t = m[0];
+      if (t.startsWith('**')) node.append(el('strong', { text: t.slice(2, -2) }));
+      else if (t.startsWith('`')) node.append(el('code', { text: t.slice(1, -1) }));
+      else {
+        const link = /^\[([^\]]+)\]\((.+)\)$/.exec(t);
+        node.append(el('a', { href: link[2], text: link[1], target: '_blank', rel: 'noopener noreferrer' }));
+      }
+      at = m.index + t.length;
+    }
+    node.append(text.slice(at));
+    return node;
+  };
+
+  const showUserMessage = (chat, messageId, text, files) => {
+    const b = bubble(chat, `user:${messageId}`, 'user');
+    b.node.classList.remove('mu-pending');
+    b.body.textContent = text;
+    if (files.length && !b.filesShown) {
+      b.filesShown = true;
+      b.media.append(el('div', { class: 'mu-chips' }, files.map(id => el('span', { class: 'mu-chip', title: id }, el('span', { text: `${typeOf(id)}: ${fileNameOf(id)}` })))));
+    }
+    scrollLog(chat);
+  };
+
+  /* A file event: the image, video or audio inline under the answer that shows it, and a card in the Files panel.
+     Inline, a file shows once per answer: the stream, GET /chats/{chatId} and a replay after a resume can all report the same file
+     under the same answer. A later answer can show the same asset id again (Muse often rewrites a file in place): it shows there
+     too, with fresh bytes. The Files panel keeps one card per asset id and refreshes its preview.
+     A file whose messageId matches no message (Muse files made outside a message) goes under the latest answer after your latest
+     message, or into a Muse bubble of its own when there is none. That choice is remembered per messageId, so the same file
+     event coming again (a resume can repeat the last few events) lands in the same place and is not shown twice. */
+  const showFile = (chat, e, host) => {
+    const asset = { assetId: e.assetId, type: e.type, mime: e.mime, bytes: e.bytes, origin: e.origin };
+    const b = host || chat.bubbles.get(e.messageId) || chat.fileHosts.get(e.messageId) || chat.lastAssistant || bubble(chat, e.messageId || `files-${asset.assetId}`, 'assistant');
+    if (e.messageId && !chat.bubbles.has(e.messageId) && !chat.fileHosts.has(e.messageId)) chat.fileHosts.set(e.messageId, b);
+    const key = `${b.key}|${asset.assetId}`;
+    if (chat.shown.has(key)) return addChatFile(chat, asset, false);
+    const again = chat.shownAssets.has(asset.assetId);
+    chat.shown.add(key);
+    chat.shownAssets.add(asset.assetId);
+    if (again) refreshItem(asset.assetId);
+    addChatFile(chat, asset, again);
+    const msg = el('span', { class: 'mu-item-msg' });
+    const download = el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Download' });
+    download.addEventListener('click', () => downloadItem(asset, download, msg));
+    b.media.append(el('figure', { class: 'mu-figure' }, [preview(asset), el('figcaption', { class: 'mu-figcap' }, [el('span', { text: `${fileNameOf(asset.assetId)} · ${fmtBytes(asset.bytes)}` }), msg, download])]));
+    scrollLog(chat);
+  };
+
+  const updateFilesHeader = chat => {
+    if (!isCurrent(chat)) return;
+    const n = chat.files.size;
+    $('mu-chat-files-title').textContent = n ? `Files in this chat (${n})` : 'Files in this chat';
+    $('mu-files-count').textContent = n ? String(n) : '';
+    $('mu-chat-files-state').hidden = n > 0;
+  };
+  /* One Files panel card per asset id; refresh replaces the card so its preview loads the new bytes */
+  const addChatFile = (chat, asset, refresh) => {
+    const old = chat.fileCards.get(asset.assetId);
+    if (old && !refresh) return;
+    const card = fileCard(Object.assign({}, chat.files.get(asset.assetId), asset), { tab: false });
+    chat.files.set(asset.assetId, asset);
+    chat.fileCards.set(asset.assetId, card);
+    if (old) old.replaceWith(card);
+    else chat.filesList.prepend(card);
+    updateFilesHeader(chat);
+  };
+
+  /* ======================================================================
+     8. Streams: live chats (max + least recently used), SSE reading, resume, backoff
+     ====================================================================== */
+
+  /* Why a limit: every open stream is a connection the account keeps open (the API refuses more than about 50 per account with
+     429), so the demo keeps only the last few chats you opened live ("Live chats", 1 to 10, default 5) and closes the least
+     recently opened one when you go over. The chat on screen is never closed: it is the one you are reading, and closing it
+     would make the next event you wait for arrive late. Chats with an answer running are closed last.
+     Background live chats keep taking in their events (messages, files, statuses), so switching to one is instant and current.
+     A chat that is no longer live keeps its last event id and resumes from it, silently, when it is opened again. */
+  const LIVE_KEY = 'muse-demo-live-chats';
+  /* The chats that keep a stream open (wanted), the shown chat included once it has an id */
+  const liveChats = () => [...state.chats.values()].filter(c => c.wanted);
+  /* The live chat to close for room: never the chat shown (nor keep); the least recently opened one with no answer running,
+     else the least recently opened one. */
+  const pickToClose = keep => {
+    const others = liveChats().filter(c => !isCurrent(c) && c !== keep).sort((a, b) => a.usedAt - b.usedAt);
+    return others.find(c => c.status !== 'running') || others[0] || null;
+  };
+  /* Close a chat's stream for room: it greys out in the list with its status as of now and resumes when opened again */
+  const stopLive = chat => {
+    chat.wanted = false;
+    closeStream(chat);
+    setConn(chat, 'off', 'Not live', 'Not live: opening this chat resumes it');
+    scheduleUsageTimer();
+    const item = chat.id && listItemOf(chat.id);
+    if (!item) return;
+    if (chat.status) item.dataset.status = chat.status;
+    item.dataset.checked = String(Date.now());
+    renderItemStatus(item);
+  };
+  /* Close live chats until no more than state.liveMax are open */
+  const enforceLiveCap = () => {
+    while (liveChats().length > state.liveMax) {
+      const chat = pickToClose(null);
+      if (!chat) break;
+      stopLive(chat);
+    }
+  };
+  /* Make a chat live (or keep it live): its stream opens, or resumes after its last event id. */
+  const goLive = chat => {
+    if (!chat.id || chat.gone) return;
+    chat.usedAt = Date.now();
+    if (!chat.wanted) {
+      chat.wanted = true;
+      chat.retries = 0;
+      chat.refused429 = false;
+    }
+    /* make room first, so the account never has more than the limit open even for a moment */
+    enforceLiveCap();
+    if (chat.wanted && !chat.controller && !chat.retryTimer) openStream(chat);
+  };
+  /* The "Live chats" setting (1 to 10), remembered in this browser */
+  const setLiveMax = n => {
+    state.liveMax = Math.min(10, Math.max(1, Number(n) || 5));
+    $('mu-live-max').value = String(state.liveMax);
+    try {
+      localStorage.setItem(LIVE_KEY, String(state.liveMax));
+    } catch (err) { /* storage blocked: the choice lasts until the page closes */ }
+    enforceLiveCap();
+  };
+
+  /* One stream event (the list in the Chat Streaming Guide). */
+  /* Events that carry the chat's content. Only these prove the stream works: initialized can be followed at once by an error
+     event (Muse could not be read), so counting it as success would retry every second forever without saying so. */
+  const CONTENT_EVENTS = new Set(['message', 'text', 'message.done', 'file', 'widget', 'activity', 'status', 'approval', 'approval.resolved', 'turn.done']);
+  const onEvent = (chat, e) => {
+    if (CONTENT_EVENTS.has(e.event)) {
+      chat.retries = 0;
+      chat.lastEventAt = Date.now();
+    }
+    switch (e.event) {
+      case 'initialized':
+        setConn(chat, 'live', 'Live');
+        break;
+      case 'message':
+        showUserMessage(chat, e.messageId, e.text, e.files || []);
+        break;
+      case 'text': {
+        const b = bubble(chat, e.messageId, 'assistant');
+        b.node.classList.add('mu-typing');
+        setAgentText(chat, b, e.full ? e.text : b.text + e.text);
+        if (!e.full) markRunning(chat);
+        break;
+      }
+      case 'message.done': {
+        const b = chat.bubbles.get(e.messageId);
+        if (b) b.node.classList.remove('mu-typing');
+        break;
+      }
+      case 'file':
+        showFile(chat, e);
+        break;
+      case 'widget':
+        showWidget(chat, e, false);
+        break;
+      case 'activity':
+        /* the agent's activity line, shown only while this chat's own answer runs: activity never sets a chat's status (only its
+           status events and its own text do), so an idle chat never turns "Running" or "Waiting for approval" from it */
+        if (chat.status !== 'running' && chat.status !== 'pending_user_confirmation') break;
+        setActivity(chat, ACTIVITY_LABELS[e.text] || `Muse: ${e.text}`);
+        break;
+      case 'status':
+        setChatStatus(chat, e.status);
+        setActivity(chat, e.status === 'running' ? 'Muse is working…' : statusLabel(e.status), e.status === 'running');
+        break;
+      case 'approval':
+        showApproval(chat, e, false);
+        break;
+      case 'approval.resolved':
+        resolveApproval(chat, e);
+        break;
+      case 'turn.done':
+        for (const b of chat.bubbles.values()) b.node.classList.remove('mu-typing');
+        setChatStatus(chat, e.status);
+        setActivity(chat, `${statusLabel(e.status)}${e.files && e.files.length ? `, ${e.files.length} file(s)` : ''}`, false);
+        scheduleListRefresh();
+        usageAfterTurn();
+        break;
+      case 'idle':
+        chat.ended = 'idle';
+        break;
+      case 'reconnect':
+        chat.ended = 'reconnect';
+        break;
+      case 'error':
+        chat.ended = 'error';
+        chat.error = e.message;
+        chat.errorStatus = e.code || 0;
+        break;
+      default:
+        break;
+    }
+  };
+
+  /* Split the byte stream into SSE events: blocks separated by a blank line, each with optional "id:" and "data:" lines. */
+  const readSse = async (body, onMessage) => {
+    const reader = body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) return;
+      buffer += decoder.decode(value, { stream: true });
+      const blocks = buffer.split(/\r?\n\r?\n/);
+      buffer = blocks.pop();
+      for (const block of blocks) {
+        let id = '';
+        const data = [];
+        for (const line of block.split(/\r?\n/)) {
+          if (line.startsWith('id:')) id = line.slice(3).trim();
+          else if (line.startsWith('data:')) data.push(line.slice(5).replace(/^ /, ''));
+        }
+        /* the handler returns false to stop: the rest of the body is cancelled, which closes the connection */
+        if (data.length && onMessage(id, data.join('\n')) === false) {
+          reader.cancel().catch(() => 0);
+          return;
+        }
+      }
+    }
+  };
+
+  /* GET /chats/{chatId}/stream: Server-Sent Events read with fetch(), because EventSource cannot send the Authorization header.
+     Last-Event-ID is the last id seen: the server sends only the events after it (0 = the whole conversation), then follows the
+     chat live. Each live chat has its own stream (see Live chats). */
+  const openStream = async chat => {
+    if (!chat.id || chat.gone || !chat.wanted) return;
+    closeStream(chat);
+    const controller = new AbortController();
+    chat.controller = controller;
+    chat.ended = '';
+    chat.error = '';
+    chat.errorStatus = 0;
+    /* a resume while the dot is green (idle, reconnect, a first quick retry) stays silent */
+    if (!chat.live) setConn(chat, 'connecting', 'Connecting', chat.lastId ? `Resuming after event ${chat.lastId}` : 'Opening the stream');
+    try {
+      const res = await fetch(`${API}/chats/${enc(chat.id)}/stream`, { headers: authHeaders({ 'Last-Event-ID': String(chat.lastId) }), signal: controller.signal });
+      if (!res.ok) await readJson(res);
+      chat.refused429 = false;
+      await readSse(res.body, (id, data) => {
+        if (controller.signal.aborted) return false;
+        if (id) chat.lastId = Number(id) || chat.lastId;
+        let event;
+        try {
+          event = JSON.parse(data);
+        } catch (err) {
+          return;
+        }
+        onEvent(chat, event);
+      });
+      if (!chat.ended) chat.ended = 'closed';
+    } catch (err) {
+      if (controller.signal.aborted) return;
+      chat.ended = err.status ? 'refused' : 'dropped';
+      chat.error = err.message;
+      chat.errorStatus = err.status || 0;
+    } finally {
+      if (chat.controller === controller) chat.controller = null;
+    }
+    if (chat.wanted && !controller.signal.aborted) afterStream(chat);
+  };
+  /* Abort a chat's stream and any pending retry */
+  const closeStream = chat => {
+    clearTimeout(chat.retryTimer);
+    chat.retryTimer = 0;
+    if (chat.controller) chat.controller.abort();
+    chat.controller = null;
+  };
+
+  /* A 404 for a chat (GET, stream, messages or cancel): it was deleted, here or elsewhere. Stop following it, say so once,
+     drop it from the list and read the list again. */
+  const chatGone = chat => {
+    if (chat.gone) return;
+    chat.gone = true;
+    dropChat(chat);
+    const item = chat.id && listItemOf(chat.id);
+    if (item) item.remove();
+    if (isCurrent(chat)) {
+      startNewChat();
+      state.chat.msgs.textContent = '';
+      logNote(state.chat, 'This chat was deleted.', 'error');
+    }
+    if (state.email) loadChats(true);
+  };
+
+  /* Why the stream ended decides what comes next, always resuming after the last event id:
+     "idle" (10 quiet minutes) and "reconnect" (the 60-minute limit) reconnect at once, silently. A network drop, a 5xx or a
+     plain close retry with backoff (1, 2, 5, 10, then every 30 s). A 429 (too many open streams on the account) closes the least
+     recently opened other live chat, is said once and retried once (after 60 s when there was nothing to close). Any other 4xx is
+     shown once and not retried, and 404 means the chat is gone. Notes land in that chat's own conversation. */
+  const BACKOFF = [1, 2, 5, 10, 30];
+  const TOO_MANY = 'Too many open streams on this account; close other tabs or retry in a minute';
+  const afterStream = chat => {
+    if (chat.ended === 'idle' || chat.ended === 'reconnect') return openStream(chat);
+    if (chat.errorStatus === 404) return chatGone(chat);
+    if (chat.errorStatus === 429) {
+      setConn(chat, 'off', 'Disconnected', TOO_MANY);
+      if (chat.refused429) return;
+      chat.refused429 = true;
+      const other = pickToClose(chat);
+      if (other) stopLive(other);
+      logNote(chat, TOO_MANY, 'error');
+      chat.retryTimer = setTimeout(() => {
+        chat.retryTimer = 0;
+        openStream(chat);
+      }, other ? 3000 : 60000);
+      return;
+    }
+    if (chat.errorStatus >= 400 && chat.errorStatus < 500) {
+      setConn(chat, 'off', 'Disconnected', chat.error);
+      return logNote(chat, chat.error, 'error');
+    }
+    const delay = BACKOFF[Math.min(chat.retries, BACKOFF.length - 1)] * 1000;
+    chat.retries++;
+    if (chat.retries > 1) setConn(chat, 'retry', 'Reconnecting', `${chat.error || 'The stream ended'}. Reconnecting in ${delay / 1000} s`);
+    chat.retryTimer = setTimeout(() => {
+      chat.retryTimer = 0;
+      openStream(chat);
+    }, delay);
+  };
+  /* The ↻ next to the live dot: open the shown chat's stream again now. */
+  const reconnect = () => {
+    const chat = state.chat;
+    if (!chat.id) return;
+    chat.wanted = true;
+    chat.usedAt = Date.now();
+    chat.retries = 0;
+    chat.refused429 = false;
+    enforceLiveCap();
+    openStream(chat);
+  };
+
+  /* Read the chat list again (statuses, a new chat's title) a moment after a send or a live chat's answer ending: calls close
+     together share one read. ↻ and coming back to the page call loadChats directly. */
+  const scheduleListRefresh = () => {
+    clearTimeout(state.listTimer);
+    state.listTimer = setTimeout(() => {
+      if (state.email) loadChats(true);
+    }, 1500);
+  };
+  /* Muse's agent can go on working after a turn ends: new text in this chat means it is running again. */
+  const markRunning = chat => {
+    if (chat.status !== 'running') setChatStatus(chat, 'running');
+  };
+
+  /* ======================================================================
+     9. Sending, widgets and approvals
+     ====================================================================== */
+
+  const renderAttachments = () => {
+    const box = $('mu-attachments');
+    box.textContent = '';
+    state.attachments.forEach((a, i) => {
+      const label = a.status === 'uploading' ? `Uploading ${a.name}…` : a.status === 'error' ? `${a.name}: ${a.error}` : `${a.type}: ${a.name}`;
+      box.append(el('span', { class: `mu-chip mu-chip-${a.status}`, title: a.ref || a.name }, [
+        el('span', { text: label }),
+        el('button', { type: 'button', class: 'mu-icon-btn', text: '✕', 'aria-label': `Remove ${a.name}`, onclick: () => {
+          state.attachments.splice(i, 1);
+          renderAttachments();
+        } })
+      ]));
+    });
+  };
+  /* Attach local files: each one is uploaded right away. Images, videos and audio go up with POST /assets and are sent as asset ids,
+     any other file goes to workspace/your_files/<name> with POST /files and is sent as that path. */
+  const attachFiles = async files => {
+    const email = state.email;
+    if (!email) return showMsg($('mu-composer-msg'), 'Connect first.', 'error');
+    const jobs = [...files].map(file => {
+      const a = { name: file.name, type: 'file', status: 'uploading', ref: '', error: '' };
+      state.attachments.push(a);
+      return { file, a };
+    });
+    renderAttachments();
+    await Promise.all(jobs.map(async ({ file, a }) => {
+      try {
+        if (UPLOAD_TYPES.includes(file.type)) {
+          const r = await uploadFile(file);
+          Object.assign(a, { ref: r.assetId, type: r.type, status: 'ready' });
+        } else {
+          const r = await uploadToWorkspace(file, `workspace/your_files/${safeName(file.name)}`);
+          Object.assign(a, { ref: r.path, type: 'file', status: 'ready' });
+        }
+      } catch (err) {
+        Object.assign(a, { status: 'error', error: UPLOAD_TYPES.includes(file.type) ? err.message : filesError(err) });
+      }
+      if (email === state.email) renderAttachments();
+    }));
+  };
+  /* "Use in next message": an existing asset id or workspace path goes straight into the composer, no upload needed. */
+  const useInMessage = (att, msg) => {
+    if (!state.attachments.some(a => a.ref === att.ref)) state.attachments.push({ name: att.name, type: att.type, status: 'ready', ref: att.ref, error: '' });
+    renderAttachments();
+    showMsg(msg, 'Attached to your next message.', 'ok');
+    showTab('chat');
+    $('mu-input').focus();
+  };
+
+  /* POST /chats starts a chat (201 {chatId, messageId}). POST /chats/{chatId}/messages adds to one (202): any time, also while
+     Muse is answering. Either way the chat becomes live, so the answer streams in. */
+  const send = async () => {
+    /* Enter pressed twice must not send twice (or start two chats) */
+    if (state.sending) return;
+    const input = $('mu-input');
+    const text = input.value.trim();
+    const msg = $('mu-composer-msg');
+    if (!state.email) return showMsg(msg, 'Connect and pick an account first.', 'error');
+    if (!text) return input.focus();
+    if (state.attachments.some(a => a.status === 'uploading')) return showMsg(msg, 'Wait for the uploads to finish.', 'error');
+    if (state.attachments.some(a => a.status === 'error')) return showMsg(msg, 'Remove the files that failed to upload.', 'error');
+    const files = state.attachments.map(a => a.ref);
+    const body = files.length ? { message: text, files } : { message: text };
+    const email = state.email;
+    const chat = state.chat;
+    state.sending = true;
+    setBusy($('mu-send'), true);
+    showMsg(msg, '');
+    try {
+      let messageId;
+      if (!chat.id) {
+        const r = await api('POST', '/chats', Object.assign({ email }, body));
+        /* another account was picked meanwhile: this chat belongs to the old one, leave the page as it is now */
+        if (state.email !== email) return;
+        /* the new chat keeps its page nodes: it gets its id, joins state.chats and its stream replays it from the start */
+        Object.assign(chat, { id: r.chatId, fresh: true, title: text.slice(0, 60), created: new Date().toISOString() });
+        state.chats.set(chat.id, chat);
+        messageId = r.messageId;
+        $('mu-chat-list').prepend(chatItem({ chatId: chat.id, title: chat.title, status: 'running', created: chat.created }));
+        showMsg($('mu-chats-state'), '');
+        setHeader(chat, chat.title, 'running');
+        if (isCurrent(chat)) markCurrent(chat.id);
+        goLive(chat);
+      } else {
+        const r = await api('POST', `/chats/${enc(chat.id)}/messages`, body);
+        if (state.email !== email) return;
+        messageId = r.messageId;
+        goLive(chat);
+      }
+      if (messageId && !chat.bubbles.has(`user:${messageId}`)) {
+        showUserMessage(chat, messageId, text, files);
+        chat.bubbles.get(`user:${messageId}`).node.classList.add('mu-pending');
+      }
+      scheduleListRefresh();
+      /* the composer belongs to the chat on screen: clear it only if that is still this chat */
+      if (isCurrent(chat)) {
+        input.value = '';
+        autoGrow();
+        state.attachments = [];
+        renderAttachments();
+      }
+    } catch (err) {
+      if (state.email !== email) return;
+      if (err.status === 404 && chat.id) chatGone(chat);
+      showMsg(msg, err.message, 'error');
+    } finally {
+      state.sending = false;
+      setBusy($('mu-send'), false);
+      updateComposer();
+    }
+  };
+
+  /* POST /chats/{chatId}/cancel: stops the running turn ({cancelled: false} when nothing was running). */
+  const stop = async () => {
+    const chat = state.chat;
+    if (!chat.id) return;
+    setBusy($('mu-stop'), true);
+    try {
+      const r = await api('POST', `/chats/${enc(chat.id)}/cancel`);
+      setActivity(chat, r.cancelled ? 'Stopped.' : 'Nothing was running.', false);
+    } catch (err) {
+      if (err.status === 404) chatGone(chat);
+      else showMsg($('mu-composer-msg'), err.message, 'error');
+    } finally {
+      setBusy($('mu-stop'), false);
+      updateComposer();
+    }
+  };
+  const autoGrow = () => {
+    const input = $('mu-input');
+    input.style.height = 'auto';
+    input.style.height = `${Math.min(input.scrollHeight + 2, 180)}px`;
+  };
+
+  /* --- Widgets: interactive cards in an agent message --- */
+  /* kind "html": Muse's own little page (a chart, a card). It runs in a sandboxed iframe: scripts only, no same-origin, so it can
+     never read this page, the token or the API. Its styles use Muse's --hatch-widget-* colors, mapped here to the demo's theme.
+     A tiny script inside reports the content height and the iframe grows to fit (up to 1200 px). It sits in <head>, before the
+     widget's html, so an unclosed tag in the widget cannot swallow it. */
+  const WIDGET_THEME = `<style>
+:root { color-scheme: light dark; --hatch-widget-text: #1e2230; --hatch-widget-muted: #687086; --hatch-widget-accent: #7253ed; --hatch-widget-surface: #ffffff; --hatch-widget-surface-muted: #eff1f6; --hatch-widget-border: #dfe2ea; }
+@media (prefers-color-scheme: dark) { :root { --hatch-widget-text: #e7e8f0; --hatch-widget-muted: #9aa1b6; --hatch-widget-accent: #9d86ff; --hatch-widget-surface: #1c1e26; --hatch-widget-surface-muted: #252833; --hatch-widget-border: #31354a; } }
+html, body { margin: 0; background: transparent; color: var(--hatch-widget-text); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+</style>`;
+  const WIDGET_SIZER = '<script>(() => { const send = () => parent.postMessage(document.documentElement.scrollHeight, "*"); new ResizeObserver(send).observe(document.documentElement); addEventListener("load", send); send(); setTimeout(send, 300); setTimeout(send, 1500); })()<\/script>';
+  const widgetFrame = w => el('iframe', { class: 'mu-widget-frame', sandbox: 'allow-scripts', title: w.fallbackText || 'Muse widget', onload: e => { e.target.dataset.loadedAt = String(Date.now()); }, srcdoc: `<!doctype html><html><head><meta charset="utf-8">${WIDGET_THEME}${WIDGET_SIZER}</head><body>${w.html}</body></html>` });
+  /* Height reports from the widget iframes: only a number, only from one of our iframes' own window. */
+  const onWidgetHeight = e => {
+    if (typeof e.data !== 'number' || !Number.isFinite(e.data)) return;
+    const frame = [...document.querySelectorAll('iframe.mu-widget-frame')].find(f => f.contentWindow === e.source);
+    /* a frame in a hidden chat has no layout: keep its last height instead of collapsing it */
+    if (frame && frame.getClientRects().length) frame.style.height = `${Math.min(1200, Math.max(20, Math.ceil(e.data)))}px`;
+  };
+
+  /* A widget event (or messages[].widgets from GET /chats/{chatId}). kind "option" = quick-reply choices: one button per option,
+     plus a field for your own answer. kind "html" runs in its sandboxed iframe (above). Any other kind shows a card saying the
+     demo cannot display it yet, with Muse's text version underneath. One card per widgetId. A widget from GET whose
+     message the stream has not shown yet waits for that message, so it lands in the right bubble. */
+  const showWidget = (chat, w, fromDetails) => {
+    if (chat.widgets.has(w.widgetId)) return;
+    if (fromDetails && !chat.bubbles.has(w.messageId)) {
+      chat.laterWidgets.set(w.messageId, (chat.laterWidgets.get(w.messageId) || []).concat(w));
+      return;
+    }
+    chat.widgets.add(w.widgetId);
+    const b = bubble(chat, w.messageId || `widget-${w.widgetId}`, 'assistant');
+    const box = el('div', { class: 'mu-widget', role: 'group', 'aria-label': w.text || w.fallbackText || 'Quick replies' });
+    if (w.kind === 'option' && w.options && w.options.length) optionWidget(chat, w, box);
+    else if (w.kind === 'html' && w.html) {
+      box.append(widgetFrame(w));
+      b.node.classList.add('mu-wide');
+    } else if (w.kind === 'option' || w.kind === 'html') box.append(el('div', { class: 'mu-widget-text', text: w.text || w.fallbackText || '' }));
+    else {
+      /* any other kind (Muse's raw data in w.data): say so visibly, with Muse's own text version underneath */
+      box.classList.add('mu-widget-unknown');
+      box.append(el('div', { class: 'mu-widget-unknown-title', text: `Muse sent a ${w.kind || 'widget'} card this demo can't display yet` }));
+      if (w.fallbackText || w.text) box.append(el('div', { class: 'mu-widget-text', text: w.fallbackText || w.text }));
+    }
+    b.widgets.append(box);
+    scrollLog(chat);
+  };
+  /* Quick-reply buttons, one per option, plus a field for your own answer. Muse's plain-text version of the choices (w.text)
+     is not repeated above the buttons. */
+  const optionWidget = (chat, w, box) => {
+    const msg = el('div', { class: 'mu-item-msg', role: 'status' });
+    const buttons = w.options.map((label, index) => el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: label, 'aria-pressed': 'false', onclick: () => answerWidget(chat, w, { option: index }, buttons, form, msg) }));
+    const input = el('input', { type: 'text', placeholder: 'Or type your own answer', 'aria-label': 'Your own answer' });
+    const form = el('form', { class: 'mu-widget-form' }, [input, el('button', { type: 'submit', class: 'mu-btn mu-btn-sm', text: 'Reply' })]);
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      if (input.value.trim()) answerWidget(chat, w, { text: input.value.trim() }, buttons, form, msg);
+    });
+    box.append(el('div', { class: 'mu-actions' }, buttons), form, msg);
+  };
+
+  /* POST /chats/{chatId}/widgets/{widgetId} {option: index} or {text}: answers like a message (202). The reply streams as usual. */
+  const answerWidget = async (chat, w, answer, buttons, form, msg) => {
+    const controls = [...buttons, ...form.elements];
+    for (const c of controls) c.disabled = true;
+    showMsg(msg, 'Sending…');
+    try {
+      await api('POST', `/chats/${enc(chat.id)}/widgets/${enc(w.widgetId)}`, answer);
+      if (answer.option !== undefined) {
+        buttons[answer.option].classList.add('mu-chosen');
+        buttons[answer.option].setAttribute('aria-pressed', 'true');
+      }
+      showMsg(msg, answer.text ? `You answered: ${answer.text}` : '');
+      setChatStatus(chat, 'running');
+      goLive(chat);
+    } catch (err) {
+      showMsg(msg, err.message, 'error');
+      for (const c of controls) c.disabled = false;
+    }
+  };
+
+  /* --- Approvals: the agent asks before it acts --- */
+  const resolvedText = r => `${r.status ? statusLabel(r.status) : 'Answered'}${r.decision ? ` (${r.decision})` : ''}`;
+
+  /* A card for one approval: title, question, details, a countdown to expires, and one button per option. */
+  const approvalCard = (a, chatId) => {
+    const countdown = el('div', { class: 'mu-countdown' });
+    const actions = el('div', { class: 'mu-actions' });
+    const msg = el('div', { class: 'mu-item-msg', role: 'status' });
+    const card = el('div', { class: 'mu-approval', role: 'group', 'aria-label': a.title || 'Permission request' }, [
+      el('div', { class: 'mu-approval-title', text: a.title || 'Muse asks for permission' }),
+      a.question ? el('p', { text: a.question }) : null,
+      a.details && a.details.length ? el('dl', { class: 'mu-details' }, a.details.flatMap(d => [el('dt', { text: d.label }), el('dd', { text: d.value })])) : null,
+      countdown, actions, msg
+    ]);
+    const c = { card, msg, countdown, buttons: [], timer: 0, done: false };
+    for (const o of a.options || []) {
+      const button = el('button', { type: 'button', class: o.decision === 'deny' ? 'mu-btn mu-btn-sm' : 'mu-btn mu-btn-sm mu-btn-primary', onclick: () => decide(chatId, a.approvalId, o, c) },
+        [o.label || o.decision, o.decision === 'allow_always' ? el('span', { class: 'mu-badge', text: 'permanent' }) : null]);
+      if (!chatId) button.disabled = true;
+      c.buttons.push(button);
+      actions.append(button);
+    }
+    startCountdown(c, a.expires);
+    return c;
+  };
+  const finishCard = (c, text, kind) => {
+    c.done = true;
+    clearInterval(c.timer);
+    for (const b of c.buttons) b.disabled = true;
+    c.countdown.textContent = '';
+    c.card.classList.add('mu-approval-done');
+    showMsg(c.msg, text, kind);
+  };
+  const startCountdown = (c, expires) => {
+    const end = expires ? Date.parse(expires) : 0;
+    if (!end) return;
+    const tick = () => {
+      if (c.done) return;
+      const left = Math.round((end - Date.now()) / 1000);
+      if (left <= 0) finishCard(c, 'Expired: Muse stopped waiting for an answer.');
+      else c.countdown.textContent = `Answer within ${fmtLeft(left)}`;
+    };
+    tick();
+    if (!c.done) c.timer = setInterval(tick, 1000);
+  };
+
+  /* POST /chats/{chatId}/approvals/{approvalId} {decision}: one of the card's options. 409 means it was already answered or expired. */
+  const decide = async (chatId, approvalId, option, c) => {
+    for (const b of c.buttons) b.disabled = true;
+    showMsg(c.msg, 'Sending your answer…');
+    try {
+      await api('POST', `/chats/${enc(chatId)}/approvals/${enc(approvalId)}`, { decision: option.decision });
+      finishCard(c, `You chose "${option.label || option.decision}". Muse continues.`, 'ok');
+    } catch (err) {
+      if (err.status === 409 || err.status === 404) finishCard(c, err.message, 'error');
+      else {
+        showMsg(c.msg, err.message, 'error');
+        for (const b of c.buttons) b.disabled = false;
+      }
+    }
+  };
+
+  /* One card per approvalId: the stream and GET /chats/{chatId} can both report the same request. */
+  const showApproval = (chat, a, pinned) => {
+    if (chat.cards.has(a.approvalId)) return;
+    const c = approvalCard(a, chat.id);
+    chat.cards.set(a.approvalId, c);
+    const resolved = chat.resolved.get(a.approvalId);
+    if (resolved) finishCard(c, resolvedText(resolved));
+    (pinned ? chat.pinned : chat.msgs).append(c.card);
+    scrollLog(chat);
+  };
+  const resolveApproval = (chat, e) => {
+    chat.resolved.set(e.approvalId, e);
+    const c = chat.cards.get(e.approvalId);
+    if (c) finishCard(c, resolvedText(e), e.status === 'approved' ? 'ok' : undefined);
+  };
+
+  /* ======================================================================
+     10. Files, Workspace and Permissions tabs
+     ====================================================================== */
+
+  /* --- Files tab --- */
+  /* GET /assets: the account's files, newest first, filtered by type and origin. A page may hold fewer than limit: cursor continues it. */
+  const loadFiles = async reset => {
+    const email = state.email;
+    const seq = ++state.filesSeq;
+    const grid = $('mu-grid');
+    state.loaded.files = true;
+    if (reset) {
+      grid.textContent = '';
+      state.filesCursor = null;
+    }
+    $('mu-f-more').hidden = true;
+    showMsg($('mu-f-state'), 'Loading files…');
+    try {
+      const page = await api('GET', '/assets' + query({ email, type: $('mu-f-type').value, origin: $('mu-f-origin').value, limit: 24, cursor: state.filesCursor }));
+      /* a newer load (another filter, another account) started meanwhile: its result wins */
+      if (email !== state.email || seq !== state.filesSeq) return;
+      for (const asset of page.assets) grid.append(fileCard(asset, { tab: true }));
+      state.filesCursor = page.cursor || null;
+      $('mu-f-more').hidden = !state.filesCursor;
+      showMsg($('mu-f-state'), grid.children.length ? '' : state.filesCursor ? 'Nothing matched on this page. Press Load more to keep looking.' : 'No files match these filters.');
+    } catch (err) {
+      if (email === state.email && seq === state.filesSeq) showMsg($('mu-f-state'), err.message, 'error');
+    }
+  };
+
+  /* DELETE /assets/{assetId}: removes the file from the account's Muse workspace. */
+  const deleteAsset = async (asset, card, msg) => {
+    if (!await confirmInline(msg, 'Delete this file from Muse?', 'Delete')) return;
+    showMsg(msg, 'Deleting…');
+    try {
+      await api('DELETE', `/assets/${enc(asset.assetId)}`);
+      card.remove();
+      if (!$('mu-grid').children.length) showMsg($('mu-f-state'), 'No files match these filters.');
+    } catch (err) {
+      showMsg(msg, err.message, 'error');
+    }
+  };
+  const copyId = async (assetId, msg) => {
+    try {
+      await navigator.clipboard.writeText(assetId);
+      showMsg(msg, 'Asset id copied.', 'ok');
+    } catch (err) {
+      showMsg(msg, `Copy it by hand: ${assetId}`);
+    }
+  };
+  const addUploaded = r => {
+    $('mu-grid').prepend(fileCard({ assetId: r.assetId, type: r.type, mime: r.mime, bytes: r.bytes, origin: 'uploaded', created: new Date().toISOString() }, { tab: true }));
+    showMsg($('mu-f-state'), '');
+  };
+  const uploadFromDisk = async files => {
+    if (!state.email) return showMsg($('mu-f-msg'), 'Connect first.', 'error');
+    for (const file of files) {
+      showMsg($('mu-f-msg'), `Uploading ${file.name}…`);
+      try {
+        addUploaded(await uploadFile(file));
+        showMsg($('mu-f-msg'), `Uploaded ${file.name}.`, 'ok');
+      } catch (err) {
+        showMsg($('mu-f-msg'), err.message, 'error');
+      }
+    }
+  };
+  /* POST /assets with JSON {url}: useapi.net fetches the file from a public https link (image, video or audio, up to 50 MB). */
+  const uploadFromUrl = async () => {
+    const url = $('mu-f-url').value.trim();
+    if (!state.email) return showMsg($('mu-f-msg'), 'Connect first.', 'error');
+    if (!url) return $('mu-f-url').focus();
+    showMsg($('mu-f-msg'), 'Fetching the file…');
+    try {
+      addUploaded(await api('POST', '/assets' + query({ email: state.email }), { url }));
+      $('mu-f-url').value = '';
+      showMsg($('mu-f-msg'), 'Uploaded from the URL.', 'ok');
+    } catch (err) {
+      showMsg($('mu-f-msg'), err.message, 'error');
+    }
+  };
+
+  /* --- Files tab: Media or Workspace view --- */
+  const wsVisible = () => !$('mu-ws-view').hidden;
+  const loadFilesView = () => {
+    if (wsVisible() && !state.loaded.ws) loadWorkspace(state.ws.path);
+    if (!wsVisible() && !state.loaded.files) loadFiles(true);
+  };
+  const showFilesView = ws => {
+    $('mu-view-media').setAttribute('aria-selected', ws ? 'false' : 'true');
+    $('mu-view-ws').setAttribute('aria-selected', ws ? 'true' : 'false');
+    $('mu-view-media').tabIndex = ws ? -1 : 0;
+    $('mu-view-ws').tabIndex = ws ? 0 : -1;
+    $('mu-media-view').hidden = ws;
+    $('mu-ws-view').hidden = !ws;
+    if (state.email) loadFilesView();
+  };
+
+  /* --- Workspace view: a file browser over the account's Muse workspace --- */
+  const TEXT_EXT = ['txt', 'md', 'json', 'csv', 'tsv', 'py', 'js', 'ts', 'html', 'css', 'xml', 'yml', 'yaml', 'log', 'sh'];
+  const MEDIA_EXT = { image: ['jpg', 'jpeg', 'png', 'webp', 'gif'], video: ['mp4', 'm4v', 'mov', 'webm'], audio: ['mp3', 'wav', 'm4a', 'aac', 'ogg'] };
+  const ICONS = { directory: '\u{1F4C1}', image: '\u{1F5BC}', video: '\u{1F39E}', audio: '\u{1F3B5}', text: '\u{1F4C4}', file: '\u{1F4E6}' };
+  const TEXT_PREVIEW_BYTES = 200 * 1024;
+  const extOf = name => {
+    const m = /\.([A-Za-z0-9]+)$/.exec(name);
+    return m ? m[1].toLowerCase() : '';
+  };
+  const kindOf = name => {
+    const ext = extOf(name);
+    if (TEXT_EXT.includes(ext)) return 'text';
+    return ['image', 'video', 'audio'].find(t => MEDIA_EXT[t].includes(ext)) || 'file';
+  };
+
+  /* The path as clickable parts: workspace / your_files / … (and "Search results" while a search is shown). */
+  const renderCrumbs = () => {
+    const nav = $('mu-ws-crumbs');
+    nav.textContent = '';
+    const parts = state.ws.path.split('/');
+    parts.forEach((part, i) => {
+      if (i) nav.append(el('span', { class: 'mu-crumb-sep', 'aria-hidden': 'true', text: '/' }));
+      const last = i === parts.length - 1 && !state.ws.search;
+      nav.append(el('button', { type: 'button', class: 'mu-crumb', text: part, 'aria-current': last ? 'location' : null, onclick: () => loadWorkspace(parts.slice(0, i + 1).join('/')) }));
+    });
+    if (state.ws.search) nav.append(el('span', { class: 'mu-crumb-sep', 'aria-hidden': 'true', text: '/' }), el('span', { class: 'mu-crumb', 'aria-current': 'location', text: 'Search results' }));
+  };
+
+  /* GET /files?email=&path=: one folder's entries {name, path, type (file or directory), bytes, modified, assetId}. Folders first. */
+  const loadWorkspace = async path => {
+    const email = state.email;
+    state.loaded.ws = true;
+    state.ws.path = path;
+    state.ws.search = null;
+    renderCrumbs();
+    $('mu-ws-rows').textContent = '';
+    $('mu-ws-more').hidden = true;
+    showMsg($('mu-ws-state'), 'Loading\u2026');
+    try {
+      const data = await api('GET', '/files' + query({ email, path }));
+      if (email !== state.email || state.ws.path !== path || state.ws.search) return;
+      const entries = (data.entries || []).slice().sort((a, b) => a.type === b.type ? a.name.localeCompare(b.name) : a.type === 'directory' ? -1 : 1);
+      for (const e of entries) $('mu-ws-rows').append(wsRow(e, false));
+      showMsg($('mu-ws-state'), entries.length ? '' : 'This folder is empty.');
+    } catch (err) {
+      if (email === state.email) showMsg($('mu-ws-state'), filesError(err), 'error');
+    }
+  };
+
+  /* GET /files/search?email=&name=&extensions=&path=&limit=&offset=: files under the current folder whose name contains the text and/or has one of the extensions. */
+  const searchWorkspace = async more => {
+    const email = state.email;
+    if (!more) {
+      const name = $('mu-ws-name').value.trim();
+      const extensions = $('mu-ws-ext').value.trim();
+      if (!name && !extensions) return loadWorkspace(state.ws.path);
+      state.ws.search = { name, extensions, path: state.ws.path, offset: 0 };
+      $('mu-ws-rows').textContent = '';
+      renderCrumbs();
+    }
+    const search = state.ws.search;
+    $('mu-ws-more').hidden = true;
+    showMsg($('mu-ws-state'), 'Searching\u2026');
+    try {
+      const data = await api('GET', '/files/search' + query({ email, name: search.name, extensions: search.extensions, path: search.path, limit: 100, offset: search.offset }));
+      if (state.ws.search !== search || email !== state.email) return;
+      for (const e of data.entries) $('mu-ws-rows').append(wsRow(e, true));
+      search.offset += data.entries.length;
+      $('mu-ws-more').hidden = !data.hasMore;
+      const n = $('mu-ws-rows').children.length;
+      showMsg($('mu-ws-state'), n ? (typeof data.total === 'number' ? `${data.total} found` : '') : 'No files found.');
+    } catch (err) {
+      if (state.ws.search === search) showMsg($('mu-ws-state'), filesError(err), 'error');
+    }
+  };
+
+  /* One row: a folder opens on click, a file opens the preview. Files get Download, Use in chat and Delete. */
+  const wsRow = (e, showPath) => {
+    const dir = e.type === 'directory';
+    const kind = dir ? 'directory' : kindOf(e.name);
+    const msg = el('div', { class: 'mu-item-msg', role: 'status' });
+    const open = el('button', { type: 'button', class: 'mu-ws-name', title: e.path, onclick: () => dir ? loadWorkspace(e.path) : openPreview(e, row) }, [
+      el('span', { class: 'mu-ws-icon', 'aria-hidden': 'true', text: ICONS[kind] }),
+      el('span', {}, [e.name, showPath ? el('span', { class: 'mu-muted mu-ws-path', text: e.path }) : null])
+    ]);
+    const actions = el('td');
+    const row = el('tr', { 'data-path': e.path, 'data-asset-id': e.assetId }, [
+      el('td', {}, open),
+      el('td', { class: 'mu-nowrap', text: dir ? '' : fmtBytes(e.bytes) }),
+      el('td', { class: 'mu-nowrap', text: fmtShort(e.modified), title: fmtDate(e.modified) }),
+      actions
+    ]);
+    if (!dir) {
+      const download = el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Download', 'aria-label': `Download ${e.name}` });
+      download.addEventListener('click', () => downloadItem(e, download, msg));
+      actions.append(el('div', { class: 'mu-actions' }, [
+        download,
+        el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Use in chat', title: 'Attach this file to your next message', onclick: () => useInMessage({ ref: e.path, name: e.name, type: 'file' }, msg) }),
+        el('button', { type: 'button', class: 'mu-btn mu-btn-sm mu-btn-danger', text: 'Delete', 'aria-label': `Delete ${e.name}`, onclick: () => deleteWorkspaceFile(e, row, msg) })
+      ]), msg);
+    }
+    return row;
+  };
+
+  /* The preview pane: text files as plain text (the first 200 KB, never rendered), images, videos and audio as in Media. */
+  const openPreview = async (e, row) => {
+    const body = $('mu-ws-preview-body');
+    for (const r of $('mu-ws-rows').children) r.classList.toggle('mu-ws-sel', r === row);
+    state.ws.selected = e.path;
+    $('mu-ws-preview').hidden = false;
+    $('mu-ws-preview-title').textContent = e.name;
+    $('mu-ws-preview-title').title = e.path;
+    body.textContent = '';
+    const kind = kindOf(e.name);
+    if (kind === 'image' || kind === 'video' || kind === 'audio') return body.append(preview({ assetId: e.assetId || null, path: e.path, type: kind, bytes: e.bytes }));
+    if (kind !== 'text') return body.append(el('p', { class: 'mu-muted', text: 'No preview for this type of file. Use Download.' }));
+    body.append(el('div', { class: 'mu-state', text: 'Loading\u2026' }));
+    try {
+      const { text, cut } = await readTextStart(e.path, TEXT_PREVIEW_BYTES);
+      if (state.ws.selected !== e.path) return;
+      body.textContent = '';
+      body.append(el('pre', { class: 'mu-ws-text' }, el('code', { text })));
+      if (cut) body.append(el('div', { class: 'mu-item-msg', text: 'Showing the first 200 KB. Download it for the whole file.' }));
+    } catch (err) {
+      if (state.ws.selected !== e.path) return;
+      body.textContent = '';
+      body.append(el('div', { class: 'mu-msg-error', text: filesError(err) }));
+    }
+  };
+  /* GET /files/content?email=&path=: read only the start of the file, then cancel the rest of the download. */
+  const readTextStart = async (path, limit) => {
+    const res = await fetch(API + '/files/content' + query({ email: state.email, path }), { headers: authHeaders() });
+    if (!res.ok) await readJson(res);
+    const reader = res.body.getReader();
+    const bytes = new Uint8Array(limit);
+    let size = 0;
+    let cut = false;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const take = Math.min(value.byteLength, limit - size);
+      bytes.set(value.subarray(0, take), size);
+      size += take;
+      if (take < value.byteLength || size >= limit) {
+        cut = true;
+        reader.cancel().catch(() => 0);
+        break;
+      }
+    }
+    return { text: new TextDecoder().decode(bytes.subarray(0, size)), cut };
+  };
+
+  /* DELETE /files?email=&path=: deletes one file (folders cannot be deleted). */
+  const deleteWorkspaceFile = async (e, row, msg) => {
+    if (!await confirmInline(msg, 'Delete this file from the workspace?', 'Delete')) return;
+    showMsg(msg, 'Deleting\u2026');
+    try {
+      await api('DELETE', '/files' + query({ email: state.email, path: e.path }));
+      forgetItem(itemKey(e));
+      forgetItem(`file:${e.path}`);
+      row.remove();
+      if (state.ws.selected === e.path) $('mu-ws-preview').hidden = true;
+      if (!$('mu-ws-rows').children.length) showMsg($('mu-ws-state'), state.ws.search ? 'No files found.' : 'This folder is empty.');
+    } catch (err) {
+      showMsg(msg, filesError(err), 'error');
+    }
+  };
+
+  /* Upload into the folder shown: POST /files with path = <folder>/<file name>. A file of that name is replaced. */
+  const uploadHere = async files => {
+    if (!state.email) return showMsg($('mu-ws-msg'), 'Connect first.', 'error');
+    const folder = state.ws.path;
+    for (const file of files) {
+      showMsg($('mu-ws-msg'), `Uploading ${file.name}\u2026`);
+      try {
+        const path = `${folder}/${safeName(file.name)}`;
+        const r = await uploadToWorkspace(file, path);
+        /* the file may have been cached under its path or, for media, its asset id: forget both */
+        const row = [...$('mu-ws-rows').children].find(n => n.dataset.path === r.path || n.dataset.path === path);
+        for (const key of [`file:${r.path || path}`, r.assetId, row && row.dataset.assetId]) if (key) forgetItem(key);
+        showMsg($('mu-ws-msg'), `Uploaded to ${r.path}.`, 'ok');
+      } catch (err) {
+        showMsg($('mu-ws-msg'), filesError(err), 'error');
+      }
+    }
+    if (!state.ws.search && state.ws.path === folder) loadWorkspace(folder);
+  };
+
+  /* --- Permissions tab --- */
+  const MODES = { allow: 'Allow', ask: 'Ask (removes the rule)', deny: 'Deny' };
+  const accountPath = () => `/accounts/${enc(state.email)}`;
+
+  /* GET /accounts/{email}/permissions and GET /accounts/{email}/approvals, read side by side. */
+  const loadPerms = async () => {
+    const email = state.email;
+    const seq = ++state.permsSeq;
+    state.loaded.perms = true;
+    for (const c of state.permCards) clearInterval(c.timer);
+    state.permCards = [];
+    $('mu-p-rules').textContent = '';
+    $('mu-p-pending').textContent = '';
+    $('mu-p-decided').textContent = '';
+    showMsg($('mu-p-defaults-msg'), '');
+    for (const id of ['mu-p-rules-state', 'mu-p-pending-state', 'mu-p-decided-state']) showMsg($(id), 'Loading…');
+    const [perms, approvals] = await Promise.allSettled([api('GET', `${accountPath()}/permissions`), api('GET', `${accountPath()}/approvals${query({ limit: 50 })}`)]);
+    /* a newer refresh started meanwhile: only the newest one fills the tables */
+    if (email !== state.email || seq !== state.permsSeq) return;
+    if (perms.status === 'fulfilled') renderPermissions(perms.value);
+    else showMsg($('mu-p-rules-state'), perms.reason.message, 'error');
+    if (approvals.status === 'fulfilled') renderApprovals(approvals.value);
+    else for (const id of ['mu-p-pending-state', 'mu-p-decided-state']) showMsg($(id), approvals.reason.message, 'error');
+  };
+
+  const renderPermissions = data => {
+    if (data.defaults.web) $('mu-p-web').value = data.defaults.web;
+    if (data.defaults.connectors) $('mu-p-connectors').value = data.defaults.connectors;
+    for (const r of data.rules) $('mu-p-rules').append(ruleRow(r));
+    showMsg($('mu-p-rules-state'), data.rules.length ? '' : 'No rules yet. They appear when you answer a request with a permanent allow, or connect an app.');
+  };
+
+  /* POST /accounts/{email}/permissions {web, connectors}: auto_allow ("Ask for some actions") or always_ask. */
+  const saveDefaults = async () => {
+    const button = $('mu-p-save');
+    setBusy(button, true);
+    try {
+      const r = await api('POST', `${accountPath()}/permissions`, { web: $('mu-p-web').value, connectors: $('mu-p-connectors').value });
+      if (r.defaults.web) $('mu-p-web').value = r.defaults.web;
+      if (r.defaults.connectors) $('mu-p-connectors').value = r.defaults.connectors;
+      showMsg($('mu-p-defaults-msg'), 'Saved.', 'ok');
+    } catch (err) {
+      showMsg($('mu-p-defaults-msg'), err.message, 'error');
+    } finally {
+      setBusy(button, false);
+    }
+  };
+
+  const ruleRow = r => {
+    const msg = el('div', { class: 'mu-item-msg', role: 'status' });
+    const label = r.title || r.target || r.permissionId;
+    const mode = el('select', { 'aria-label': `Mode for ${label}` }, (r.modes.length ? r.modes : [r.mode]).map(m => el('option', { value: m, text: MODES[m] || m })));
+    mode.value = r.mode;
+    const remove = el('button', { type: 'button', class: 'mu-btn mu-btn-sm mu-btn-danger', text: 'Remove', 'aria-label': `Remove ${label}`, disabled: !r.revocable });
+    const row = el('tr', {}, [
+      el('td', { text: r.type }),
+      el('td', {}, [el('div', { text: r.title || '—' }), r.note ? el('div', { class: 'mu-muted', text: r.note }) : null]),
+      el('td', { class: 'mu-mono', text: r.target || '' }),
+      el('td', {}, mode),
+      el('td', {}, [remove, msg])
+    ]);
+    mode.addEventListener('change', () => setRuleMode(r, mode, row, msg));
+    remove.addEventListener('click', () => removeRule(r, row, msg));
+    return row;
+  };
+
+  /* POST /accounts/{email}/permissions/{permissionId} {mode}: allow or deny keeps the rule. ask is the default, so it removes the rule. */
+  const setRuleMode = async (r, select, row, msg) => {
+    select.disabled = true;
+    showMsg(msg, 'Saving…');
+    try {
+      const res = await api('POST', `${accountPath()}/permissions/${enc(r.permissionId)}`, { mode: select.value });
+      if (res.removed) {
+        row.remove();
+        showMsg($('mu-p-rules-state'), 'Rule removed: Muse asks again next time.', 'ok');
+      } else {
+        r.mode = res.mode;
+        showMsg(msg, 'Saved.', 'ok');
+      }
+    } catch (err) {
+      select.value = r.mode;
+      showMsg(msg, err.message, 'error');
+    } finally {
+      select.disabled = false;
+    }
+  };
+
+  /* DELETE /accounts/{email}/permissions/{permissionId}: removes the rule. */
+  const removeRule = async (r, row, msg) => {
+    if (!await confirmInline(msg, 'Remove this rule?', 'Remove')) return;
+    showMsg(msg, 'Removing…');
+    try {
+      await api('DELETE', `${accountPath()}/permissions/${enc(r.permissionId)}`);
+      row.remove();
+      showMsg($('mu-p-rules-state'), $('mu-p-rules').children.length ? 'Rule removed.' : 'Rule removed. No rules left.', 'ok');
+    } catch (err) {
+      showMsg(msg, err.message, 'error');
+    }
+  };
+
+  /* Each approval names the chat that asked (chatId): pending ones are answered in that chat, answered ones link to it. */
+  const renderApprovals = data => {
+    for (const a of data.pending) {
+      const c = approvalCard(a, a.chatId);
+      state.permCards.push(c);
+      if (a.chatId) c.card.append(el('div', { class: 'mu-actions' }, el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Open chat', onclick: () => openChatFromAnywhere(a.chatId) })));
+      $('mu-p-pending').append(c.card);
+    }
+    showMsg($('mu-p-pending-state'), data.pending.length ? '' : 'Nothing is waiting for an answer.');
+    for (const a of data.decided || []) {
+      $('mu-p-decided').append(el('tr', {}, [
+        el('td', {}, [el('div', { text: a.title || 'Request' }), a.question ? el('div', { class: 'mu-muted', text: a.question }) : null]),
+        el('td', {}, statusPill(a.status)),
+        el('td', { text: a.decision || '—' }),
+        el('td', { text: fmtDate(a.decided || a.requested) }),
+        el('td', {}, a.chatId ? el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Open chat', onclick: () => openChatFromAnywhere(a.chatId) }) : '—')
+      ]));
+    }
+    showMsg($('mu-p-decided-state'), (data.decided || []).length ? '' : 'No answered requests yet.');
+  };
+  const openChatFromAnywhere = chatId => {
+    showTab('chat');
+    openChat(chatId, null);
+  };
+
+  /* ======================================================================
+     11. Layout and boot
+     ====================================================================== */
+
+  /* --- Layout: the chat's Files panel opens and closes (closed by default when the app is under 1000 px wide) --- */
+  const showFilesPanel = open => {
+    if (open && isNarrow()) showChatsDrawer(false);
+    $('mu-cols').classList.toggle('mu-files-closed', !open);
+    $('mu-files-toggle').setAttribute('aria-expanded', open ? 'true' : 'false');
+  };
+  /* On a phone (the app under 640 px wide) the chat list and the files panel are drawers over the conversation, one at a time. */
+  const isNarrow = () => $('mu-app').clientWidth <= 640;
+  const showChatsDrawer = open => {
+    if (open && isNarrow()) showFilesPanel(false);
+    $('mu-cols').classList.toggle('mu-chats-open', open);
+    $('mu-chats-toggle').setAttribute('aria-expanded', open ? 'true' : 'false');
+  };
+
+  /* --- Layout: draggable splitters (mouse, touch, or arrow keys) --- */
+  const initSplitters = () => {
+    const grid = $('mu-cols');
+    for (const handle of grid.querySelectorAll('.mu-split')) {
+      const left = handle.dataset.side === 'left';
+      const pane = $(left ? 'mu-pane-chats' : 'mu-pane-files');
+      const setWidth = px => {
+        const other = $(left ? 'mu-pane-files' : 'mu-pane-chats').getBoundingClientRect().width;
+        const max = Math.max(160, grid.clientWidth - other - 16 - 260);
+        const width = Math.round(Math.max(160, Math.min(max, px)));
+        grid.style.setProperty(left ? '--mu-left' : '--mu-right', `${width}px`);
+        handle.setAttribute('aria-valuenow', String(width));
+      };
+      handle.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        handle.setPointerCapture(e.pointerId);
+        handle.classList.add('mu-dragging');
+        const startX = e.clientX;
+        const start = pane.getBoundingClientRect().width;
+        const move = ev => setWidth(left ? start + ev.clientX - startX : start - (ev.clientX - startX));
+        const up = () => {
+          handle.classList.remove('mu-dragging');
+          handle.removeEventListener('pointermove', move);
+          handle.removeEventListener('pointerup', up);
+          handle.removeEventListener('pointercancel', up);
+        };
+        handle.addEventListener('pointermove', move);
+        handle.addEventListener('pointerup', up);
+        handle.addEventListener('pointercancel', up);
+      });
+      handle.addEventListener('keydown', e => {
+        const dir = e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0;
+        if (!dir) return;
+        e.preventDefault();
+        setWidth(pane.getBoundingClientRect().width + (left ? dir : -dir) * (e.shiftKey ? 64 : 16));
+      });
+    }
+  };
+
+  const init = () => {
+    try {
+      const saved = sessionStorage.getItem(TOKEN_KEY);
+      if (saved) {
+        $('mu-token').value = saved;
+        $('mu-remember').checked = true;
+      }
+    } catch (err) { /* no storage: nothing remembered */ }
+    $('mu-connect-form').addEventListener('submit', e => {
+      e.preventDefault();
+      connect();
+    });
+    $('mu-remember').addEventListener('change', () => {
+      state.token = $('mu-token').value.trim();
+      rememberToken();
+    });
+    $('mu-account').addEventListener('change', e => selectAccount(e.target.value));
+    $('mu-usage-check').addEventListener('click', () => checkUsage(state.email, 'demand'));
+    window.addEventListener('resize', () => state.email && renderUsage());
+    document.addEventListener('visibilitychange', scheduleUsageTimer);
+    for (const t of TABS) $(`mu-tab-${t}`).addEventListener('click', () => showTab(t));
+    document.querySelector('.mu-tabs').addEventListener('keydown', e => {
+      const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!step) return;
+      const next = TABS[(TABS.indexOf(currentTab()) + step + TABS.length) % TABS.length];
+      showTab(next);
+      $(`mu-tab-${next}`).focus();
+    });
+    $('mu-chats-toggle').addEventListener('click', () => showChatsDrawer(!$('mu-cols').classList.contains('mu-chats-open')));
+    $('mu-chats-close').addEventListener('click', () => showChatsDrawer(false));
+    $('mu-files-close').addEventListener('click', () => showFilesPanel(false));
+    $('mu-files-toggle').addEventListener('click', () => showFilesPanel($('mu-cols').classList.contains('mu-files-closed')));
+    showFilesPanel($('mu-app').clientWidth >= 1000);
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Escape' || !isNarrow() || e.target.closest('.mu-confirm')) return;
+      showChatsDrawer(false);
+      showFilesPanel(false);
+    });
+    $('mu-new-chat').addEventListener('click', () => {
+      startNewChat();
+      showChatsDrawer(false);
+      $('mu-input').focus();
+    });
+    $('mu-refresh-chats').addEventListener('click', () => state.email && loadChats(true));
+    $('mu-chats-more').addEventListener('click', () => loadChats(false));
+    $('mu-reconnect').addEventListener('click', reconnect);
+    $('mu-send').addEventListener('click', send);
+    $('mu-stop').addEventListener('click', stop);
+    $('mu-input').addEventListener('input', autoGrow);
+    $('mu-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+        e.preventDefault();
+        send();
+      }
+    });
+    $('mu-attach').addEventListener('change', e => {
+      attachFiles(e.target.files);
+      e.target.value = '';
+    });
+    $('mu-log').addEventListener('scroll', onLogScroll);
+    window.addEventListener('blur', onWindowBlur);
+    document.addEventListener('focusin', e => {
+      if (!e.target.classList || !e.target.classList.contains('mu-widget-frame')) focusMemo.last = e.target;
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Tab') focusMemo.tabAt = Date.now();
+    });
+    /* the pointer over a widget: a focus that follows is your click */
+    $('mu-log').addEventListener('pointerover', e => {
+      focusMemo.hovered = e.target.classList && e.target.classList.contains('mu-widget-frame') ? e.target : null;
+    });
+    $('mu-f-type').addEventListener('change', () => loadFiles(true));
+    $('mu-f-origin').addEventListener('change', () => loadFiles(true));
+    $('mu-f-refresh').addEventListener('click', () => state.email && loadFiles(true));
+    $('mu-f-more').addEventListener('click', () => loadFiles(false));
+    $('mu-f-upload').addEventListener('change', e => {
+      uploadFromDisk([...e.target.files]);
+      e.target.value = '';
+    });
+    $('mu-view-media').addEventListener('click', () => showFilesView(false));
+    $('mu-view-ws').addEventListener('click', () => showFilesView(true));
+    document.querySelector('.mu-viewbar').addEventListener('keydown', e => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      const ws = !wsVisible();
+      showFilesView(ws);
+      $(ws ? 'mu-view-ws' : 'mu-view-media').focus();
+    });
+    $('mu-ws-search').addEventListener('submit', e => {
+      e.preventDefault();
+      if (state.email) searchWorkspace(false);
+    });
+    $('mu-ws-more').addEventListener('click', () => searchWorkspace(true));
+    $('mu-ws-refresh').addEventListener('click', () => state.email && (state.ws.search ? searchWorkspace(false) : loadWorkspace(state.ws.path)));
+    $('mu-ws-upload').addEventListener('change', e => {
+      uploadHere([...e.target.files]);
+      e.target.value = '';
+    });
+    $('mu-ws-preview-close').addEventListener('click', () => {
+      $('mu-ws-preview').hidden = true;
+      state.ws.selected = '';
+      for (const row of $('mu-ws-rows').children) row.classList.remove('mu-ws-sel');
+    });
+    $('mu-f-url-form').addEventListener('submit', e => {
+      e.preventDefault();
+      uploadFromUrl();
+    });
+    $('mu-p-refresh').addEventListener('click', () => state.email && loadPerms());
+    /* Back on the page: read the chat list again (at most every 30 s), so statuses and chats made or deleted elsewhere show up. */
+    const refreshOnReturn = () => {
+      if (document.visibilityState === 'visible' && state.email && !state.chatsLoading && Date.now() - state.chatsAt > 30000) loadChats(true);
+    };
+    document.addEventListener('visibilitychange', refreshOnReturn);
+    window.addEventListener('focus', refreshOnReturn);
+    setInterval(renderListAge, 30000);
+    window.addEventListener('message', onWidgetHeight);
+    for (let n = 1; n <= 10; n++) $('mu-live-max').append(el('option', { value: String(n), text: String(n) }));
+    let savedMax = 5;
+    try {
+      savedMax = Number(localStorage.getItem(LIVE_KEY)) || 5;
+    } catch (err) { /* no storage: the default */ }
+    setLiveMax(savedMax);
+    $('mu-live-max').addEventListener('change', e => setLiveMax(e.target.value));
+    $('mu-p-save').addEventListener('click', saveDefaults);
+    initSplitters();
+    startNewChat();
+    if ($('mu-token').value) connect();
+  };
+  init();
+})();
+</script>
+</body>
+</html>
