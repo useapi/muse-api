@@ -189,12 +189,15 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 .mu-btn.mu-chosen, .mu-btn.mu-chosen:disabled { opacity: 1; background: var(--mu-accent); border-color: var(--mu-accent); color: var(--mu-on-accent); }
 .mu-media { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
 .mu-app-frame { width: 100%; height: 480px; border: 1px solid rgba(127, 127, 127, 0.3); border-radius: 8px; background: #fff; margin-top: 8px; }
+.mu-podcast-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.mu-podcast-cover { width: 44px; height: 44px; border-radius: 8px; overflow: hidden; flex: none; display: flex; align-items: center; justify-content: center; font-size: 26px; background: rgba(127, 127, 127, 0.15); }
+.mu-podcast-cover img { width: 100%; height: 100%; object-fit: cover; }
+.mu-podcast-label { font-size: 12px; color: var(--mu-muted); }
+.mu-doc-preview { margin: 0; padding: 10px 12px; max-height: 220px; overflow: auto; white-space: pre-wrap; font-size: 12px; line-height: 1.45; background: rgba(127, 127, 127, 0.08); border-radius: 8px; text-align: left; }
 .mu-preview-icon { font-size: 56px; line-height: 1; display: flex; align-items: center; justify-content: center; min-height: 120px; }
 .mu-reacts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; align-items: center; }
 .mu-reacts:empty { display: none; }
 .mu-react { font-size: 13px; line-height: 1; padding: 3px 7px; border-radius: 999px; background: rgba(127, 127, 127, 0.18); }
-.mu-react-btn { font-size: 13px; line-height: 1; padding: 3px 7px; border-radius: 999px; border: 1px solid rgba(127, 127, 127, 0.35); background: transparent; color: inherit; cursor: pointer; opacity: 0.55; }
-.mu-react-btn:hover, .mu-react-btn[aria-pressed="true"] { opacity: 1; }
 .mu-figure { margin: 0; }
 .mu-figure .mu-preview { min-height: 140px; }
 .mu-figure .mu-preview img, .mu-figure .mu-preview video { max-height: 360px; }
@@ -785,25 +788,45 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     io.observe(node);
   };
   /* A preview box: the image, video or audio from a blob URL once it scrolls into view. Large files wait for a click. */
+  /* GET /assets/{podcastId}?part=cover: a podcast's cover as a blob URL, cached like every other preview (state.urls) */
+  const podcastCover = podcastId => {
+    const key = `${podcastId}#cover`;
+    if (!state.urls.has(key)) {
+      const pending = fetch(`${API}/assets/${pathId(podcastId)}?part=cover`, { headers: authHeaders() })
+        .then(async res => { if (!res.ok) await readJson(res); return URL.createObjectURL(await res.blob()); });
+      pending.catch(() => state.urls.delete(key));
+      state.urls.set(key, pending);
+    }
+    return state.urls.get(key);
+  };
   const preview = asset => {
     const box = el('div', { class: 'mu-preview' });
     /* the Library's other kinds: a document or web app shows its icon; a podcast its cover, with its audio on demand */
     if (asset.type && !MEDIA_TYPES.includes(asset.type)) {
+      /* a text document (md, txt, csv…): its first lines, like Muse's file card */
+      const ext = asset.assetId ? extOf(fileNameOf(asset.assetId)) : '';
+      if (asset.type === 'document' && asset.assetId && TEXT_EXT.includes(ext)) {
+        const showText = async () => {
+          box.textContent = '';
+          try {
+            const text = await (await itemBlob(asset)).text();
+            box.append(el('pre', { class: 'mu-doc-preview', text: text.slice(0, 1200) + (text.length > 1200 ? '\n…' : '') }));
+          } catch (err) {
+            box.append(el('div', { class: 'mu-preview-icon', text: KIND_ICON.document, 'aria-hidden': 'true' }));
+          }
+        };
+        /* a large document is fetched only on demand (the preview shows its first lines only) */
+        if (asset.bytes > AUTO_PREVIEW_BYTES) box.append(el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: `Load preview (${fmtBytes(asset.bytes)})`, onclick: showText }));
+        else whenVisible(box, showText);
+        return box;
+      }
       if (asset.type !== 'podcast' || !asset.assetId) {
         box.append(el('div', { class: 'mu-preview-icon', text: KIND_ICON[asset.type] || '\u{1F4E6}', 'aria-hidden': 'true' }));
         return box;
       }
       whenVisible(box, async () => {
         try {
-          /* the cover's blob URL is cached like every other preview (state.urls), so a refresh does not fetch it again */
-          const key = `${asset.assetId}#cover`;
-          if (!state.urls.has(key)) {
-            const pending = fetch(`${API}/assets/${pathId(asset.assetId)}?part=cover`, { headers: authHeaders() })
-              .then(async res => { if (!res.ok) await readJson(res); return URL.createObjectURL(await res.blob()); });
-            pending.catch(() => state.urls.delete(key));
-            state.urls.set(key, pending);
-          }
-          box.prepend(el('img', { src: await state.urls.get(key), alt: `${asset.name || 'Podcast'} cover` }));
+          box.prepend(el('img', { src: await podcastCover(asset.assetId), alt: `${asset.name || 'Podcast'} cover` }));
         } catch (err) {
           box.prepend(el('div', { class: 'mu-preview-icon', text: KIND_ICON.podcast, 'aria-hidden': 'true' }));
         }
@@ -1574,7 +1597,10 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     const msg = el('span', { class: 'mu-item-msg' });
     const download = el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Download' });
     download.addEventListener('click', () => downloadItem(asset, download, msg));
-    b.media.append(el('figure', { class: 'mu-figure' }, [preview(asset), el('figcaption', { class: 'mu-figcap' }, [el('span', { text: `${fileNameOf(asset.assetId)} · ${fmtBytes(asset.bytes)}` }), msg, download])]));
+    /* a podcast episode (podcastId): its cover and a Podcast label above the player, as Muse's app shows it */
+    const head = e.podcastId ? el('div', { class: 'mu-podcast-head' }, [el('div', { class: 'mu-podcast-cover' }), el('span', { class: 'mu-podcast-label', text: 'Podcast' })]) : null;
+    if (head) podcastCover(e.podcastId).then(url => head.firstChild.append(el('img', { src: url, alt: 'Podcast cover' })), () => { head.firstChild.textContent = '\u{1F399}'; });
+    b.media.append(el('figure', { class: 'mu-figure' }, [...(head ? [head] : []), preview(asset), el('figcaption', { class: 'mu-figcap' }, [el('span', { text: `${fileNameOf(asset.assetId)} · ${fmtBytes(asset.bytes)}` }), msg, download])]));
     scrollLog(chat);
   };
 
@@ -1716,7 +1742,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
         showBrowser(chat, e, false);
         break;
       case 'turn.done':
-        for (const b of chat.bubbles.values()) { b.node.classList.remove('mu-typing'); renderReactions(chat, b.key.replace(/^user:/, '')); }
+        for (const b of chat.bubbles.values()) b.node.classList.remove('mu-typing');
         setChatStatus(chat, e.status);
         setActivity(chat, `${statusLabel(e.status)}${e.files && e.files.length ? `, ${e.files.length} file(s)` : ''}`, false);
         scheduleListRefresh();
@@ -2138,7 +2164,8 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     }
   };
 
-  /* --- Reactions: Muse reacts to your messages (👍, 🫶); you can 👍 Muse's. A reaction event carries the message's whole
+  /* --- Reactions: Muse reacts to your messages (👍, 🫶 …). Reacting yourself is in the API (POST /chats/{chatId}/messages/
+     {messageId}/reactions, any emoji); the demo leaves it out — Muse's own app offers a full emoji picker. A reaction event carries the message's whole
      current set, so the row is redrawn from it. Kept per message until its bubble exists (history may arrive first). --- */
   const showReactions = (chat, messageId, list) => {
     chat.reactions.set(messageId, Array.isArray(list) ? list : []);
@@ -2150,20 +2177,6 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     const list = chat.reactions.get(messageId) || [];
     if (!b.reacts) { b.reacts = el('div', { class: 'mu-reacts' }); b.node.append(b.reacts); }
     b.reacts.replaceChildren(...list.map(e => el('span', { class: 'mu-react', text: e })));
-    /* Muse's messages: a 👍 you can toggle, once the message has finished streaming (as Muse's app) */
-    if (!b.key.startsWith('user:') && !b.node.classList.contains('mu-typing')) {
-      const mine = list.includes('👍');
-      b.reacts.append(el('button', { type: 'button', class: 'mu-react-btn', text: '👍', title: mine ? 'Remove your 👍' : 'React with 👍', 'aria-pressed': mine ? 'true' : 'false', onclick: () => reactTo(chat, messageId, '👍') }));
-    }
-  };
-  /* POST /chats/{chatId}/messages/{messageId}/reactions {emoji}: a toggle; answers the message's reactions */
-  const reactTo = async (chat, messageId, emoji) => {
-    try {
-      const r = await api('POST', `/chats/${pathId(chat.id)}/messages/${pathId(messageId)}/reactions`, { emoji });
-      showReactions(chat, messageId, r.reactions);
-    } catch (err) {
-      logNote(chat, err.message, 'error');
-    }
   };
 
   /* --- Browser tasks: Muse working in a web browser on its computer --- */
