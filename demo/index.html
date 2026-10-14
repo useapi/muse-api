@@ -99,8 +99,9 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 .mu-top > .mu-tabs { margin-left: auto; }
 .mu-acct { display: flex; flex-direction: column; gap: 2px; flex: 0 1 380px; min-width: min(220px, 100%); }
 #mu-account { width: 100%; min-width: 0; }
-.mu-usage { display: flex; align-items: center; gap: 2px; min-width: 0; font-size: 11.5px; color: var(--mu-muted); }
-.mu-usage[hidden] { display: none; }
+.mu-usage { display: flex; align-items: center; gap: 2px; min-width: 0; min-height: 16px; font-size: 11.5px; color: var(--mu-muted); }
+/* hidden but still taking its line: the header keeps one height before and after the usage arrives (no layout shift) */
+.mu-usage[hidden] { display: flex; visibility: hidden; }
 .mu-usage-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mu-link-btn:disabled { opacity: 0.4; cursor: default; background: transparent; }
 .mu-tabs { display: flex; gap: 2px; max-width: 100%; padding: 3px; border-radius: 10px; background: var(--mu-sunk); overflow-x: auto; scrollbar-width: none; }
@@ -187,6 +188,8 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 .mu-widget-form input { flex: 1; min-width: 0; }
 .mu-btn.mu-chosen, .mu-btn.mu-chosen:disabled { opacity: 1; background: var(--mu-accent); border-color: var(--mu-accent); color: var(--mu-on-accent); }
 .mu-media { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.mu-app-frame { width: 100%; height: 480px; border: 1px solid rgba(127, 127, 127, 0.3); border-radius: 8px; background: #fff; margin-top: 8px; }
+.mu-preview-icon { font-size: 56px; line-height: 1; display: flex; align-items: center; justify-content: center; min-height: 120px; }
 .mu-reacts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; align-items: center; }
 .mu-reacts:empty { display: none; }
 .mu-react { font-size: 13px; line-height: 1; padding: 3px 7px; border-radius: 999px; background: rgba(127, 127, 127, 0.18); }
@@ -390,12 +393,12 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
   </section>
   <section id="mu-panel-files" class="mu-tabpanel mu-scroll" role="tabpanel" aria-labelledby="mu-tab-files" hidden>
     <div class="mu-tabs mu-viewbar" role="tablist" aria-label="File views">
-      <button id="mu-view-media" class="mu-tab" type="button" role="tab" aria-controls="mu-media-view" aria-selected="true">Media</button>
+      <button id="mu-view-media" class="mu-tab" type="button" role="tab" aria-controls="mu-media-view" aria-selected="true">Library</button>
       <button id="mu-view-ws" class="mu-tab" type="button" role="tab" aria-controls="mu-ws-view" aria-selected="false" tabindex="-1">Workspace</button>
     </div>
     <div id="mu-media-view" role="tabpanel" aria-labelledby="mu-view-media">
     <div class="mu-toolbar">
-      <label>Type<select id="mu-f-type"><option value="">All types</option><option value="image">Images</option><option value="video">Videos</option><option value="audio">Audio</option></select></label>
+      <label>Type<select id="mu-f-type"><option value="">All types</option><option value="image">Images</option><option value="video">Videos</option><option value="audio">Audio</option><option value="document">Documents</option><option value="web">Web apps</option><option value="podcast">Podcasts</option></select></label>
       <label>Origin<select id="mu-f-origin"><option value="">All origins</option><option value="uploaded">Uploaded</option><option value="generated">Generated</option><option value="made">Made by the agent</option></select></label>
       <button id="mu-f-refresh" class="mu-btn" type="button">Refresh</button>
       <span class="mu-grow"></span>
@@ -632,8 +635,16 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
   const ACTIVITY_LABELS = { 'Needs approval': 'Waiting for your approval' };
   const fmtLeft = s => s >= 3600 ? `${Math.floor(s / 3600)}h ${Math.floor(s % 3600 / 60)}m` : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
   /* An asset id ends with "-<type>:<file name>". Files the agent saved elsewhere carry their folder with "~" between parts. */
-  const fileNameOf = ref => ref.startsWith('workspace/') ? ref.split('/').pop() : ref.replace(/^.*-(image|video|audio):/, '').split('~').pop();
-  const typeOf = assetId => (/-(image|video|audio):/.exec(assetId) || [])[1] || 'file';
+  /* a file name from an asset id: media and documents carry it; a web app downloads as <slug>.html, a podcast as <slug>.mp3 */
+  const fileNameOf = ref => {
+    if (ref.startsWith('workspace/')) return ref.split('/').pop();
+    const lib = /-(web|podcast):(?:space|podcast)~(.+)$/.exec(ref);
+    if (lib) return `${lib[2]}.${lib[1] === 'web' ? 'html' : 'mp3'}`;
+    return ref.replace(/^.*-(image|video|audio|document):/, '').split('~').pop();
+  };
+  const typeOf = assetId => (/-(image|video|audio|document|web|podcast):/.exec(assetId) || [])[1] || 'file';
+  const MEDIA_TYPES = ['image', 'video', 'audio'];
+  const KIND_ICON = { document: '\u{1F4C4}', web: '\u{1F310}', podcast: '\u{1F399}' };
   const query = params => {
     const q = new URLSearchParams();
     for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== null && v !== '') q.set(k, v);
@@ -684,6 +695,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
   /* A file is an item: {assetId} (media) or {path} (any workspace file). One Blob per item, so a preview and a Download share one download. */
   const itemKey = item => item.assetId || `file:${item.path}`;
   const itemName = item => item.assetId ? fileNameOf(item.assetId) : item.path.split('/').pop();
+  /* (a web app's or podcast's display name is item.name; its download name comes from the id, with the right extension) */
   /* GET /assets/{assetId} for media, GET /files/content?email=&path= for a workspace file: the bytes, fetched with the token. */
   const itemBlob = item => {
     const key = itemKey(item);
@@ -775,6 +787,36 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
   /* A preview box: the image, video or audio from a blob URL once it scrolls into view. Large files wait for a click. */
   const preview = asset => {
     const box = el('div', { class: 'mu-preview' });
+    /* the Library's other kinds: a document or web app shows its icon; a podcast its cover, with its audio on demand */
+    if (asset.type && !MEDIA_TYPES.includes(asset.type)) {
+      if (asset.type !== 'podcast' || !asset.assetId) {
+        box.append(el('div', { class: 'mu-preview-icon', text: KIND_ICON[asset.type] || '\u{1F4E6}', 'aria-hidden': 'true' }));
+        return box;
+      }
+      whenVisible(box, async () => {
+        try {
+          /* the cover's blob URL is cached like every other preview (state.urls), so a refresh does not fetch it again */
+          const key = `${asset.assetId}#cover`;
+          if (!state.urls.has(key)) {
+            const pending = fetch(`${API}/assets/${pathId(asset.assetId)}?part=cover`, { headers: authHeaders() })
+              .then(async res => { if (!res.ok) await readJson(res); return URL.createObjectURL(await res.blob()); });
+            pending.catch(() => state.urls.delete(key));
+            state.urls.set(key, pending);
+          }
+          box.prepend(el('img', { src: await state.urls.get(key), alt: `${asset.name || 'Podcast'} cover` }));
+        } catch (err) {
+          box.prepend(el('div', { class: 'mu-preview-icon', text: KIND_ICON.podcast, 'aria-hidden': 'true' }));
+        }
+      });
+      const play = el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Load audio' });
+      play.addEventListener('click', async () => {
+        setBusy(play, true);
+        try { play.replaceWith(el('audio', { src: await itemUrl(asset), controls: true, autoplay: true })); }
+        catch (err) { play.textContent = err.message; }
+      });
+      box.append(play);
+      return box;
+    }
     const load = async () => {
       box.textContent = '';
       box.classList.add('mu-loading');
@@ -796,16 +838,20 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
   /* A file card, used by the chat's Files panel and the Files tab: preview, name, details and actions. */
   const fileCard = (asset, options) => {
     const msg = el('div', { class: 'mu-item-msg', role: 'status' });
-    const name = fileNameOf(asset.assetId);
-    const meta = [asset.type || typeOf(asset.assetId), fmtBytes(asset.bytes), asset.origin, fmtDate(asset.created)].filter(Boolean).join(' · ');
+    const name = asset.name || (asset.assetId ? fileNameOf(asset.assetId) : 'Untitled');
+    const kind = asset.type || typeOf(asset.assetId);
+    const media = MEDIA_TYPES.includes(kind);
+    const secs = typeof asset.duration === 'number' ? `${Math.round(asset.duration)} s` : '';
+    const meta = [kind === 'web' ? 'web app' : kind, !media && asset.format, fmtBytes(asset.bytes), secs, asset.origin, fmtDate(asset.updated || asset.created)].filter(Boolean).join(' · ');
     const download = el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Download', 'aria-label': `Download ${name}` });
     download.addEventListener('click', () => downloadItem(asset, download, msg));
-    const actions = el('div', { class: 'mu-actions' }, [
+    /* a kind Muse reports that the API has no id for yet is listed only; media can be attached to a message */
+    const actions = el('div', { class: 'mu-actions' }, asset.assetId ? [
       download,
-      el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: options.tab ? 'Use in chat' : 'Use in next message', title: 'Attach this file to your next message', onclick: () => useInMessage({ ref: asset.assetId, name, type: asset.type || typeOf(asset.assetId) }, msg) })
-    ]);
+      ...(media ? [el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: options.tab ? 'Use in chat' : 'Use in next message', title: 'Attach this file to your next message', onclick: () => useInMessage({ ref: asset.assetId, name, type: kind }, msg) })] : [])
+    ] : []);
     const card = el('div', { class: 'mu-file', role: 'listitem' }, [preview(asset), el('div', { class: 'mu-file-name', title: name, text: name }), el('div', { class: 'mu-file-meta', text: meta }), actions, msg]);
-    if (options.tab) {
+    if (options.tab && asset.assetId) {
       actions.append(
         el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Copy id', onclick: () => copyId(asset.assetId, msg) }),
         el('button', { type: 'button', class: 'mu-btn mu-btn-sm mu-btn-danger', text: 'Delete', 'aria-label': `Delete ${name}`, onclick: () => deleteAsset(asset, card, msg) })
@@ -2018,6 +2064,7 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
       box.append(widgetFrame(w));
       b.node.classList.add('mu-wide');
     } else if (w.kind === 'option' || w.kind === 'html') box.append(el('div', { class: 'mu-widget-text', text: w.text || w.fallbackText || '' }));
+    else if (w.kind === 'space_build_completed') appWidget(w, box, b);
     else {
       /* any other kind (Muse's raw data in w.data): say so visibly, with Muse's own text version underneath */
       box.classList.add('mu-widget-unknown');
@@ -2026,6 +2073,36 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     }
     b.widgets.append(box);
     scrollLog(chat);
+  };
+  /* A web app the agent built (kind space_build_completed): its name and Muse's summary, Open app and Download. The app is
+     GET /assets/{assetId} (one self-contained HTML file); Open app runs it right here, in a sandboxed iframe (scripts only,
+     never this page's origin: it cannot read the token). */
+  const appWidget = (w, box, b) => {
+    const msg = el('div', { class: 'mu-item-msg', role: 'status' });
+    box.classList.add('mu-widget-app');
+    box.append(el('div', { class: 'mu-widget-unknown-title', text: `\u{1F310} ${w.name || 'Web app'}${w.status && w.status !== 'succeeded' ? ` (${w.status})` : ''}` }));
+    if (w.summary) box.append(el('div', { class: 'mu-widget-text', text: w.summary }));
+    if (!w.assetId) return box.append(el('div', { class: 'mu-widget-text', text: w.fallbackText || w.text || '' }));
+    const item = { assetId: w.assetId };
+    const open = el('button', { type: 'button', class: 'mu-btn mu-btn-sm mu-btn-primary', text: 'Open app' });
+    const download = el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Download' });
+    open.addEventListener('click', async () => {
+      setBusy(open, true);
+      try {
+        /* always the current build (the agent may have rebuilt the app since) */
+        refreshItem(itemKey(item));
+        const html = await (await itemBlob(item)).text();
+        const frame = el('iframe', { class: 'mu-app-frame', sandbox: 'allow-scripts', title: w.name || 'Web app', srcdoc: html });
+        open.closest('.mu-actions').after(frame);
+        open.remove();
+        b.node.classList.add('mu-wide');
+      } catch (err) {
+        showMsg(msg, err.message, 'error');
+        setBusy(open, false);
+      }
+    });
+    download.addEventListener('click', () => downloadItem(item, download, msg));
+    box.append(el('div', { class: 'mu-actions' }, [open, download]), msg);
   };
   /* Quick-reply buttons, one per option, plus a field for your own answer. Muse's plain-text version of the choices (w.text)
      is not repeated above the buttons. */
