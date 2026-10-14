@@ -2284,7 +2284,7 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
       renderBrowser(c);
     }
   };
-  /* POST …/release: hand control back to Muse. 409 = you do not hold control (or the browser is closed): nothing to give back. */
+  /* POST …/release: hand control back to Muse (200 also when Muse already has it). 409 = the browser is closed. */
   const releaseBrowser = async c => {
     setBusy(c.release, true);
     try {
@@ -2292,7 +2292,7 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
       c.state = Object.assign({}, c.state, { controlOwner: r.controlOwner || 'agent' });
       showMsg(c.msg, 'Control is back with Muse.', 'ok');
     } catch (err) {
-      showMsg(c.msg, err.status === 409 ? 'Nothing to give back: you do not have control of this browser (Muse has it, or it is closed).' : err.message, err.status === 409 ? undefined : 'error');
+      showMsg(c.msg, err.status === 409 ? 'This browser is closed.' : err.message, err.status === 409 ? undefined : 'error');
     } finally {
       setBusy(c.release, false);
       renderBrowser(c);
