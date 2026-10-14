@@ -2050,8 +2050,8 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
   /* --- Browser tasks: Muse working in a web browser on its computer --- */
   /* One card per browser task (taskId), updated in place by each `browser` stream event and by GET /chats/{chatId}
      (browsers[]). A task is state, not a message: every stream open sends its latest state again, so an update older than the
-     one shown is ignored. The live view (watching or taking over the browser) is not in the API yet: open the chat in Muse's
-     app for that. */
+     one shown is ignored. "Watch live" mints a single-use viewer link (POST …/browser/{taskId}/viewer) and opens the hosted
+     noVNC page in a new tab — watch, or take control from inside the viewer. */
   const fmtWhen = iso => iso ? new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
   const showBrowser = (chat, state, fromDetails) => {
     let c = chat.browsers.get(state.taskId);
@@ -2073,14 +2073,14 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     c.step = el('div', { class: 'mu-browser-step' });
     c.details = el('dl', { class: 'mu-details' });
     c.msg = el('div', { class: 'mu-item-msg', role: 'status' });
+    c.watch = el('button', { type: 'button', class: 'mu-btn mu-btn-sm mu-btn-primary', text: 'Watch live', title: 'Open a live view of this browser in a new tab (a single-use link; take control from inside the viewer)', onclick: () => watchBrowser(c) });
     c.refresh = el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Refresh', onclick: () => refreshBrowser(c) });
     c.release = el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Give back', title: 'Give control of the browser back to Muse', onclick: () => releaseBrowser(c) });
     c.stop = el('button', { type: 'button', class: 'mu-btn mu-btn-sm mu-btn-danger', text: 'Stop', title: 'Close this browser task', onclick: () => stopBrowser(c) });
     c.card = el('div', { class: 'mu-browser', role: 'group', 'aria-label': 'Browser task' }, [
       el('div', { class: 'mu-browser-head' }, [c.title, c.pill]),
       c.step, c.details,
-      el('div', { class: 'mu-widget-text', text: 'The live view is not available yet: open the chat in Muse\'s app to watch.' }),
-      el('div', { class: 'mu-actions' }, [c.refresh, c.release, c.stop]), c.msg
+      el('div', { class: 'mu-actions' }, [c.watch, c.refresh, c.release, c.stop]), c.msg
     ]);
     return c;
   };
@@ -2100,8 +2100,25 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     if (!b.ended && b.previewAvailable && b.parkedExpiresAt) rows.push(['Parked', `until ${fmtWhen(b.parkedExpiresAt)}`]);
     c.details.replaceChildren(...rows.flatMap(([label, value]) => [el('dt', { text: label }), el('dd', {}, value)]));
     c.card.classList.toggle('mu-browser-ended', !!b.ended);
+    c.watch.disabled = !!b.ended || !b.previewAvailable;
+    c.refresh.disabled = !!b.ended;
     c.release.disabled = !!b.ended;
     c.stop.disabled = !!b.ended;
+  };
+  /* POST …/viewer {mode:'control'} → {url}: a single-use link to the hosted noVNC page; open it in a new tab. The viewer
+     page has its own Take control / Release buttons; one viewer per browser task at a time (409 while one is open). */
+  const watchBrowser = async c => {
+    setBusy(c.watch, true);
+    try {
+      const r = await api('POST', `/chats/${pathId(c.chat.id)}/browser/${pathId(c.taskId)}/viewer`, { mode: 'control' });
+      if (!r.url || !/^https:\/\/api\.useapi\.net\//.test(r.url)) throw new Error('The API returned no viewer URL');
+      window.open(r.url, '_blank', 'noopener,noreferrer');
+      showMsg(c.msg, `Viewer link opens in a new tab (usable once, expires ${fmtWhen(r.expiresAt)}).`, 'ok');
+    } catch (err) {
+      showMsg(c.msg, err.status === 404 ? 'The live view is on the development API only for now.' : err.message, 'error');
+    } finally {
+      setBusy(c.watch, false);
+    }
   };
   /* GET /chats/{chatId}/browser/{taskId}: the task's state now, with who controls it and until when */
   const refreshBrowser = async c => {
