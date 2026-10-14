@@ -1396,6 +1396,10 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
       b = { key: messageId, node, body, widgets, media, text: '', frame: 0, filesShown: false };
       chat.bubbles.set(messageId, b);
       chat.msgs.append(node);
+      /* a browser task from GET /chats/{chatId} that was waiting for this message moves after it */
+      const raw = messageId.replace(/^user:/, '');
+      for (const c of chat.browsers.values())
+        if (c.after === raw && c.card.parentNode === chat.pinned) { c.after = null; placeAfter(node, c.card); }
       /* the latest agent answer after your latest message (a message of yours starts a new answer) */
       chat.lastAssistant = role === 'assistant' ? b : null;
       for (const w of chat.laterWidgets.get(messageId) || []) showWidget(chat, w, false);
@@ -2052,14 +2056,31 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
      (browsers[]). A task is state, not a message: every stream open sends its latest state again, so an update older than the
      one shown is ignored. "Watch live" mints a single-use viewer link (POST …/browser/{taskId}/viewer) and opens the hosted
      noVNC page in a new tab — watch, or take control from inside the viewer. */
+  /* after a message bubble, past any browser cards already placed there */
+  const placeAfter = (node, card) => {
+    let at = node;
+    while (at.nextElementSibling && at.nextElementSibling.classList.contains('mu-browser')) at = at.nextElementSibling;
+    at.after(card);
+  };
   const fmtWhen = iso => iso ? new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
   const showBrowser = (chat, state, fromDetails) => {
     let c = chat.browsers.get(state.taskId);
     if (!c) {
       c = browserCard(chat, state.taskId);
       chat.browsers.set(state.taskId, c);
-      /* a task first known from GET /chats/{chatId} waits under the conversation, like pending approvals */
-      (fromDetails ? chat.pinned : chat.msgs).append(c.card);
+      /* a task first known from GET /chats/{chatId} goes right after the message it followed (afterMessageId; after
+         any task already placed there), else under the conversation like pending approvals; a live one where it happens */
+      const anchor = fromDetails && state.afterMessageId && (chat.bubbles.get(state.afterMessageId) || chat.bubbles.get(`user:${state.afterMessageId}`));
+      if (anchor) placeAfter(anchor.node, c.card);
+      else {
+        /* the stream replay has not drawn the anchor yet: wait pinned, bubble() moves the card once it does */
+        if (fromDetails && state.afterMessageId) c.after = state.afterMessageId;
+        (fromDetails ? chat.pinned : chat.msgs).append(c.card);
+      }
+    } else if (!fromDetails && c.card.parentNode === chat.pinned) {
+      /* pinned from details, now reached by the in-order stream replay: this is its place */
+      c.after = null;
+      chat.msgs.append(c.card);
     }
     if (c.state && state.updated && c.state.updated && Date.parse(state.updated) < Date.parse(c.state.updated)) return;
     c.state = Object.assign({}, c.state, state);
