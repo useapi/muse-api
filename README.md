@@ -7,6 +7,7 @@ Runnable examples for the [Muse API](https://useapi.net/docs/api-muse-v1?utm_sou
 | [`images-videos/`](./images-videos) | Three photos become one picture of a rider on a vintage motorcycle in the surf, the picture becomes a 10-second video in which she shouts a line, and a woman from a fourth photo replaces her in that video. Also two images from text, and a hundred-year-old portrait restored, colorized and brought to life. Node.js and Python | [How to Generate AI Videos and Images with the Meta Muse API](https://useapi.net/docs/articles/muse-images-videos?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) | October 12, 2026 |
 | [`demo/`](./demo) | **Live chat app**: one self-contained HTML page that chats with the Muse agent through the API, with answers streamed live, files and cards, approvals, several live chats at once, workspace files and the agent's permissions. Open the [live demo](https://useapi.net/demos/muse/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) or open `demo/index.html` locally. Vanilla JS, no build | [Chat Streaming Guide](https://useapi.net/docs/api-muse-v1/chat-streaming-guide?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) | October 12, 2026 |
 | [`skills/muse-video/`](./skills/muse-video) | **Agent skill** for Claude Code, Codex and other coding agents: ask for an image or a clip and the agent makes it with Muse (text to image, photo compositing, old-photo restoration, talking photos, person swap in a video) and downloads the `.webp` or `.mp4`, never paying twice for a request. Install: `npx skills add useapi/muse-api --skill muse-video`. Bash, curl, jq | [SKILL.md](./skills/muse-video/SKILL.md) | October 12, 2026 |
+| [MCP server](#mcp-server) | **Hosted MCP server**: connect Claude Code, Cursor, VS Code or Windsurf to `https://api.useapi.net/v1/muse/mcp` and the assistant gets 27 tools for Muse images, videos, chat, files and permissions. Nothing to install or host | [MCP Server](https://useapi.net/docs/api-muse-v1/mcp?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) | October 13, 2026 |
 
 ## Quick start
 
@@ -23,6 +24,53 @@ node ./images-videos.mjs <API_TOKEN> <EMAIL> --steps portrait-video
 ```
 
 Each example's README lists its options. Every endpoint is documented in the [Muse API reference](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api).
+
+## MCP server
+
+useapi.net also runs a hosted [Model Context Protocol](https://modelcontextprotocol.io) server for Muse, so an AI assistant such as Claude Code, Cursor or VS Code Copilot can use Muse on your own Muse account. It has 27 tools: generate images and videos, chat with the Muse agent, answer its permission requests, and manage the account's files. Each tool calls the Muse API, so the same rules, limits and allowance apply. Nothing needs to be installed or hosted.
+
+- Endpoint: `https://api.useapi.net/v1/muse/mcp`
+- Transport: Streamable HTTP
+- Authorization: your useapi.net API token in the `Authorization: Bearer …` header, and at least one Muse account added with the [Muse setup](https://useapi.net/docs/start-here/setup-muse?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)
+
+Claude Code:
+
+```bash
+claude mcp add --transport http useapi-muse https://api.useapi.net/v1/muse/mcp --header "Authorization: Bearer YOUR_API_TOKEN"
+```
+
+Cursor (`~/.cursor/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "useapi-muse": {
+      "url": "https://api.useapi.net/v1/muse/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_API_TOKEN"
+      }
+    }
+  }
+}
+```
+
+VS Code (`.vscode/mcp.json`):
+
+```json
+{
+  "servers": {
+    "useapi-muse": {
+      "type": "http",
+      "url": "https://api.useapi.net/v1/muse/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_API_TOKEN"
+      }
+    }
+  }
+}
+```
+
+Windsurf setup, a curl test, the full list of 27 tools and how long-running videos and chats are handled: [Muse MCP Server](https://useapi.net/docs/api-muse-v1/mcp?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api).
 
 ## Common questions
 
@@ -42,6 +90,7 @@ Each example's README lists its options. Every endpoint is documented in the [Mu
 - 没有画幅、时长、分辨率参数，全部写在提示词里，例如 `in exactly 16:9 aspect ratio`。视频约 10 秒、约 720p，引号里的台词会被说出来。
 - 价格：useapi.net 每月 15 美元（含所有 API），不按图片或视频计费。
 - Muse 目前只在美国和加拿大开放（[Meta 官方说明](https://about.fb.com/news/2026/09/introducing-muse-small-business/)），账号需要在这两个国家注册；绑定后可以在任何地方调用 API。
+- MCP 服务器：在 Claude Code、Cursor、VS Code 或 Windsurf 中连接托管的 MCP 服务器 `https://api.useapi.net/v1/muse/mcp`（Streamable HTTP，`Authorization: Bearer` 填 useapi.net API token），即可获得 27 个工具：生成图片和视频、与 Muse 对话、处理权限请求、管理文件。说明：[Muse MCP Server](https://useapi.net/docs/api-muse-v1/mcp?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)。
 - useapi.net 是独立的第三方 API，与 Meta 无关联。
 
 中文教程（多图合成、老照片修复、视频换人，含 curl 示例）：[如何通过 Muse API 用 Meta Muse 生成 AI 图片和带配音的视频](https://useapi.net/docs/articles/muse-api-zh?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)。完整文档：[Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)。
