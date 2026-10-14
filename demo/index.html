@@ -214,6 +214,15 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 .mu-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .mu-actions:empty { display: none; }
 .mu-approval-done { border-left-color: var(--mu-border); background: var(--mu-panel); }
+/* browser task cards */
+.mu-browser { align-self: stretch; min-width: 0; max-width: 680px; overflow-wrap: anywhere; padding: 12px 14px; border: 1px solid var(--mu-border); border-left: 4px solid var(--mu-accent); border-radius: 10px; background: var(--mu-panel); }
+.mu-browser-ended { border-left-color: var(--mu-border); }
+.mu-browser-head { display: flex; align-items: center; gap: 8px; }
+.mu-browser-head .mu-approval-title { flex: 1; min-width: 0; }
+.mu-browser-step { margin-top: 4px; }
+.mu-browser .mu-item-msg { margin-top: 6px; }
+.mu-dev-badge { padding: 1px 7px; border-radius: 999px; background: var(--mu-warn-soft); border: 1px solid var(--mu-warn-border); color: var(--mu-warn); font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em; }
+.mu-dev-badge[hidden] { display: none; }
 .mu-approval .mu-item-msg { margin-top: 6px; }
 /* status bar + composer */
 .mu-statusbar { display: flex; align-items: center; gap: 8px; min-height: 30px; padding: 4px 16px; font-size: 12.5px; color: var(--mu-muted); border-top: 1px solid var(--mu-border); background: var(--mu-panel); }
@@ -306,7 +315,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 <body>
 <div id="mu-app" class="mu-app">
   <header class="mu-top">
-    <div class="mu-brand"><span class="mu-logo" aria-hidden="true">M</span>Muse API demo <a class="mu-doclink" href="https://useapi.net/docs/api-muse-v1">Docs</a> <a class="mu-doclink" href="https://github.com/useapi/muse-api/tree/main/demo" target="_blank" rel="noopener noreferrer" title="This page's source code on GitHub">Source code</a></div>
+    <div class="mu-brand"><span class="mu-logo" aria-hidden="true">M</span>Muse API demo <span id="mu-dev-badge" class="mu-dev-badge" title="Calls go to the development API (api.useapi.net/v1-dev/muse)" hidden>DEV API</span> <a class="mu-doclink" href="https://useapi.net/docs/api-muse-v1">Docs</a> <a class="mu-doclink" href="https://github.com/useapi/muse-api/tree/main/demo" target="_blank" rel="noopener noreferrer" title="This page's source code on GitHub">Source code</a></div>
     <form id="mu-connect-form" class="mu-connect">
       <label class="mu-sr" for="mu-token">useapi.net API token</label>
       <input id="mu-token" type="password" placeholder="useapi.net API token" autocomplete="off" spellcheck="false">
@@ -458,6 +467,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 <script>
 /*
   Muse API demo. Base URL: api.useapi.net/v1/muse. Every call sends the header Authorization: Bearer <API token>.
+  (The development API, api.useapi.net/v1-dev/muse, is used with ?api=dev, or by default on localhost:4000.)
 
   API calls used:
     GET    /accounts                                      the Muse accounts on this token (account picker)
@@ -499,7 +509,20 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
   /* ======================================================================
      1. Config and state
      ====================================================================== */
-  const API = 'https://api.useapi.net/v1/muse';
+  /* The API base: production by default. ?api=dev or ?api=prod picks one (remembered in this tab), and the docs site's local
+     preview (localhost:4000) uses the development API unless told otherwise. A "DEV API" badge shows when it is in use. */
+  const API_BASES = { prod: 'https://api.useapi.net/v1/muse', dev: 'https://api.useapi.net/v1-dev/muse' };
+  const API_MODE = (() => {
+    let mode = '';
+    try {
+      const asked = new URLSearchParams(location.search).get('api');
+      if (asked === 'dev' || asked === 'prod') sessionStorage.setItem('muse-demo-api', asked);
+      mode = asked === 'dev' || asked === 'prod' ? asked : sessionStorage.getItem('muse-demo-api') || '';
+    } catch (err) { /* storage blocked: the URL and the host decide */ }
+    if (mode !== 'dev' && mode !== 'prod') mode = ['localhost:4000', '127.0.0.1:4000'].includes(location.host) ? 'dev' : 'prod';
+    return mode;
+  })();
+  const API = API_BASES[API_MODE];
   const TOKEN_KEY = 'muse-demo-token';
   const UPLOAD_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/quicktime', 'video/webm', 'audio/mpeg', 'audio/wav', 'audio/x-wav', 'audio/mp4', 'audio/x-m4a', 'audio/ogg'];
   const AUTO_PREVIEW_BYTES = 30 * 1024 * 1024;
@@ -516,7 +539,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
       view: el('div', { class: 'mu-view' }, [msgs, pinned]), msgs, pinned, anchor: null, filesList: el('div', { class: 'mu-file-list', role: 'list' }),
       fresh: false, created: '', gone: false, lastEventAt: 0,
       bubbles: new Map(), cards: new Map(), resolved: new Map(), files: new Map(), fileCards: new Map(), fileHosts: new Map(), shown: new Set(), shownAssets: new Set(),
-      widgets: new Set(), laterWidgets: new Map(), laterFiles: new Map(), lastAssistant: null
+      widgets: new Set(), laterWidgets: new Map(), browsers: new Map(), laterFiles: new Map(), lastAssistant: null
     };
   };
   const state = {
@@ -1351,6 +1374,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
         if (m.text) previous = m.messageId;
       }
       for (const a of data.pendingApprovals || []) showApproval(chat, a, true);
+      for (const b of data.browsers || []) showBrowser(chat, b, true);
     } catch (err) {
       if (err.status === 404) chatGone(chat);
       else logNote(chat, err.message, 'error');
@@ -1627,6 +1651,9 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
         break;
       case 'approval.resolved':
         resolveApproval(chat, e);
+        break;
+      case 'browser':
+        showBrowser(chat, e, false);
         break;
       case 'turn.done':
         for (const b of chat.bubbles.values()) b.node.classList.remove('mu-typing');
@@ -2017,6 +2044,108 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     } catch (err) {
       showMsg(msg, err.message, 'error');
       for (const c of controls) c.disabled = false;
+    }
+  };
+
+  /* --- Browser tasks: Muse working in a web browser on its computer --- */
+  /* One card per browser task (taskId), updated in place by each `browser` stream event and by GET /chats/{chatId}
+     (browsers[]). A task is state, not a message: every stream open sends its latest state again, so an update older than the
+     one shown is ignored. The live view (watching or taking over the browser) is not in the API yet: open the chat in Muse's
+     app for that. */
+  const fmtWhen = iso => iso ? new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+  const showBrowser = (chat, state, fromDetails) => {
+    let c = chat.browsers.get(state.taskId);
+    if (!c) {
+      c = browserCard(chat, state.taskId);
+      chat.browsers.set(state.taskId, c);
+      /* a task first known from GET /chats/{chatId} waits under the conversation, like pending approvals */
+      (fromDetails ? chat.pinned : chat.msgs).append(c.card);
+    }
+    if (c.state && state.updated && c.state.updated && Date.parse(state.updated) < Date.parse(c.state.updated)) return;
+    c.state = Object.assign({}, c.state, state);
+    renderBrowser(c);
+    scrollLog(chat);
+  };
+  const browserCard = (chat, taskId) => {
+    const c = { chat, taskId, state: null };
+    c.title = el('div', { class: 'mu-approval-title', text: 'Muse is using a browser' });
+    c.pill = el('span', { class: 'mu-pill' });
+    c.step = el('div', { class: 'mu-browser-step' });
+    c.details = el('dl', { class: 'mu-details' });
+    c.msg = el('div', { class: 'mu-item-msg', role: 'status' });
+    c.refresh = el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Refresh', onclick: () => refreshBrowser(c) });
+    c.release = el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Give back', title: 'Give control of the browser back to Muse', onclick: () => releaseBrowser(c) });
+    c.stop = el('button', { type: 'button', class: 'mu-btn mu-btn-sm mu-btn-danger', text: 'Stop', title: 'Close this browser task', onclick: () => stopBrowser(c) });
+    c.card = el('div', { class: 'mu-browser', role: 'group', 'aria-label': 'Browser task' }, [
+      el('div', { class: 'mu-browser-head' }, [c.title, c.pill]),
+      c.step, c.details,
+      el('div', { class: 'mu-widget-text', text: 'The live view is not available yet: open the chat in Muse\'s app to watch.' }),
+      el('div', { class: 'mu-actions' }, [c.refresh, c.release, c.stop]), c.msg
+    ]);
+    return c;
+  };
+  const renderBrowser = c => {
+    const b = c.state;
+    const status = b.ended ? 'Ended' : b.status || 'Unknown';
+    c.title.textContent = b.ended ? 'Muse used a browser' : 'Muse is using a browser';
+    c.pill.className = `mu-pill mu-pill-${b.ended ? 'completed' : String(b.status || '').toLowerCase()}`;
+    c.pill.textContent = status;
+    c.step.textContent = [b.stepTitle, b.steps ? `step ${b.steps}` : ''].filter(Boolean).join(' · ');
+    c.step.hidden = !c.step.textContent;
+    const rows = [];
+    /* the link opens the page Muse is on, in your own browser (only http and https links) */
+    if (b.url && /^https?:\/\//i.test(b.url)) rows.push(['Page', el('a', { href: b.url, target: '_blank', rel: 'noopener noreferrer', text: b.tabTitle || b.site || b.url, title: b.url })]);
+    else if (b.site) rows.push(['Site', b.site]);
+    if (b.controlOwner) rows.push(['Control', b.controlOwner === 'user' ? `You${b.controlExpiresAt ? ` (until ${fmtWhen(b.controlExpiresAt)})` : ''}` : 'Muse']);
+    if (!b.ended && b.previewAvailable && b.parkedExpiresAt) rows.push(['Parked', `until ${fmtWhen(b.parkedExpiresAt)}`]);
+    c.details.replaceChildren(...rows.flatMap(([label, value]) => [el('dt', { text: label }), el('dd', {}, value)]));
+    c.card.classList.toggle('mu-browser-ended', !!b.ended);
+    c.release.disabled = !!b.ended;
+    c.stop.disabled = !!b.ended;
+  };
+  /* GET /chats/{chatId}/browser/{taskId}: the task's state now, with who controls it and until when */
+  const refreshBrowser = async c => {
+    setBusy(c.refresh, true);
+    try {
+      const b = await api('GET', `/chats/${pathId(c.chat.id)}/browser/${pathId(c.taskId)}`);
+      c.state = Object.assign({}, c.state, b);
+      renderBrowser(c);
+      showMsg(c.msg, `Checked at ${fmtWhen(new Date().toISOString())}.`);
+    } catch (err) {
+      showMsg(c.msg, err.message, 'error');
+    } finally {
+      setBusy(c.refresh, false);
+      renderBrowser(c);
+    }
+  };
+  /* POST …/release: hand control back to Muse. 409 = you do not hold control (or the browser is closed): nothing to give back. */
+  const releaseBrowser = async c => {
+    setBusy(c.release, true);
+    try {
+      const r = await api('POST', `/chats/${pathId(c.chat.id)}/browser/${pathId(c.taskId)}/release`);
+      c.state = Object.assign({}, c.state, { controlOwner: r.controlOwner || 'agent' });
+      showMsg(c.msg, 'Control is back with Muse.', 'ok');
+    } catch (err) {
+      showMsg(c.msg, err.status === 409 ? 'Nothing to give back: you do not have control of this browser (Muse has it, or it is closed).' : err.message, err.status === 409 ? undefined : 'error');
+    } finally {
+      setBusy(c.release, false);
+      renderBrowser(c);
+    }
+  };
+  /* POST …/stop: close the browser task (after a confirmation). 409 = it was already closed. */
+  const stopBrowser = async c => {
+    if (!await confirmInline(c.msg, 'Stop this browser task?', 'Stop')) return;
+    setBusy(c.stop, true);
+    try {
+      await api('POST', `/chats/${pathId(c.chat.id)}/browser/${pathId(c.taskId)}/stop`);
+      c.state = Object.assign({}, c.state, { ended: true });
+      showMsg(c.msg, 'Stopped.', 'ok');
+    } catch (err) {
+      if (err.status === 409) c.state = Object.assign({}, c.state, { ended: true });
+      showMsg(c.msg, err.status === 409 ? 'This browser was already closed.' : err.message, err.status === 409 ? undefined : 'error');
+    } finally {
+      setBusy(c.stop, false);
+      renderBrowser(c);
     }
   };
 
@@ -2688,6 +2817,7 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     setLiveMax(savedMax);
     $('mu-live-max').addEventListener('change', e => setLiveMax(e.target.value));
     $('mu-p-save').addEventListener('click', saveDefaults);
+    $('mu-dev-badge').hidden = API_MODE !== 'dev';
     initSplitters();
     startNewChat();
     if ($('mu-token').value) connect();
