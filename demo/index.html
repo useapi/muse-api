@@ -187,6 +187,11 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 .mu-widget-form input { flex: 1; min-width: 0; }
 .mu-btn.mu-chosen, .mu-btn.mu-chosen:disabled { opacity: 1; background: var(--mu-accent); border-color: var(--mu-accent); color: var(--mu-on-accent); }
 .mu-media { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.mu-reacts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; align-items: center; }
+.mu-reacts:empty { display: none; }
+.mu-react { font-size: 13px; line-height: 1; padding: 3px 7px; border-radius: 999px; background: rgba(127, 127, 127, 0.18); }
+.mu-react-btn { font-size: 13px; line-height: 1; padding: 3px 7px; border-radius: 999px; border: 1px solid rgba(127, 127, 127, 0.35); background: transparent; color: inherit; cursor: pointer; opacity: 0.55; }
+.mu-react-btn:hover, .mu-react-btn[aria-pressed="true"] { opacity: 1; }
 .mu-figure { margin: 0; }
 .mu-figure .mu-preview { min-height: 140px; }
 .mu-figure .mu-preview img, .mu-figure .mu-preview video { max-height: 360px; }
@@ -539,7 +544,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
       view: el('div', { class: 'mu-view' }, [msgs, pinned]), msgs, pinned, anchor: null, filesList: el('div', { class: 'mu-file-list', role: 'list' }),
       fresh: false, created: '', gone: false, lastEventAt: 0,
       bubbles: new Map(), cards: new Map(), resolved: new Map(), files: new Map(), fileCards: new Map(), fileHosts: new Map(), shown: new Set(), shownAssets: new Set(),
-      widgets: new Set(), laterWidgets: new Map(), browsers: new Map(), laterFiles: new Map(), lastAssistant: null
+      widgets: new Set(), laterWidgets: new Map(), browsers: new Map(), reactions: new Map(), laterFiles: new Map(), lastAssistant: null
     };
   };
   const state = {
@@ -1357,6 +1362,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
          waited for (laterFiles), so nothing is placed out of order. */
       let previous = '';
       for (const m of data.messages || []) {
+        if (m.reactions && m.reactions.length) showReactions(chat, m.messageId, m.reactions);
         if (m.role !== 'assistant') {
           previous = '';
           continue;
@@ -1402,6 +1408,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
         if (c.after === raw && c.card.parentNode === chat.pinned) { c.after = null; placeAfter(node, c.card); }
       /* the latest agent answer after your latest message (a message of yours starts a new answer) */
       chat.lastAssistant = role === 'assistant' ? b : null;
+      renderReactions(chat, messageId.replace(/^user:/, ''));
       for (const w of chat.laterWidgets.get(messageId) || []) showWidget(chat, w, false);
       chat.laterWidgets.delete(messageId);
       for (const f of chat.laterFiles.get(messageId) || []) showFile(chat, f, b);
@@ -1653,6 +1660,9 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
       case 'approval':
         showApproval(chat, e, false);
         break;
+      case 'reaction':
+        showReactions(chat, e.messageId, e.reactions);
+        break;
       case 'approval.resolved':
         resolveApproval(chat, e);
         break;
@@ -1660,7 +1670,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
         showBrowser(chat, e, false);
         break;
       case 'turn.done':
-        for (const b of chat.bubbles.values()) b.node.classList.remove('mu-typing');
+        for (const b of chat.bubbles.values()) { b.node.classList.remove('mu-typing'); renderReactions(chat, b.key.replace(/^user:/, '')); }
         setChatStatus(chat, e.status);
         setActivity(chat, `${statusLabel(e.status)}${e.files && e.files.length ? `, ${e.files.length} file(s)` : ''}`, false);
         scheduleListRefresh();
@@ -2048,6 +2058,34 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     } catch (err) {
       showMsg(msg, err.message, 'error');
       for (const c of controls) c.disabled = false;
+    }
+  };
+
+  /* --- Reactions: Muse reacts to your messages (👍, 🫶); you can 👍 Muse's. A reaction event carries the message's whole
+     current set, so the row is redrawn from it. Kept per message until its bubble exists (history may arrive first). --- */
+  const showReactions = (chat, messageId, list) => {
+    chat.reactions.set(messageId, Array.isArray(list) ? list : []);
+    renderReactions(chat, messageId);
+  };
+  const renderReactions = (chat, messageId) => {
+    const b = chat.bubbles.get(messageId) || chat.bubbles.get(`user:${messageId}`);
+    if (!b) return;
+    const list = chat.reactions.get(messageId) || [];
+    if (!b.reacts) { b.reacts = el('div', { class: 'mu-reacts' }); b.node.append(b.reacts); }
+    b.reacts.replaceChildren(...list.map(e => el('span', { class: 'mu-react', text: e })));
+    /* Muse's messages: a 👍 you can toggle, once the message has finished streaming (as Muse's app) */
+    if (!b.key.startsWith('user:') && !b.node.classList.contains('mu-typing')) {
+      const mine = list.includes('👍');
+      b.reacts.append(el('button', { type: 'button', class: 'mu-react-btn', text: '👍', title: mine ? 'Remove your 👍' : 'React with 👍', 'aria-pressed': mine ? 'true' : 'false', onclick: () => reactTo(chat, messageId, '👍') }));
+    }
+  };
+  /* POST /chats/{chatId}/messages/{messageId}/reactions {emoji}: a toggle; answers the message's reactions */
+  const reactTo = async (chat, messageId, emoji) => {
+    try {
+      const r = await api('POST', `/chats/${pathId(chat.id)}/messages/${pathId(messageId)}/reactions`, { emoji });
+      showReactions(chat, messageId, r.reactions);
+    } catch (err) {
+      logNote(chat, err.message, 'error');
     }
   };
 
