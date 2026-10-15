@@ -1,5 +1,7 @@
 # n8n workflow for the Muse API: old photo to talking video
 
+📖 Published on n8n: [Restore and animate old photos into talking videos with Muse](https://n8n.io/workflows/20989)
+
 [`muse-photo-talks.json`](./muse-photo-talks.json) is a ready-to-import [n8n](https://n8n.io) app that **restores an old photo and makes the person in it speak a line**, with Meta's Muse agent (muse.ai) on your own Muse account, through the [useapi.net Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api), a third-party API, not affiliated with Meta. It is built from core n8n nodes, with no community nodes. Google Sheets and Google Drive are optional.
 
 ![The form](./muse-photo-talks-01-form.png)
