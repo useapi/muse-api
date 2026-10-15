@@ -47,8 +47,9 @@ To turn it on: set the sheet id and the other options in the **Settings** node, 
 1. Get a [useapi.net API token](https://useapi.net/docs/start-here/setup-useapi?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) and add your Muse account with the [Muse setup](https://useapi.net/docs/start-here/setup-muse?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api).
 2. In n8n, import `muse-photo-talks.json`.
 3. Create a **Header Auth** credential: Name `Authorization`, Value `Bearer <your API token>`. Select it on every HTTP Request node.
-4. Optional: connect Google Drive to **Upload to Drive** and set the folder at the top of **Read the form**.
-5. Publish (activate) the workflow and open the form URL. If your n8n is reachable from the internet, consider turning on the Form Trigger's authentication so that nobody else can spend the allowance.
+4. Create a **Basic Auth** credential (any username and password) and select it on **Bring a photo to life**. The form asks for this login, so nobody else can open it and spend your allowance.
+5. Optional: connect Google Drive to **Upload to Drive** and set the folder at the top of **Read the form**.
+6. Publish (activate) the workflow, open the form URL and sign in with that username and password.
 
 **Requirements:** a useapi.net subscription and a Muse account created in the US or Canada (as of October 2026). The free Muse plan works: in our tests a restore used 0 to 1% of the week and each take 2 to 3%.
 
