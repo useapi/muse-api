@@ -10,14 +10,17 @@
   Open it in a browser, paste your useapi.net API token, pick a Muse account.
   Docs: https://useapi.net/docs/api-muse-v1   Source: https://github.com/useapi/muse-api/tree/main/demo
   Live: https://useapi.net/demos/muse/ serves this exact file.
+  How it works, every API call it makes and how to reuse it in your own app: see the comment at the top of the script below.
 -->
 <style>
-/* The page: the app fills the browser window (100dvh keeps the composer above a phone's toolbars) */
+/* The standalone page only (a host page that embeds the app leaves this out): the app fills the browser window
+   (100dvh keeps the composer above a phone's toolbars) */
 html, body { margin: 0; height: 100%; background: #f6f7fb; }
 @media (prefers-color-scheme: dark) { html, body { background: #14151b; } }
 </style>
 <style>
-/* ===== Theme: every color is a variable, light by default, dark from prefers-color-scheme ===== */
+/* ===== Theme: design tokens. Every color is a variable on .mu-app (not :root), so the app can sit inside another page
+   without changing that page. Light by default; the dark values follow prefers-color-scheme. ===== */
 .mu-app {
   --mu-bg: #f6f7fb; --mu-panel: #ffffff; --mu-sunk: #eff1f6; --mu-border: #dfe2ea; --mu-text: #1e2230; --mu-muted: #687086;
   --mu-accent: #7253ed; --mu-accent-soft: rgba(114, 83, 237, 0.12); --mu-on-accent: #ffffff;
@@ -35,7 +38,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     --mu-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.25);
   }
 }
-/* ===== Base (scoped to the app, and strong enough to override a host page's content styles) ===== */
+/* ===== Base: scoped to the app, and strong enough to override a host page's content styles ===== */
 .mu-app { container-type: inline-size; display: flex; flex-direction: column; height: 100vh; height: 100dvh; background: var(--mu-bg); color: var(--mu-text); overflow: hidden; font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; text-align: left; }
 .mu-app *, .mu-app *::before, .mu-app *::after { box-sizing: border-box; }
 #mu-app button, #mu-app input, #mu-app select, #mu-app textarea { font: inherit; color: inherit; margin: 0; }
@@ -56,7 +59,9 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 .mu-app :focus-visible { outline: 2px solid var(--mu-accent); outline-offset: 2px; }
 .mu-muted { color: var(--mu-muted); }
 .mu-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; overflow-wrap: anywhere; }
-/* ===== Controls ===== */
+/* shown only on phones and narrow windows (see the container query at the end) */
+.mu-narrow-only { display: none !important; }
+/* ===== Controls: inputs, buttons, pills, inline messages and confirm bars ===== */
 .mu-app input[type=password], .mu-app input[type=url], .mu-app input[type=text], .mu-app select, .mu-app textarea { background: var(--mu-panel); border: 1px solid var(--mu-border); border-radius: 8px; padding: 6px 10px; min-height: 34px; }
 .mu-app select { padding-right: 6px; max-width: 100%; }
 .mu-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 34px; padding: 6px 14px; border: 1px solid var(--mu-border); border-radius: 8px; background: var(--mu-panel); color: var(--mu-text); font-weight: 600; cursor: pointer; white-space: nowrap; text-decoration: none; }
@@ -90,10 +95,18 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 .mu-state { padding: 14px; text-align: center; color: var(--mu-muted); font-size: 13px; }
 .mu-state:empty { display: none; }
 .mu-more { display: block; margin: 8px auto 14px; }
-/* ===== Top bar ===== */
+/* a text-like button (↻ refresh); :disabled stays before :hover */
+.mu-link-btn { padding: 0 4px; border: 0; border-radius: 6px; background: transparent; color: var(--mu-accent); font-size: 13px; line-height: 1.4; cursor: pointer; }
+.mu-link-btn:hover { background: var(--mu-sunk); }
+.mu-link-btn:disabled { opacity: 0.4; cursor: default; background: transparent; }
+/* ===== Top bar: brand and links, token form, account picker with its usage line, tabs ===== */
 .mu-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 14px; background: var(--mu-panel); border-bottom: 1px solid var(--mu-border); }
 .mu-brand { display: flex; align-items: center; gap: 8px; font-weight: 700; white-space: nowrap; }
 .mu-logo { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; background: var(--mu-accent); color: var(--mu-on-accent); font-size: 12px; }
+.mu-dev-badge { padding: 1px 7px; border-radius: 999px; background: var(--mu-warn-soft); border: 1px solid var(--mu-warn-border); color: var(--mu-warn); font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em; }
+.mu-dev-badge[hidden] { display: none; }
+.mu-doclink { font-size: 12.5px; font-weight: 600; color: var(--mu-accent); text-decoration: none; white-space: nowrap; }
+.mu-doclink:hover { text-decoration: underline; }
 .mu-connect { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1 1 auto; min-width: 0; }
 .mu-connect input[type=password] { flex: 1 1 180px; min-width: 0; max-width: 300px; }
 .mu-top > .mu-tabs { margin-left: auto; }
@@ -103,19 +116,15 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 /* hidden but still taking its line: the header keeps one height before and after the usage arrives (no layout shift) */
 .mu-usage[hidden] { display: flex; visibility: hidden; }
 .mu-usage-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mu-link-btn:disabled { opacity: 0.4; cursor: default; background: transparent; }
 .mu-tabs { display: flex; gap: 2px; max-width: 100%; padding: 3px; border-radius: 10px; background: var(--mu-sunk); overflow-x: auto; scrollbar-width: none; }
 .mu-tab { flex: none; border: 0; background: transparent; padding: 5px 14px; border-radius: 8px; cursor: pointer; color: var(--mu-muted); font-weight: 650; white-space: nowrap; }
-.mu-doclink { font-size: 12.5px; font-weight: 600; color: var(--mu-accent); text-decoration: none; white-space: nowrap; }
-.mu-doclink:hover { text-decoration: underline; }
-.mu-narrow-only { display: none !important; }
 .mu-tab[aria-selected=true] { background: var(--mu-panel); color: var(--mu-text); box-shadow: var(--mu-shadow); }
 .mu-top-msg { padding: 8px 14px; font-size: 13px; background: var(--mu-accent-soft); border-bottom: 1px solid var(--mu-border); }
 .mu-top-msg.mu-msg-error { background: var(--mu-danger-soft); }
 .mu-tabpanel { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .mu-tabpanel[hidden] { display: none; }
 .mu-scroll { overflow: auto; }
-/* ===== Chat tab: three resizable columns ===== */
+/* ===== Chat tab: three resizable columns (chat list | conversation | the chat's files) ===== */
 .mu-cols { flex: 1; min-height: 0; display: grid; grid-template-columns: var(--mu-left) 8px minmax(240px, 1fr) 8px var(--mu-right); }
 .mu-cols.mu-files-closed { grid-template-columns: var(--mu-left) 8px minmax(240px, 1fr); }
 .mu-files-closed > [data-side=right], .mu-files-closed > #mu-pane-files { display: none; }
@@ -126,6 +135,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 .mu-split { position: relative; background: var(--mu-bg); border-left: 1px solid var(--mu-border); border-right: 1px solid var(--mu-border); cursor: col-resize; touch-action: none; }
 .mu-split::after { content: ""; position: absolute; left: 2px; top: 50%; width: 2px; height: 36px; margin-top: -18px; border-radius: 2px; background: var(--mu-border); }
 .mu-split:hover::after, .mu-split:focus-visible::after, .mu-split.mu-dragging::after { background: var(--mu-accent); }
+/* chat list */
 .mu-chat-list { padding: 6px; min-width: 0; }
 .mu-chat-item { position: relative; min-width: 0; border-radius: 9px; margin-bottom: 2px; }
 .mu-chat-item:hover { background: var(--mu-sunk); }
@@ -142,16 +152,13 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 .mu-clock::after { width: 3px; height: 1.5px; }
 .mu-live-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--mu-ok); box-shadow: 0 0 0 2px var(--mu-accent-soft); }
 .mu-list-caption { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 6px 12px 0; font-size: 11.5px; color: var(--mu-muted); }
+.mu-list-caption[hidden] { display: none; }
 .mu-live-pick { display: flex; flex-basis: 100%; align-items: center; gap: 4px; white-space: nowrap; }
 .mu-app .mu-live-pick select { min-height: 22px; padding: 0 2px; border-radius: 6px; font-size: 11.5px; }
-.mu-widget-unknown { padding: 8px 10px; border: 1px dashed var(--mu-border); border-radius: 8px; background: var(--mu-sunk); }
-.mu-widget-unknown-title { font-size: 12px; font-weight: 600; color: var(--mu-muted); }
-.mu-list-caption[hidden] { display: none; }
-.mu-link-btn { padding: 0 4px; border: 0; border-radius: 6px; background: transparent; color: var(--mu-accent); font-size: 13px; line-height: 1.4; cursor: pointer; }
-.mu-link-btn:hover { background: var(--mu-sunk); }
 .mu-chat-item > .mu-icon-btn { position: absolute; top: 6px; right: 4px; width: 26px; height: 26px; font-size: 12px; opacity: 0; }
 .mu-chat-item:hover > .mu-icon-btn, .mu-chat-item > .mu-icon-btn:focus-visible, .mu-chat-item.mu-current > .mu-icon-btn { opacity: 1; }
 .mu-chat-item > .mu-item-msg, .mu-chat-item > .mu-confirm { margin: 0 6px 6px; }
+/* conversation header: title, status pill, stream state, Files toggle */
 .mu-convo { background: var(--mu-bg); }
 .mu-convo-title { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
 .mu-convo-title h3 { flex: 0 1 auto; }
@@ -164,6 +171,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 .mu-conn-live .mu-dot { background: var(--mu-ok); box-shadow: 0 0 0 3px rgba(24, 121, 74, 0.18); }
 .mu-conn-connecting .mu-dot, .mu-conn-retry .mu-dot { background: var(--mu-warn); animation: mu-pulse 1.2s ease-in-out infinite; }
 .mu-conn-off .mu-dot { background: var(--mu-danger); }
+/* messages */
 .mu-log { flex: 1; min-height: 0; overflow-y: auto; padding: 16px; }
 .mu-msgs { display: flex; flex-direction: column; gap: 10px; }
 #mu-app .mu-pinned:not(:empty) { margin-top: 10px; }
@@ -177,33 +185,36 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 .mu-text > :last-child { margin-bottom: 0 !important; }
 .mu-text .mu-h { margin: 0.4em 0 0.3em; font-weight: 700; }
 .mu-typing .mu-text::after { content: "\258D"; margin-left: 1px; color: var(--mu-accent); animation: mu-blink 1s steps(2) infinite; }
+.mu-msg.mu-wide { width: min(680px, 90%); }
+.mu-note-line { align-self: center; max-width: 90%; padding: 3px 10px; border-radius: 999px; background: var(--mu-sunk); color: var(--mu-muted); font-size: 12px; text-align: center; }
+/* widgets and web apps inside an agent message */
 .mu-media:empty, .mu-widgets:empty { display: none; }
 .mu-widgets { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
 .mu-widget { display: flex; flex-direction: column; gap: 6px; }
+.mu-widget-unknown { padding: 8px 10px; border: 1px dashed var(--mu-border); border-radius: 8px; background: var(--mu-sunk); }
+.mu-widget-unknown-title { font-size: 12px; font-weight: 600; color: var(--mu-muted); }
 .mu-widget .mu-btn, .mu-approval .mu-btn { max-width: 100%; white-space: normal; text-align: left; overflow-wrap: anywhere; }
 .mu-widget-text { font-size: 13px; color: var(--mu-muted); }
 .mu-widget-frame { display: block; width: 100%; height: 20px; border: 0; background: transparent; }
-.mu-msg.mu-wide { width: min(680px, 90%); }
 .mu-widget-form { display: flex; gap: 6px; }
 .mu-widget-form input { flex: 1; min-width: 0; }
 .mu-btn.mu-chosen, .mu-btn.mu-chosen:disabled { opacity: 1; background: var(--mu-accent); border-color: var(--mu-accent); color: var(--mu-on-accent); }
-.mu-media { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
 .mu-app-frame { width: 100%; height: 480px; border: 1px solid rgba(127, 127, 127, 0.3); border-radius: 8px; background: #fff; margin-top: 8px; }
+/* files shown inline under a message (podcasts with their cover) and reactions */
+.mu-media { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
 .mu-podcast-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
 .mu-podcast-cover { width: 44px; height: 44px; border-radius: 8px; overflow: hidden; flex: none; display: flex; align-items: center; justify-content: center; font-size: 26px; background: rgba(127, 127, 127, 0.15); }
 .mu-podcast-cover img { width: 100%; height: 100%; object-fit: cover; }
 .mu-podcast-label { font-size: 12px; color: var(--mu-muted); }
-.mu-doc-preview { margin: 0; padding: 10px 12px; max-height: 220px; overflow: auto; white-space: pre-wrap; font-size: 12px; line-height: 1.45; background: rgba(127, 127, 127, 0.08); border-radius: 8px; text-align: left; }
-.mu-preview-icon { font-size: 56px; line-height: 1; display: flex; align-items: center; justify-content: center; min-height: 120px; }
-.mu-reacts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; align-items: center; }
-.mu-reacts:empty { display: none; }
-.mu-react { font-size: 13px; line-height: 1; padding: 3px 7px; border-radius: 999px; background: rgba(127, 127, 127, 0.18); }
 .mu-figure { margin: 0; }
 .mu-figure .mu-preview { min-height: 140px; }
 .mu-figure .mu-preview img, .mu-figure .mu-preview video { max-height: 360px; }
 .mu-figcap { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 12px; color: var(--mu-muted); }
 .mu-figcap span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mu-note-line { align-self: center; max-width: 90%; padding: 3px 10px; border-radius: 999px; background: var(--mu-sunk); color: var(--mu-muted); font-size: 12px; text-align: center; }
+.mu-reacts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; align-items: center; }
+.mu-reacts:empty { display: none; }
+.mu-react { font-size: 13px; line-height: 1; padding: 3px 7px; border-radius: 999px; background: rgba(127, 127, 127, 0.18); }
+/* file chips: the composer's attachments and the files of a sent message */
 .mu-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .mu-chips:empty { display: none; }
 .mu-chip { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 2px 4px 2px 10px; border-radius: 999px; background: var(--mu-sunk); border: 1px solid var(--mu-border); font-size: 12px; }
@@ -225,6 +236,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 .mu-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .mu-actions:empty { display: none; }
 .mu-approval-done { border-left-color: var(--mu-border); background: var(--mu-panel); }
+.mu-approval .mu-item-msg { margin-top: 6px; }
 /* browser task cards */
 .mu-browser { align-self: stretch; min-width: 0; max-width: 680px; overflow-wrap: anywhere; padding: 12px 14px; border: 1px solid var(--mu-border); border-left: 4px solid var(--mu-accent); border-radius: 10px; background: var(--mu-panel); }
 .mu-browser-ended { border-left-color: var(--mu-border); }
@@ -232,10 +244,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 .mu-browser-head .mu-approval-title { flex: 1; min-width: 0; }
 .mu-browser-step { margin-top: 4px; }
 .mu-browser .mu-item-msg { margin-top: 6px; }
-.mu-dev-badge { padding: 1px 7px; border-radius: 999px; background: var(--mu-warn-soft); border: 1px solid var(--mu-warn-border); color: var(--mu-warn); font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em; }
-.mu-dev-badge[hidden] { display: none; }
-.mu-approval .mu-item-msg { margin-top: 6px; }
-/* status bar + composer */
+/* status bar and composer */
 .mu-statusbar { display: flex; align-items: center; gap: 8px; min-height: 30px; padding: 4px 16px; font-size: 12.5px; color: var(--mu-muted); border-top: 1px solid var(--mu-border); background: var(--mu-panel); }
 .mu-statusbar span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mu-spinner { flex: none; width: 12px; height: 12px; border: 2px solid var(--mu-accent); border-top-color: transparent; border-radius: 50%; animation: mu-spin 0.8s linear infinite; }
@@ -245,7 +254,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 .mu-composer-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .mu-composer-row .mu-item-msg { flex: 1 1 120px; }
 .mu-grow { flex: 1; }
-/* files: the chat's panel and the Files tab grid share one card */
+/* ===== Files: the file card and preview shared by the chat's Files panel, the Library and the Workspace preview ===== */
 .mu-file-list { display: flex; flex-direction: column; gap: 10px; padding: 10px; }
 .mu-file { display: flex; flex-direction: column; gap: 6px; padding: 8px; border: 1px solid var(--mu-border); border-radius: 10px; background: var(--mu-panel); min-width: 0; }
 .mu-file-name { font-weight: 600; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -257,13 +266,16 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 .mu-preview img, .mu-preview video { display: block; width: 100%; max-height: 200px; object-fit: contain; }
 .mu-preview audio { width: 100%; margin: 8px; }
 .mu-loading { background: linear-gradient(90deg, var(--mu-sunk) 0%, var(--mu-border) 50%, var(--mu-sunk) 100%); background-size: 200% 100%; animation: mu-shimmer 1.4s ease-in-out infinite; }
+.mu-doc-preview { margin: 0; padding: 10px 12px; max-height: 220px; overflow: auto; white-space: pre-wrap; font-size: 12px; line-height: 1.45; background: rgba(127, 127, 127, 0.08); border-radius: 8px; text-align: left; }
+.mu-preview-icon { font-size: 56px; line-height: 1; display: flex; align-items: center; justify-content: center; min-height: 120px; }
+/* ===== Files tab: toolbar, Library grid ===== */
 .mu-toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--mu-border); background: var(--mu-panel); }
 .mu-toolbar label:not(.mu-btn) { display: flex; flex-direction: column; gap: 2px; font-size: 11.5px; font-weight: 600; color: var(--mu-muted); }
 .mu-url-form { display: flex; gap: 6px; flex: 1 1 260px; }
 .mu-url-form input { flex: 1; min-width: 0; }
 .mu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; padding: 14px 16px; }
 .mu-grid:empty { display: none; }
-/* workspace browser */
+/* ===== Files tab: Workspace view ===== */
 .mu-tabs.mu-viewbar { display: inline-flex; margin: 12px 16px 0; }
 .mu-crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; min-width: 0; font-size: 13px; }
 .mu-crumb { border: 0; background: transparent; padding: 3px 6px; border-radius: 6px; color: var(--mu-accent); font-weight: 600; cursor: pointer; overflow-wrap: anywhere; }
@@ -283,7 +295,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 .mu-ws-preview[hidden] { display: none; }
 .mu-ws-preview-body { max-height: 65vh; overflow: auto; padding: 10px; }
 #mu-app .mu-ws-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; max-height: none; }
-/* permissions */
+/* ===== Permissions tab ===== */
 .mu-perms { display: flex; flex-direction: column; gap: 14px; padding: 16px; }
 .mu-card { padding: 14px 16px; border: 1px solid var(--mu-border); border-radius: 12px; background: var(--mu-panel); box-shadow: var(--mu-shadow); }
 .mu-card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
@@ -293,8 +305,8 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 .mu-note { margin: 10px 0 0 !important; padding: 8px 10px; border-radius: 8px; background: var(--mu-warn-soft); color: var(--mu-text); font-size: 12.5px; }
 .mu-table-wrap { overflow-x: auto; }
 .mu-approval-list { display: flex; flex-direction: column; gap: 10px; }
-/* Phones and narrow windows (a container query on the app's own width, so it also works inside a docs page): the conversation
-   fills the screen (composer always in view), the chat list and the chat's files slide in as drawers from the left and the right */
+/* ===== Phones and narrow windows (a container query on the app's own width, so it also works inside a docs page): the
+   conversation fills the screen (composer always in view), the chat list and the chat's files slide in as drawers ===== */
 @container (max-width: 640px) {
   .mu-cols { position: relative; display: flex; flex-direction: column; }
   .mu-split { display: none; }
@@ -318,6 +330,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
   .mu-toolbar { padding: 10px; }
   .mu-perms { padding: 10px; }
 }
+/* ===== Animations (off when the system asks for reduced motion) ===== */
 @keyframes mu-spin { to { transform: rotate(360deg); } }
 @keyframes mu-blink { 50% { opacity: 0; } }
 @keyframes mu-pulse { 50% { opacity: 0.35; } }
@@ -479,51 +492,90 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 </div>
 <script>
 /*
-  Muse API demo. Base URL: api.useapi.net/v1/muse. Every call sends the header Authorization: Bearer <API token>.
-  (The development API, api.useapi.net/v1-dev/muse, is used with ?api=dev, or by default on localhost:4000.)
+  Muse API demo: a complete chat client for the useapi.net Muse API in one file of plain HTML, CSS and JavaScript.
 
-  API calls used:
-    GET    /accounts                                      the Muse accounts on this token (account picker)
-    GET    /accounts/{email}                              one account with its usage read fresh from Muse (usage line, throttled)
-    GET    /chats?email=&limit=&cursor=                   the chat list, paged (Load more)
-    POST   /chats                                         start a chat {message, files, email}
-    GET    /chats/{chatId}                                title, status, messages[].files, pendingApprovals
-    DELETE /chats/{chatId}                                delete a chat
-    GET    /chats/{chatId}/stream                         the live chat as Server-Sent Events, resumed with Last-Event-ID
-                                                          (one stream per live chat, up to the "Live chats" setting; idle and
-                                                          reconnect events resume silently; 429 = too many open streams)
-    POST   /chats/{chatId}/messages                       send a message {message, files}, also while Muse is answering
-                                                          (files: asset ids and workspace paths, named image_1…, file_1… for the agent)
-    POST   /chats/{chatId}/cancel                         stop the running turn
-    POST   /chats/{chatId}/approvals/{approvalId}         answer a permission request {decision}
-    POST   /chats/{chatId}/widgets/{widgetId}             answer a quick-reply widget {option} or {text}
-    GET    /assets?email=&type=&origin=&limit=&cursor=    the account's files (Files tab)
-    POST   /assets?email=                                 upload: raw file bytes, or JSON {url}
-    GET    /assets/{assetId}                              download a file (previews and Download buttons)
-    DELETE /assets/{assetId}                              delete a file
-    GET    /assets/{assetId}?format=pdf                   a document as PDF (Download PDF)
-    POST   /assets/{assetId}/share                        publish a web app on a public link (Share)
-    DELETE /assets/{assetId}/share                        stop sharing it
-    GET    /files?email=&path=                            list a folder of the account's Muse workspace (Workspace view)
-    GET    /files/content?email=&path=                    download a workspace file (previews and Download)
-    GET    /files/search?email=&name=&extensions=&path=   find workspace files by name and extension
-    POST   /files?email=&path=                            upload a file to a workspace path (replaces an existing file)
-    DELETE /files?email=&path=                            delete a workspace file
-    GET    /accounts/{email}/permissions                  the agent's defaults and standing rules
-    POST   /accounts/{email}/permissions                  change the defaults {web, connectors}
-    POST   /accounts/{email}/permissions/{permissionId}   change one rule's mode {mode}
-    DELETE /accounts/{email}/permissions/{permissionId}   remove one rule
-    GET    /accounts/{email}/approvals                    the agent's pending and answered approvals
+  Base URL: https://api.useapi.net/v1/muse. Every call sends the header Authorization: Bearer <your useapi.net API token>.
+  The development API (https://api.useapi.net/v1-dev/muse) is used with ?api=dev, and by default on localhost:4000.
 
-  Text that comes from the API is always set with textContent, never innerHTML. The one exception is an html widget, Muse's own
-  little page (a chart), which runs in a sandboxed iframe that cannot reach this page, the token or the API.
+  API calls the page makes ({email} is the Muse account picked at the top; ids in a path go through pathId()):
 
-  The script is in ordered sections: 1 config and state, 2 helpers, 3 API client, 4 previews, 5 accounts and usage, 6 chat list,
-  7 chat state and rendering, 8 streams, 9 sending / widgets / approvals, 10 Files / Workspace / Permissions tabs, 11 layout and boot.
+    Accounts
+    GET    /accounts                                       the Muse accounts on this token (account picker)
+    GET    /accounts/{email}                               one account with its usage read fresh from Muse (usage line, throttled)
+
+    Chats
+    GET    /chats?email=&limit=30&cursor=                  the chat list, newest first, paged (Load more)
+    POST   /chats                                          start a chat {email, message, files?} -> {chatId, messageId}
+    GET    /chats/{chatId}                                 title, status, messages[] (files, widgets, reactions), pendingApprovals[],
+                                                           browsers[]
+    DELETE /chats/{chatId}                                 delete a chat
+    GET    /chats/{chatId}/stream                          the live chat as Server-Sent Events; header Last-Event-ID = last event id seen
+    POST   /chats/{chatId}/messages                        send a message {message, files?}, also while Muse is answering
+    POST   /chats/{chatId}/cancel                          stop the running turn
+    POST   /chats/{chatId}/approvals/{approvalId}          answer a permission request {decision}
+    POST   /chats/{chatId}/widgets/{widgetId}              answer a quick-reply widget {option: index} or {text}
+
+    Browser tasks (Muse working in a web browser on its own computer)
+    GET    /chats/{chatId}/browser/{taskId}                the task's state now (Refresh)
+    POST   /chats/{chatId}/browser/{taskId}/viewer         {mode: 'control'} -> {url, expiresAt}: a single-use live view link (Watch live)
+    POST   /chats/{chatId}/browser/{taskId}/release        give control of the browser back to Muse (Give back)
+    POST   /chats/{chatId}/browser/{taskId}/stop           close the browser task (Stop)
+
+    Library (the account's files)
+    GET    /assets?email=&type=&origin=&limit=24&cursor=   the Library list, filtered by type and origin, paged
+    POST   /assets?email=                                  upload: the raw file bytes (Content-Type = its MIME type), or JSON {url}
+    GET    /assets/{assetId}                               a file's bytes (previews, Download, Open app)
+    GET    /assets/{assetId}?format=pdf                    a Markdown, text or HTML document converted to PDF (Download PDF)
+    GET    /assets/{assetId}?part=cover                    a podcast's cover image
+    DELETE /assets/{assetId}                               delete a file
+    POST   /assets/{assetId}/share                         publish a web app on a public link (Share) -> {shareUrl}
+    DELETE /assets/{assetId}/share                         stop sharing it
+
+    Workspace (the files in the account's Muse workspace, by path)
+    GET    /files?email=&path=                             list one folder
+    GET    /files/content?email=&path=                     a file's bytes (previews, Download)
+    GET    /files/search?email=&name=&extensions=&path=&limit=100&offset=
+                                                           find files by name and extension under a folder
+    POST   /files?email=&path=                             upload the raw file bytes to that path (replaces an existing file)
+    DELETE /files?email=&path=                             delete one file
+
+    Permissions
+    GET    /accounts/{email}/permissions                   the agent's defaults and standing rules
+    POST   /accounts/{email}/permissions                   change the defaults {web, connectors}
+    POST   /accounts/{email}/permissions/{permissionId}    change one rule's mode {mode}
+    DELETE /accounts/{email}/permissions/{permissionId}    remove one rule
+    GET    /accounts/{email}/approvals?limit=50            the agent's pending and answered approvals
+
+  Not used here, but in the API: reacting to a message yourself (POST /chats/{chatId}/messages/{messageId}/reactions). The page
+  only shows the reactions Muse adds (stream "reaction" events and messages[].reactions).
+
+  How the page is organised: the HTML is the whole UI (top bar with token, account and tabs; a Chat tab with three columns: chat
+  list, conversation, the chat's files; a Files tab with Library and Workspace views; a Permissions tab). The script below fills
+  it in, in numbered sections:
+     1 config and state           2 helpers (DOM, formatting, masking)        3 API client (JSON calls, bytes, uploads, downloads)
+     4 previews and file cards    5 accounts, usage line and tabs             6 chat list
+     7 one chat: state, scroll position, bubbles, Markdown, files
+     8 streams: live chats, SSE reading, resume, backoff
+     9 sending, widgets, reactions, browser tasks, approvals
+    10 Files, Workspace and Permissions tabs                                  11 layout and boot
+
+  Reproduce this in your app:
+  - The API client is section 3: authHeaders, readJson and api() for JSON calls, itemBlob() for file bytes, uploadFile() and
+    uploadToWorkspace() for uploads. Copy it as is and point API at the base URL; pathId() (section 2) guards every id in a path.
+  - Streaming is section 8: openStream() + readSse() read the SSE body with fetch (EventSource cannot send the Authorization
+    header), onEvent() handles each event, afterStream() decides how to reconnect. Keep the last event id per chat and send it
+    as Last-Event-ID, so a reconnect gets only what you missed.
+  - The token lives in state.token (memory) and, only when Remember is ticked, in sessionStorage under 'muse-demo-token' (this
+    tab only, gone when the tab closes). On a server, keep the token on the server and proxy these calls instead.
+
+  Safety: text from the API is always set with textContent, never innerHTML (Markdown is built as DOM nodes). The two exceptions
+  run in sandboxed iframes (sandbox="allow-scripts", no same-origin), so they cannot reach this page, the token or the API: an
+  html widget (Muse's own little page, such as a chart) and a web app opened with Open app.
 */
 (() => {
   /* ======================================================================
      1. Config and state
+     The API base URL, storage keys and limits, the per-chat state object and the page's global state. No API calls here.
      ====================================================================== */
   /* The API base: production by default. ?api=dev or ?api=prod picks one (remembered in this tab), and the docs site's local
      preview (localhost:4000) uses the development API unless told otherwise. A "DEV API" badge shows when it is in use. */
@@ -539,13 +591,17 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     return mode;
   })();
   const API = API_BASES[API_MODE];
+  /* sessionStorage key of the token, used only when Remember is ticked */
   const TOKEN_KEY = 'muse-demo-token';
+  /* The MIME types POST /assets accepts (the Upload files picker lists the same ones). Other files go to the workspace. */
   const UPLOAD_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/quicktime', 'video/webm', 'audio/mpeg', 'audio/wav', 'audio/x-wav', 'audio/mp4', 'audio/x-m4a', 'audio/ogg'];
+  /* Files larger than this are previewed only after a click */
   const AUTO_PREVIEW_BYTES = 30 * 1024 * 1024;
 
   /* One object per chat opened in this page session, kept in state.chats by chatId: its conversation and Files panel nodes
      (view, filesList), the last stream event id (lastId), its status and status-bar line. Switching back to a chat puts these
-     nodes back in the page and resumes the stream after lastId. */
+     nodes back in the page and resumes the stream after lastId. The stream fields (controller, retryTimer, retries,
+     refused429, wanted, ended, error) belong to section 8; the Maps and Sets make sure each message, card and file shows once. */
   const newChatState = chatId => {
     const msgs = el('div', { class: 'mu-msgs' });
     const pinned = el('div', { class: 'mu-msgs mu-pinned' });
@@ -558,6 +614,8 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
       widgets: new Set(), laterWidgets: new Map(), browsers: new Map(), reactions: new Map(), laterFiles: new Map(), lastAssistant: null
     };
   };
+  /* The page: the token and picked account, the chat on screen and every chat opened (chats), the composer's attachments,
+     cached file downloads (blobs, urls) and each tab's paging. The *Seq counters let only the newest of overlapping loads draw. */
   const state = {
     token: '', email: '', accounts: {},
     chat: null, chats: new Map(), liveMax: 5, sending: false, filesSeq: 0, permsSeq: 0, chatsCursor: null, chatsAt: 0, chatsSeq: 0, chatsLoading: false, listTimer: 0,
@@ -568,6 +626,8 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 
   /* ======================================================================
      2. Helpers: DOM, formatting, masking
+     Small pure helpers used everywhere: element building, safe ids for URL paths, email masking, dates and sizes, file names
+     and kinds from asset ids, the inline confirm bar. No API calls here.
      ====================================================================== */
 
   const $ = id => document.getElementById(id);
@@ -616,11 +676,13 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     for (const child of [].concat(children === undefined ? [] : children)) if (child !== null && child !== undefined && child !== false) node.append(child);
     return node;
   };
+  /* Show a status line under an action ('error' red, 'ok' green), with the account emails masked */
   const showMsg = (node, text, kind) => {
     node.textContent = maskEmails(text);
     node.classList.toggle('mu-msg-error', kind === 'error');
     node.classList.toggle('mu-msg-ok', kind === 'ok');
   };
+  /* A button's spinner while its call runs (also disables it, so it cannot fire twice) */
   const setBusy = (button, busy) => {
     button.disabled = busy;
     button.classList.toggle('mu-busy', busy);
@@ -634,31 +696,51 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     if (!iso) return '';
     const d = new Date(iso);
     const now = new Date();
-    if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    if (d.toDateString() === now.toDateString()) return fmtClock(d);
     return d.toLocaleDateString([], d.getFullYear() === now.getFullYear() ? { month: 'short', day: 'numeric' } : { month: 'short', day: 'numeric', year: 'numeric' });
   };
+  /* The time of an ISO date, or '' when there is none */
+  const fmtWhen = iso => iso ? fmtClock(iso) : '';
+  /* Seconds left as "4:05", or "1h 20m" from an hour up */
+  const fmtLeft = s => s >= 3600 ? `${Math.floor(s / 3600)}h ${Math.floor(s % 3600 / 60)}m` : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
   /* Muse's raw statuses as words people use. Anything unknown becomes Title Case. */
   const STATUS_LABELS = { pending_user_confirmation: 'Waiting for approval', running: 'Running', completed: 'Done', interrupted: 'Stopped', user_confirmed: 'Approved', user_denied: 'Denied', approved: 'Approved', denied: 'Denied', timed_out: 'Timed out', expired: 'Expired', pending: 'Waiting', failed: 'Failed', cancelled: 'Cancelled' };
   const statusLabel = status => STATUS_LABELS[status] || String(status || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  /* Muse's activity lines that read better reworded */
   const ACTIVITY_LABELS = { 'Needs approval': 'Waiting for your approval' };
-  const fmtLeft = s => s >= 3600 ? `${Math.floor(s / 3600)}h ${Math.floor(s % 3600 / 60)}m` : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-  /* An asset id ends with "-<type>:<file name>". Files the agent saved elsewhere carry their folder with "~" between parts. */
-  /* a file name from an asset id: media and documents carry it; a web app downloads as <slug>.html, a podcast as <slug>.mp3 */
+  /* A file name from an asset id or a workspace path. An asset id ends with "-<type>:<file name>", and files the agent saved in a
+     folder carry it with "~" between the parts. A web app downloads as <slug>.html, a podcast as <slug>.mp3. */
   const fileNameOf = ref => {
     if (ref.startsWith('workspace/')) return ref.split('/').pop();
     const lib = /-(web|podcast):(?:space|podcast)~(.+)$/.exec(ref);
     if (lib) return `${lib[2]}.${lib[1] === 'web' ? 'html' : 'mp3'}`;
     return ref.replace(/^.*-(image|video|audio|document):/, '').split('~').pop();
   };
+  /* The Library type in an asset id: image, video, audio, document, web or podcast */
   const typeOf = assetId => (/-(image|video|audio|document|web|podcast):/.exec(assetId) || [])[1] || 'file';
   const MEDIA_TYPES = ['image', 'video', 'audio'];
+  /* The icon a Library card shows for a kind with no picture */
   const KIND_ICON = { document: '\u{1F4C4}', web: '\u{1F310}', podcast: '\u{1F399}' };
+  /* A file's kind from its extension (workspace files carry no type): text is previewed as plain text, media in a player */
+  const TEXT_EXT = ['txt', 'md', 'json', 'csv', 'tsv', 'py', 'js', 'ts', 'html', 'css', 'xml', 'yml', 'yaml', 'log', 'sh'];
+  const MEDIA_EXT = { image: ['jpg', 'jpeg', 'png', 'webp', 'gif'], video: ['mp4', 'm4v', 'mov', 'webm'], audio: ['mp3', 'wav', 'm4a', 'aac', 'ogg'] };
+  const extOf = name => {
+    const m = /\.([A-Za-z0-9]+)$/.exec(name);
+    return m ? m[1].toLowerCase() : '';
+  };
+  const kindOf = name => {
+    const ext = extOf(name);
+    if (TEXT_EXT.includes(ext)) return 'text';
+    return ['image', 'video', 'audio'].find(t => MEDIA_EXT[t].includes(ext)) || 'file';
+  };
+  /* A query string from the params that have a value: {email, limit: 30, cursor: null} -> "?email=…&limit=30" */
   const query = params => {
     const q = new URLSearchParams();
     for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== null && v !== '') q.set(k, v);
     const s = q.toString();
     return s ? `?${s}` : '';
   };
+  /* The message bar under the top bar (connection and account problems) */
   const topMsg = (text, kind) => {
     const node = $('mu-top-msg');
     node.hidden = !text;
@@ -681,11 +763,24 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     host.onkeydown = e => { if (e.key === 'Escape') done(false); };
     no.focus();
   });
+  /* Copy an asset id for use in your own API calls; shows it when the clipboard is not allowed */
+  const copyId = async (assetId, msg) => {
+    try {
+      await navigator.clipboard.writeText(assetId);
+      showMsg(msg, 'Asset id copied.', 'ok');
+    } catch (err) {
+      showMsg(msg, `Copy it by hand: ${assetId}`);
+    }
+  };
 
   /* ======================================================================
      3. API client: JSON calls, file bytes, uploads, downloads
+     Everything that talks to the API without drawing a whole view: api() for JSON calls, itemBlob() / itemUrl() for a file's
+     bytes (GET /assets/{assetId}, GET /files/content), podcast covers, uploads (POST /assets, POST /files), Download and
+     Download PDF. Downloads are cached per file, so a preview and its Download button fetch the bytes once.
      ====================================================================== */
 
+  /* The token goes in the Authorization header of every call (never in the URL) */
   const authHeaders = extra => Object.assign({ Authorization: `Bearer ${state.token}` }, extra || {});
   /* A non-2xx answer becomes an Error carrying the HTTP status and the API's own error text. */
   const readJson = async res => {
@@ -700,11 +795,13 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     return readJson(await fetch(API + path, init));
   };
 
-  /* A file is an item: {assetId} (media) or {path} (any workspace file). One Blob per item, so a preview and a Download share one download. */
+  /* A file is an item: {assetId} (a Library file) or {path} (any workspace file). One Blob per item, so a preview and a Download
+     share one download. The download name always comes from the id or path, which carries the right extension (a web app's or
+     podcast's display name, item.name, does not). */
   const itemKey = item => item.assetId || `file:${item.path}`;
   const itemName = item => item.assetId ? fileNameOf(item.assetId) : item.path.split('/').pop();
-  /* (a web app's or podcast's display name is item.name; its download name comes from the id, with the right extension) */
-  /* GET /assets/{assetId} for media, GET /files/content?email=&path= for a workspace file: the bytes, fetched with the token. */
+  /* GET /assets/{assetId} or GET /files/content?email=&path=: the file's bytes as a Blob (a failed download is not cached).
+     The fetch starts inside a promise so an id refused by pathId() becomes a rejected promise, not a thrown error. */
   const itemBlob = item => {
     const key = itemKey(item);
     if (!state.blobs.has(key)) {
@@ -717,6 +814,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     }
     return state.blobs.get(key);
   };
+  /* The same bytes as a blob: URL for <img>, <video> and <audio> (an img tag cannot send the Authorization header) */
   const itemUrl = item => {
     const key = itemKey(item);
     if (!state.urls.has(key)) {
@@ -739,10 +837,22 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     state.urls.delete(key);
     state.blobs.delete(key);
   };
+  /* Another account was picked: drop every cached download */
   const forgetBlobs = () => {
     for (const pending of state.urls.values()) pending.then(url => URL.revokeObjectURL(url), () => 0);
     state.urls.clear();
     state.blobs.clear();
+  };
+  /* GET /assets/{podcastId}?part=cover: a podcast's cover as a blob URL, cached like every other preview (state.urls) */
+  const podcastCover = podcastId => {
+    const key = `${podcastId}#cover`;
+    if (!state.urls.has(key)) {
+      const pending = fetch(`${API}/assets/${pathId(podcastId)}?part=cover`, { headers: authHeaders() })
+        .then(async res => { if (!res.ok) await readJson(res); return URL.createObjectURL(await res.blob()); });
+      pending.catch(() => state.urls.delete(key));
+      state.urls.set(key, pending);
+    }
+    return state.urls.get(key);
   };
 
   /* POST /assets?email=…: the raw file as the body and its MIME type as Content-Type. Answers {assetId, email, type, mime, bytes}. */
@@ -757,8 +867,10 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     const res = await fetch(API + '/files' + query({ email: state.email, path }), { method: 'POST', headers: authHeaders({ 'Content-Type': file.type || 'application/octet-stream' }), body: file });
     return readJson(res);
   };
+  /* A local file name as one workspace path segment: no "/" and no control characters */
   const safeName = name => name.split('/').join('_').replace(/[\u0000-\u001f]/g, '_');
-  /* The /files calls are newer than the rest: a server without them answers "Endpoint not found", or the browser blocks the call. */
+  /* A /files error as a message. A server without the /files endpoints answers "Endpoint not found" (or the browser blocks the
+     call): say so plainly instead of showing a bare 404. */
   const filesError = err => (err.status === 404 && /Endpoint not found/.test(err.message)) || err instanceof TypeError ? 'The workspace file API (/files) is not available on this server yet.' : err.message;
 
   /* Save a file: download it (with the token) as a Blob, then click a temporary link named after the file. */
@@ -800,59 +912,13 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     }
   };
 
-  /* A web app's public link: POST /assets/{assetId}/share publishes it (anyone with the link can open it, signed in or not;
-     Muse reviews it first, about 15 s), DELETE …/share stops sharing. Publishing asks for a second click. */
-  const shareControls = (asset, name, msg) => {
-    const box = el('span', { class: 'mu-share' });
-    const change = async (method, button) => {
-      setBusy(button, true);
-      showMsg(msg, method === 'POST' ? 'Muse is reviewing and publishing the app…' : 'Stopping sharing…');
-      try {
-        const res = await fetch(`${API}/assets/${pathId(asset.assetId)}/share`, { method, headers: authHeaders() });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(`${res.status}: ${data.error || res.statusText}${data.errorDetails ? `\n${data.errorDetails}` : ''}`);
-        asset.shareUrl = data.shareUrl || null;
-        showMsg(msg, asset.shareUrl ? `Published: ${asset.shareUrl}` : 'No longer shared.', 'ok');
-        render();
-      } catch (err) {
-        showMsg(msg, err.message, 'error');
-        setBusy(button, false);
-      }
-    };
-    const render = () => {
-      box.textContent = '';
-      if (asset.shareUrl) {
-        box.append(
-          el('a', { class: 'mu-btn mu-btn-sm', href: asset.shareUrl, target: '_blank', rel: 'noopener', text: 'Open public link' }),
-          el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Copy link', onclick: async () => {
-            try {
-              await navigator.clipboard.writeText(asset.shareUrl);
-              showMsg(msg, 'Link copied.', 'ok');
-            } catch (err) {
-              showMsg(msg, asset.shareUrl);
-            }
-          } }),
-          el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Stop sharing', onclick: ev => change('DELETE', ev.currentTarget) })
-        );
-        return;
-      }
-      const share = el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Share', 'aria-label': `Publish ${name} on a public link` });
-      share.addEventListener('click', () => {
-        if (share.dataset.confirm) return change('POST', share);
-        share.dataset.confirm = '1';
-        share.textContent = 'Publish publicly';
-        showMsg(msg, 'Anyone with the link will be able to open this app. Click "Publish publicly" to go ahead.');
-      });
-      box.append(share);
-    };
-    render();
-    return box;
-  };
-
   /* ======================================================================
      4. Media previews and file cards (chat Files panel and Files tab)
+     The preview box and the file card shared by the chat's Files panel, the Library and the Workspace preview, plus the Share
+     controls of a web app (POST / DELETE /assets/{assetId}/share). Bytes come from section 3.
      ====================================================================== */
 
+  /* Run once the node scrolls near the view, so a long list does not download every file at once */
   const whenVisible = (node, run) => {
     if (!('IntersectionObserver' in window)) return run();
     const io = new IntersectionObserver(entries => {
@@ -863,18 +929,8 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     }, { rootMargin: '200px' });
     io.observe(node);
   };
-  /* A preview box: the image, video or audio from a blob URL once it scrolls into view. Large files wait for a click. */
-  /* GET /assets/{podcastId}?part=cover: a podcast's cover as a blob URL, cached like every other preview (state.urls) */
-  const podcastCover = podcastId => {
-    const key = `${podcastId}#cover`;
-    if (!state.urls.has(key)) {
-      const pending = fetch(`${API}/assets/${pathId(podcastId)}?part=cover`, { headers: authHeaders() })
-        .then(async res => { if (!res.ok) await readJson(res); return URL.createObjectURL(await res.blob()); });
-      pending.catch(() => state.urls.delete(key));
-      state.urls.set(key, pending);
-    }
-    return state.urls.get(key);
-  };
+  /* A preview box: an image, video or audio player once it scrolls into view (large files wait for a click), the first lines of
+     a text document, a podcast's cover with its audio on demand, or an icon for any other kind. */
   const preview = asset => {
     const box = el('div', { class: 'mu-preview' });
     /* the Library's other kinds: a document or web app shows its icon; a podcast its cover, with its audio on demand */
@@ -934,7 +990,58 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     return box;
   };
 
-  /* A file card, used by the chat's Files panel and the Files tab: preview, name, details and actions. */
+  /* A web app's public link: POST /assets/{assetId}/share publishes it (anyone with the link can open it, signed in or not;
+     Muse reviews it first, about 15 s), DELETE …/share stops sharing. Publishing asks for a second click. This call reads the
+     response itself (not api()) to show the API's errorDetails under the error, which says why Muse refused to publish. */
+  const shareControls = (asset, name, msg) => {
+    const box = el('span', { class: 'mu-share' });
+    const change = async (method, button) => {
+      setBusy(button, true);
+      showMsg(msg, method === 'POST' ? 'Muse is reviewing and publishing the app…' : 'Stopping sharing…');
+      try {
+        const res = await fetch(`${API}/assets/${pathId(asset.assetId)}/share`, { method, headers: authHeaders() });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(`${res.status}: ${data.error || res.statusText}${data.errorDetails ? `\n${data.errorDetails}` : ''}`);
+        asset.shareUrl = data.shareUrl || null;
+        showMsg(msg, asset.shareUrl ? `Published: ${asset.shareUrl}` : 'No longer shared.', 'ok');
+        render();
+      } catch (err) {
+        showMsg(msg, err.message, 'error');
+        setBusy(button, false);
+      }
+    };
+    const render = () => {
+      box.textContent = '';
+      if (asset.shareUrl) {
+        box.append(
+          el('a', { class: 'mu-btn mu-btn-sm', href: asset.shareUrl, target: '_blank', rel: 'noopener', text: 'Open public link' }),
+          el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Copy link', onclick: async () => {
+            try {
+              await navigator.clipboard.writeText(asset.shareUrl);
+              showMsg(msg, 'Link copied.', 'ok');
+            } catch (err) {
+              showMsg(msg, asset.shareUrl);
+            }
+          } }),
+          el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Stop sharing', onclick: ev => change('DELETE', ev.currentTarget) })
+        );
+        return;
+      }
+      const share = el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Share', 'aria-label': `Publish ${name} on a public link` });
+      share.addEventListener('click', () => {
+        if (share.dataset.confirm) return change('POST', share);
+        share.dataset.confirm = '1';
+        share.textContent = 'Publish publicly';
+        showMsg(msg, 'Anyone with the link will be able to open this app. Click "Publish publicly" to go ahead.');
+      });
+      box.append(share);
+    };
+    render();
+    return box;
+  };
+
+  /* A file card, used by the chat's Files panel (options.tab false) and the Library (options.tab true, which adds Download PDF,
+     Share, Copy id and Delete): preview, name, details and actions. */
   const fileCard = (asset, options) => {
     const msg = el('div', { class: 'mu-item-msg', role: 'status' });
     const name = asset.name || (asset.assetId ? fileNameOf(asset.assetId) : 'Untitled');
@@ -944,7 +1051,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     const meta = [kind === 'web' ? 'web app' : kind, !media && asset.format, fmtBytes(asset.bytes), secs, asset.origin, fmtDate(asset.updated || asset.created)].filter(Boolean).join(' · ');
     const download = el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Download', 'aria-label': `Download ${name}` });
     download.addEventListener('click', () => downloadItem(asset, download, msg));
-    /* a kind Muse reports that the API has no id for yet is listed only; media can be attached to a message */
+    /* an entry without an assetId (a kind the API cannot download) is listed without actions; media can be attached to a message */
     const actions = el('div', { class: 'mu-actions' }, asset.assetId ? [
       download,
       ...(media ? [el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: options.tab ? 'Use in chat' : 'Use in next message', title: 'Attach this file to your next message', onclick: () => useInMessage({ ref: asset.assetId, name, type: kind }, msg) })] : [])
@@ -963,6 +1070,8 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 
   /* ======================================================================
      5. Accounts and usage: token, account picker, live usage line, tabs
+     Connect reads the accounts (GET /accounts); the usage line under the picker reads one account fresh (GET /accounts/{email})
+     on a strict schedule; picking an account resets every tab; showTab switches Chat / Files / Permissions.
      ====================================================================== */
 
   /* Keep the token in sessionStorage (this tab only) when "Remember" is ticked, otherwise forget it */
@@ -1015,20 +1124,21 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
   const USAGE_AUTO_EVERY = 5 * 60 * 1000;
   const USAGE_AUTO_GAP = 3 * 60 * 1000;
   const USAGE_ACTIVE_WINDOW = 15 * 60 * 1000;
-  /* FNV-1a: a short, stable key for an email */
+  /* FNV-1a hash: a short, stable key for an email */
   const emailKey = email => {
     let h = 0x811c9dc5;
     for (const ch of email.toLowerCase()) h = Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0;
     return h.toString(36);
   };
+  /* When each account was last checked: {emailKey: ms}, kept in localStorage */
   const usageChecks = (() => {
     try {
-      localStorage.removeItem('muse-demo-usage-checked');
       return JSON.parse(localStorage.getItem(USAGE_KEY) || '{}') || {};
     } catch (err) {
       return {};
     }
   })();
+  /* When an account's usage was last read (ms, 0 = never), and record a read now */
   const lastCheck = email => usageChecks[emailKey(email)] || 0;
   const noteCheck = email => {
     usageChecks[emailKey(email)] = Date.now();
@@ -1036,7 +1146,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
       localStorage.setItem(USAGE_KEY, JSON.stringify(usageChecks));
     } catch (err) { /* storage blocked: remembered until the page closes */ }
   };
-  /* per account: a check in flight (busy) and the ↻ rest */
+  /* Per account: a check in flight (busy) and the ↻ rest (restUntil); the timers of the 5-minute and after-answer checks */
   const usageState = { busy: new Set(), restUntil: new Map(), timer: 0, auto: 0, afterTurn: 0 };
   const fmtReset = iso => iso ? new Date(iso).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }) : '';
   /* The picker's option: masked email · health · 52%, with the full detail in its tooltip */
@@ -1078,8 +1188,8 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     if (option) Object.assign(option, accountLabel(email));
     if ($('mu-account').value === email) $('mu-account').title = option ? option.title : '';
   };
-  /* GET /accounts/{email}: the account with its usage read fresh from Muse ({quota}), or {quotaError, session: 'unknown'} */
-  /* mode: 'select' (account picked), 'auto' (the 5-minute timer or an answer ended) or 'demand' (↻) */
+  /* GET /accounts/{email}: the account with its usage read fresh from Muse ({quota}), or {quotaError, session: 'unknown'}.
+     mode: 'select' (account picked), 'auto' (the 5-minute timer or an answer ended) or 'demand' (↻); each has its own limit. */
   const checkUsage = async (email, mode) => {
     if (!email || usageState.busy.has(email)) return;
     /* a time in the future (the computer's clock was changed) counts as never */
@@ -1149,8 +1259,10 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     if (tab === 'perms') loadPerms();
   };
 
+  /* The three tabs (ids mu-tab-<name> and mu-panel-<name>). A tab loads its data the first time it is shown for an account. */
   const TABS = ['chat', 'files', 'perms'];
   const currentTab = () => TABS.find(t => $(`mu-tab-${t}`).getAttribute('aria-selected') === 'true');
+  /* Show one tab (and load its data if needed) */
   const showTab = name => {
     for (const t of TABS) {
       const on = t === name;
@@ -1165,10 +1277,13 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 
   /* ======================================================================
      6. Chat list: last-known statuses, live dots, refresh
+     The left column: GET /chats (paged with cursor) and DELETE /chats/{chatId}. Each entry shows a live status for chats with an
+     open stream and a greyed, last-checked status for the rest.
      ====================================================================== */
 
   /* The list shows each chat's status as of the last GET /chats ("last checked", greyed with a clock). Live chats (the one shown
      and the others still streaming, section 8) show the status from their own stream instead, with a green dot while connected. */
+  /* A colored status pill (mu-pill-<status>), or null when there is no status */
   const statusPill = (status, title) => status ? el('span', { class: `mu-pill mu-pill-${status}`, text: statusLabel(status), title: title || statusLabel(status) }) : null;
   /* The caption says what is real-time and what is not: chats with a live stream (green dot) vs the rest, as of the last list check */
   const renderListAge = () => {
@@ -1198,6 +1313,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     if (status) box.append(statusPill(status, open ? '' : `${statusLabel(status)} · ${checked}`));
     if (open && chat.live) box.append(el('span', { class: 'mu-live-dot', role: 'img', title: 'Live', 'aria-label': 'Live' }));
   };
+  /* Redraw every entry's status (the shown chat changed) */
   const renderListStatuses = () => {
     for (const item of $('mu-chat-list').children) renderItemStatus(item);
   };
@@ -1249,6 +1365,8 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
   /* Muse names a chat a little after it starts: until then a chat started here keeps its first message as the title */
   const titleOf = c => c.title || (state.chats.get(c.chatId) || {}).title || 'Untitled chat';
 
+  /* One list entry for a chat summary from GET /chats: open on click, ✕ deletes (after an inline confirm). checked = when the
+     status was read. */
   const chatItem = (c, checked) => {
     const msg = el('div', { class: 'mu-item-msg', role: 'status' });
     const item = el('div', { class: 'mu-chat-item', role: 'listitem', 'data-id': c.chatId, 'data-status': c.status || '', 'data-checked': String(checked || Date.now()) });
@@ -1299,10 +1417,13 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 
   /* ======================================================================
      7. Chat state and rendering: one in-memory object per chat, bubbles, Markdown, files
+     The middle column: showing a chat (and keeping each chat's nodes and scroll position), opening one (GET /chats/{chatId}
+     for its files, widgets, reactions, approvals and browser tasks), message bubbles, a small Markdown renderer and file events.
      ====================================================================== */
 
   /* True for the chat on screen (only it drives the header, status bar and scroll position) */
   const isCurrent = chat => state.chat === chat;
+  /* Keep the shown chat at the bottom while it follows new content */
   const scrollLog = chat => {
     if (isCurrent(chat) && chat.follow) $('mu-log').scrollTop = $('mu-log').scrollHeight;
   };
@@ -1328,11 +1449,14 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     $('mu-conn-text').textContent = chat.conn.text;
     $('mu-conn').title = chat.conn.detail;
   };
+  /* A chat's title and (when given) status, shown in the header when it is the chat on screen */
   const setHeader = (chat, title, status) => {
     if (title) chat.title = title;
     if (title && isCurrent(chat)) $('mu-chat-title').textContent = title;
     if (status !== undefined) setChatStatus(chat, status);
   };
+  /* A chat's status (running, completed, pending_user_confirmation…): its list entry, and for the shown chat the header pill,
+     spinner and Stop button. It also starts or stops the 5-minute usage check. */
   const setChatStatus = (chat, status) => {
     chat.status = status || '';
     chat.busy = status === 'running';
@@ -1356,6 +1480,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     $('mu-stop').classList.toggle('mu-btn-danger', chat.status === 'running');
     $('mu-reconnect').disabled = !chat.id;
   };
+  /* A one-line note in a conversation (stream problems, a deleted chat); the same note twice in a row shows once */
   const logNote = (chat, rawText, kind) => {
     const text = maskEmails(rawText);
     const last = chat.msgs.lastElementChild;
@@ -1624,6 +1749,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
       }
     }
   };
+  /* **bold**, `code` and [links](https://…) inside one line; only http and https links become links */
   const inlineMarkdown = (node, text) => {
     const re = /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\(https?:[^)\s]+\))/g;
     let at = 0;
@@ -1643,6 +1769,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     return node;
   };
 
+  /* Your message (from Send or the stream's message event, one bubble either way), with chips for its files */
   const showUserMessage = (chat, messageId, text, files) => {
     const b = bubble(chat, `user:${messageId}`, 'user');
     b.node.classList.remove('mu-pending');
@@ -1682,6 +1809,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     scrollLog(chat);
   };
 
+  /* The Files panel title and the count on the Files button */
   const updateFilesHeader = chat => {
     if (!isCurrent(chat)) return;
     const n = chat.files.size;
@@ -1703,6 +1831,8 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 
   /* ======================================================================
      8. Streams: live chats (max + least recently used), SSE reading, resume, backoff
+     GET /chats/{chatId}/stream, one per live chat: which chats stay live, reading the Server-Sent Events, handling each event,
+     and reconnecting after the last event id when a stream ends.
      ====================================================================== */
 
   /* Why a limit: every open stream is a connection the account keeps open (the API refuses more than about 50 per account with
@@ -1711,6 +1841,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
      would make the next event you wait for arrive late. Chats with an answer running are closed last.
      Background live chats keep taking in their events (messages, files, statuses), so switching to one is instant and current.
      A chat that is no longer live keeps its last event id and resumes from it, silently, when it is opened again. */
+  /* localStorage key of the "Live chats" setting */
   const LIVE_KEY = 'muse-demo-live-chats';
   /* The chats that keep a stream open (wanted), the shown chat included once it has an id */
   const liveChats = () => [...state.chats.values()].filter(c => c.wanted);
@@ -1763,10 +1894,11 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     enforceLiveCap();
   };
 
-  /* One stream event (the list in the Chat Streaming Guide). */
-  /* Events that carry the chat's content. Only these prove the stream works: initialized can be followed at once by an error
-     event (Muse could not be read), so counting it as success would retry every second forever without saying so. */
-  const CONTENT_EVENTS = new Set(['message', 'text', 'message.done', 'file', 'widget', 'activity', 'status', 'approval', 'approval.resolved', 'turn.done']);
+  /* Events that carry the chat's content. Only these prove the stream works and reset the retry backoff: initialized can be
+     followed at once by an error event (Muse could not be read), so counting it as success would retry every second forever. */
+  const CONTENT_EVENTS = new Set(['message', 'text', 'message.done', 'file', 'widget', 'activity', 'status', 'approval', 'approval.resolved', 'turn.done', 'browser', 'reaction']);
+  /* One stream event ({event, …}; the full list is in the docs' Chat Streaming Guide). Events update the chat's object and its
+     nodes even while the chat is not on screen. idle, reconnect and error only record why the stream is about to end. */
   const onEvent = (chat, e) => {
     if (CONTENT_EVENTS.has(e.event)) {
       chat.retries = 0;
@@ -1994,8 +2126,13 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 
   /* ======================================================================
      9. Sending, widgets and approvals
+     The composer (attachments, POST /chats, POST /chats/{chatId}/messages, POST /chats/{chatId}/cancel) and the cards Muse puts
+     in a conversation: widgets (POST …/widgets/{widgetId}), reactions, browser tasks (GET …/browser/{taskId}, POST …/viewer,
+     …/release, …/stop) and approvals (POST …/approvals/{approvalId}).
      ====================================================================== */
 
+  /* --- Composer --- */
+  /* The chips above the message box: one per attached file, uploading, ready or failed, each with ✕ to remove it */
   const renderAttachments = () => {
     const box = $('mu-attachments');
     box.textContent = '';
@@ -2124,6 +2261,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
       updateComposer();
     }
   };
+  /* The message box grows with its text, up to 180 px */
   const autoGrow = () => {
     const input = $('mu-input');
     input.style.height = 'auto';
@@ -2242,13 +2380,14 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     }
   };
 
-  /* --- Reactions: Muse reacts to your messages (👍, 🫶 …). Reacting yourself is in the API (POST /chats/{chatId}/messages/
-     {messageId}/reactions, any emoji); the demo leaves it out — Muse's own app offers a full emoji picker. A reaction event carries the message's whole
-     current set, so the row is redrawn from it. Kept per message until its bubble exists (history may arrive first). --- */
+  /* --- Reactions: the emoji Muse adds to messages --- */
+  /* A reaction event (and messages[].reactions from GET /chats/{chatId}) carries the message's whole current set, so the row is
+     redrawn from it. The set is kept per message until its bubble exists, since GET may answer before the stream draws it. */
   const showReactions = (chat, messageId, list) => {
     chat.reactions.set(messageId, Array.isArray(list) ? list : []);
     renderReactions(chat, messageId);
   };
+  /* The reactions row under a bubble (your message or Muse's), created the first time it is needed */
   const renderReactions = (chat, messageId) => {
     const b = chat.bubbles.get(messageId) || chat.bubbles.get(`user:${messageId}`);
     if (!b) return;
@@ -2257,30 +2396,32 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     b.reacts.replaceChildren(...list.map(e => el('span', { class: 'mu-react', text: e })));
   };
 
-  /* --- Browser tasks: Muse working in a web browser on its computer --- */
+  /* --- Browser tasks: Muse working in a web browser on its own computer --- */
   /* One card per browser task (taskId), updated in place by each `browser` stream event and by GET /chats/{chatId}
      (browsers[]). A task is state, not a message: every stream open sends its latest state again, so an update older than the
-     one shown is ignored. "Watch live" mints a single-use viewer link (POST …/browser/{taskId}/viewer) and opens the hosted
-     noVNC page in a new tab — watch, or take control from inside the viewer. */
-  /* after a message bubble, past any browser cards already placed there */
+     one shown is ignored.
+     Control of the browser is shared: Muse drives it, and "Watch live" opens a live view of it in a new tab, where you can watch
+     or take control (to sign in to a site, for example). While you have control (controlOwner 'user', until controlExpiresAt),
+     "Give back" hands it back to Muse without waiting for that time. "Stop" closes the browser task. */
+  /* Put a card after a message bubble, past any browser cards already placed there */
   const placeAfter = (node, card) => {
     let at = node;
     while (at.nextElementSibling && at.nextElementSibling.classList.contains('mu-browser')) at = at.nextElementSibling;
     at.after(card);
   };
-  const fmtWhen = iso => iso ? new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
-  const showBrowser = (chat, state, fromDetails) => {
-    let c = chat.browsers.get(state.taskId);
+  /* A browser task's state (a stream event, or browsers[] from GET /chats/{chatId} with fromDetails). A stream event arrives in
+     conversation order, so its card goes at the end of the conversation. A task from GET carries afterMessageId, the message it
+     came after: its card goes right after that message, or waits pinned under the conversation until the stream draws it. */
+  const showBrowser = (chat, task, fromDetails) => {
+    let c = chat.browsers.get(task.taskId);
     if (!c) {
-      c = browserCard(chat, state.taskId);
-      chat.browsers.set(state.taskId, c);
-      /* a task first known from GET /chats/{chatId} goes right after the message it followed (afterMessageId; after
-         any task already placed there), else under the conversation like pending approvals; a live one where it happens */
-      const anchor = fromDetails && state.afterMessageId && (chat.bubbles.get(state.afterMessageId) || chat.bubbles.get(`user:${state.afterMessageId}`));
+      c = browserCard(chat, task.taskId);
+      chat.browsers.set(task.taskId, c);
+      const anchor = fromDetails && task.afterMessageId && (chat.bubbles.get(task.afterMessageId) || chat.bubbles.get(`user:${task.afterMessageId}`));
       if (anchor) placeAfter(anchor.node, c.card);
       else {
         /* the stream replay has not drawn the anchor yet: wait pinned, bubble() moves the card once it does */
-        if (fromDetails && state.afterMessageId) c.after = state.afterMessageId;
+        if (fromDetails && task.afterMessageId) c.after = task.afterMessageId;
         (fromDetails ? chat.pinned : chat.msgs).append(c.card);
       }
     } else if (!fromDetails && c.card.parentNode === chat.pinned) {
@@ -2288,11 +2429,12 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
       c.after = null;
       chat.msgs.append(c.card);
     }
-    if (c.state && state.updated && c.state.updated && Date.parse(state.updated) < Date.parse(c.state.updated)) return;
-    c.state = Object.assign({}, c.state, state);
+    if (c.state && task.updated && c.state.updated && Date.parse(task.updated) < Date.parse(c.state.updated)) return;
+    c.state = Object.assign({}, c.state, task);
     renderBrowser(c);
     scrollLog(chat);
   };
+  /* The card's nodes, kept on c so renderBrowser can update them in place */
   const browserCard = (chat, taskId) => {
     const c = { chat, taskId, state: null };
     c.title = el('div', { class: 'mu-approval-title', text: 'Muse is using a browser' });
@@ -2311,6 +2453,7 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     ]);
     return c;
   };
+  /* Draw a task's state: status, current step, page, who has control, and which buttons apply (none once it ended) */
   const renderBrowser = c => {
     const b = c.state;
     const status = b.ended ? 'Ended' : b.status || 'Unknown';
@@ -2332,17 +2475,18 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     c.release.disabled = !!b.ended;
     c.stop.disabled = !!b.ended;
   };
-  /* POST …/viewer {mode:'control'} → {url}: a single-use link to the hosted noVNC page; open it in a new tab. The viewer
-     page has its own Take control / Release buttons; one viewer per browser task at a time (409 while one is open). */
+  /* POST …/viewer {mode: 'control'} → {url, expiresAt}: a single-use link to the hosted live view; open it in a new tab. The
+     viewer page has its own Take control / Release buttons; one viewer per browser task at a time (409 while one is open).
+     Only a link on api.useapi.net is opened. */
   const watchBrowser = async c => {
     setBusy(c.watch, true);
     try {
       const r = await api('POST', `/chats/${pathId(c.chat.id)}/browser/${pathId(c.taskId)}/viewer`, { mode: 'control' });
       if (!r.url || !/^https:\/\/api\.useapi\.net\//.test(r.url)) throw new Error('The API returned no viewer URL');
       window.open(r.url, '_blank', 'noopener,noreferrer');
-      showMsg(c.msg, `Viewer link opens in a new tab (usable once, expires ${fmtWhen(r.expiresAt)}).`, 'ok');
+      showMsg(c.msg, `Viewer link opens in a new tab (usable once${r.expiresAt ? `, expires ${fmtWhen(r.expiresAt)}` : ''}).`, 'ok');
     } catch (err) {
-      showMsg(c.msg, err.status === 404 ? 'The live view is on the development API only for now.' : err.message, 'error');
+      showMsg(c.msg, err.message, 'error');
     } finally {
       setBusy(c.watch, false);
     }
@@ -2353,7 +2497,6 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     try {
       const b = await api('GET', `/chats/${pathId(c.chat.id)}/browser/${pathId(c.taskId)}`);
       c.state = Object.assign({}, c.state, b);
-      renderBrowser(c);
       showMsg(c.msg, `Checked at ${fmtWhen(new Date().toISOString())}.`);
     } catch (err) {
       showMsg(c.msg, err.message, 'error');
@@ -2393,7 +2536,8 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     }
   };
 
-  /* --- Approvals: the agent asks before it acts --- */
+  /* --- Approvals: the agent asks before it acts (for example before it sends an email), and waits for an answer until it expires --- */
+  /* "Approved (allow_once)": how an approval was answered */
   const resolvedText = r => `${r.status ? statusLabel(r.status) : 'Answered'}${r.decision ? ` (${r.decision})` : ''}`;
 
   /* A card for one approval: title, question, details, a countdown to expires, and one button per option. */
@@ -2418,6 +2562,7 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     startCountdown(c, a.expires);
     return c;
   };
+  /* An approval card that can no longer be answered (answered here or elsewhere, or expired): buttons off, countdown gone */
   const finishCard = (c, text, kind) => {
     c.done = true;
     clearInterval(c.timer);
@@ -2426,6 +2571,7 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     c.card.classList.add('mu-approval-done');
     showMsg(c.msg, text, kind);
   };
+  /* "Answer within 4:05", ticking every second until expires */
   const startCountdown = (c, expires) => {
     const end = expires ? Date.parse(expires) : 0;
     if (!end) return;
@@ -2465,6 +2611,7 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     (pinned ? chat.pinned : chat.msgs).append(c.card);
     scrollLog(chat);
   };
+  /* approval.resolved: remembered, so a card drawn later (from GET) shows as answered at once */
   const resolveApproval = (chat, e) => {
     chat.resolved.set(e.approvalId, e);
     const c = chat.cards.get(e.approvalId);
@@ -2473,9 +2620,13 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
 
   /* ======================================================================
      10. Files, Workspace and Permissions tabs
+     Files tab, Library view: GET /assets (filters, paging), uploads (POST /assets) and DELETE /assets/{assetId}.
+     Files tab, Workspace view: GET /files, GET /files/search, GET /files/content, POST /files and DELETE /files.
+     Permissions tab: GET / POST /accounts/{email}/permissions, POST / DELETE …/permissions/{permissionId} and
+     GET /accounts/{email}/approvals.
      ====================================================================== */
 
-  /* --- Files tab --- */
+  /* --- Files tab: Library view --- */
   /* GET /assets: the account's files, newest first, filtered by type and origin. A page may hold fewer than limit: cursor continues it. */
   const loadFiles = async reset => {
     const email = state.email;
@@ -2513,18 +2664,12 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
       showMsg(msg, err.message, 'error');
     }
   };
-  const copyId = async (assetId, msg) => {
-    try {
-      await navigator.clipboard.writeText(assetId);
-      showMsg(msg, 'Asset id copied.', 'ok');
-    } catch (err) {
-      showMsg(msg, `Copy it by hand: ${assetId}`);
-    }
-  };
+  /* A file just uploaded goes on top of the Library grid */
   const addUploaded = r => {
     $('mu-grid').prepend(fileCard({ assetId: r.assetId, type: r.type, mime: r.mime, bytes: r.bytes, origin: 'uploaded', created: new Date().toISOString() }, { tab: true }));
     showMsg($('mu-f-state'), '');
   };
+  /* Upload files one after another with POST /assets (raw bytes), showing progress in the toolbar line */
   const uploadFromDisk = async files => {
     if (!state.email) return showMsg($('mu-f-msg'), 'Connect first.', 'error');
     for (const file of files) {
@@ -2552,12 +2697,14 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     }
   };
 
-  /* --- Files tab: Media or Workspace view --- */
+  /* --- Files tab: Library or Workspace view --- */
   const wsVisible = () => !$('mu-ws-view').hidden;
+  /* Load the view on screen the first time it is shown for this account */
   const loadFilesView = () => {
     if (wsVisible() && !state.loaded.ws) loadWorkspace(state.ws.path);
     if (!wsVisible() && !state.loaded.files) loadFiles(true);
   };
+  /* Switch the Files tab between Library (ws false) and Workspace (ws true) */
   const showFilesView = ws => {
     $('mu-view-media').setAttribute('aria-selected', ws ? 'false' : 'true');
     $('mu-view-ws').setAttribute('aria-selected', ws ? 'true' : 'false');
@@ -2568,20 +2715,11 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     if (state.email) loadFilesView();
   };
 
-  /* --- Workspace view: a file browser over the account's Muse workspace --- */
-  const TEXT_EXT = ['txt', 'md', 'json', 'csv', 'tsv', 'py', 'js', 'ts', 'html', 'css', 'xml', 'yml', 'yaml', 'log', 'sh'];
-  const MEDIA_EXT = { image: ['jpg', 'jpeg', 'png', 'webp', 'gif'], video: ['mp4', 'm4v', 'mov', 'webm'], audio: ['mp3', 'wav', 'm4a', 'aac', 'ogg'] };
+  /* --- Workspace view: a file browser over the account's Muse workspace (paths start at "workspace") --- */
+  /* The icon in front of each row, by kind (kindOf, section 2) */
   const ICONS = { directory: '\u{1F4C1}', image: '\u{1F5BC}', video: '\u{1F39E}', audio: '\u{1F3B5}', text: '\u{1F4C4}', file: '\u{1F4E6}' };
+  /* A text preview reads at most this much of the file */
   const TEXT_PREVIEW_BYTES = 200 * 1024;
-  const extOf = name => {
-    const m = /\.([A-Za-z0-9]+)$/.exec(name);
-    return m ? m[1].toLowerCase() : '';
-  };
-  const kindOf = name => {
-    const ext = extOf(name);
-    if (TEXT_EXT.includes(ext)) return 'text';
-    return ['image', 'video', 'audio'].find(t => MEDIA_EXT[t].includes(ext)) || 'file';
-  };
 
   /* The path as clickable parts: workspace / your_files / … (and "Search results" while a search is shown). */
   const renderCrumbs = () => {
@@ -2748,7 +2886,7 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
         /* the file may have been cached under its path or, for media, its asset id: forget both */
         const row = [...$('mu-ws-rows').children].find(n => n.dataset.path === r.path || n.dataset.path === path);
         for (const key of [`file:${r.path || path}`, r.assetId, row && row.dataset.assetId]) if (key) forgetItem(key);
-        showMsg($('mu-ws-msg'), `Uploaded to ${r.path}.`, 'ok');
+        showMsg($('mu-ws-msg'), `Uploaded to ${r.path || path}.`, 'ok');
       } catch (err) {
         showMsg($('mu-ws-msg'), filesError(err), 'error');
       }
@@ -2757,10 +2895,13 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
   };
 
   /* --- Permissions tab --- */
+  /* A rule's modes as words. "ask" is Muse's default, so choosing it removes the rule. */
   const MODES = { allow: 'Allow', ask: 'Ask (removes the rule)', deny: 'Deny' };
+  /* The picked account's path, for the permission and approval calls */
   const accountPath = () => `/accounts/${pathId(state.email)}`;
 
-  /* GET /accounts/{email}/permissions and GET /accounts/{email}/approvals, read side by side. */
+  /* GET /accounts/{email}/permissions and GET /accounts/{email}/approvals, read side by side; one failing does not hide the
+     other. Each call is wrapped in an async function so an error thrown while building the URL also lands in allSettled. */
   const loadPerms = async () => {
     const email = state.email;
     const seq = ++state.permsSeq;
@@ -2781,9 +2922,11 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     else for (const id of ['mu-p-pending-state', 'mu-p-decided-state']) showMsg($(id), approvals.reason.message, 'error');
   };
 
+  /* The Defaults selects and one table row per standing rule */
   const renderPermissions = data => {
-    if (data.defaults.web) $('mu-p-web').value = data.defaults.web;
-    if (data.defaults.connectors) $('mu-p-connectors').value = data.defaults.connectors;
+    const defaults = data.defaults || {};
+    if (defaults.web) $('mu-p-web').value = defaults.web;
+    if (defaults.connectors) $('mu-p-connectors').value = defaults.connectors;
     for (const r of data.rules) $('mu-p-rules').append(ruleRow(r));
     showMsg($('mu-p-rules-state'), data.rules.length ? '' : 'No rules yet. They appear when you answer a request with a permanent allow, or connect an app.');
   };
@@ -2804,6 +2947,7 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     }
   };
 
+  /* A rule row: type, title and note, target, a mode select (the modes Muse allows for it) and Remove (when revocable) */
   const ruleRow = r => {
     const msg = el('div', { class: 'mu-item-msg', role: 'status' });
     const label = r.title || r.target || r.permissionId;
@@ -2858,13 +3002,14 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
 
   /* Each approval names the chat that asked (chatId): pending ones are answered in that chat, answered ones link to it. */
   const renderApprovals = data => {
-    for (const a of data.pending) {
+    const pending = data.pending || [];
+    for (const a of pending) {
       const c = approvalCard(a, a.chatId);
       state.permCards.push(c);
       if (a.chatId) c.card.append(el('div', { class: 'mu-actions' }, el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Open chat', onclick: () => openChatFromAnywhere(a.chatId) })));
       $('mu-p-pending').append(c.card);
     }
-    showMsg($('mu-p-pending-state'), data.pending.length ? '' : 'Nothing is waiting for an answer.');
+    showMsg($('mu-p-pending-state'), pending.length ? '' : 'Nothing is waiting for an answer.');
     for (const a of data.decided || []) {
       $('mu-p-decided').append(el('tr', {}, [
         el('td', {}, [el('div', { text: a.title || 'Request' }), a.question ? el('div', { class: 'mu-muted', text: a.question }) : null]),
@@ -2876,6 +3021,7 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     }
     showMsg($('mu-p-decided-state'), (data.decided || []).length ? '' : 'No answered requests yet.');
   };
+  /* "Open chat" on the Permissions tab: switch to the Chat tab and open that chat */
   const openChatFromAnywhere = chatId => {
     showTab('chat');
     openChat(chatId, null);
@@ -2883,6 +3029,8 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
 
   /* ======================================================================
      11. Layout and boot
+     The columns, drawers and splitters, then init(): every event listener, the remembered token and settings, and the first
+     Connect when a remembered token is there.
      ====================================================================== */
 
   /* --- Layout: the chat's Files panel opens and closes (closed by default when the app is under 1000 px wide) --- */
@@ -2938,6 +3086,7 @@ html, body { margin: 0; background: transparent; color: var(--hatch-widget-text)
     }
   };
 
+  /* Wire the page up. Runs once, at the end of the script, after every definition above. */
   const init = () => {
     try {
       const saved = sessionStorage.getItem(TOKEN_KEY);
