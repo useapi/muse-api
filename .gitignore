@@ -16,3 +16,4 @@ result.json
 *_state.json
 _*.*
 !skills/**/scripts/_common.sh
+!n8n/*.png
