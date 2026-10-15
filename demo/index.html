@@ -81,7 +81,7 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 .mu-pill-pending_user_confirmation, .mu-pill-pending { background: var(--mu-warn-soft); color: var(--mu-warn); }
 .mu-pill-approved, .mu-pill-user_confirmed { color: var(--mu-ok); }
 .mu-badge { display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 999px; font-size: 10.5px; font-weight: 700; background: rgba(255, 255, 255, 0.25); text-transform: uppercase; letter-spacing: 0.03em; }
-.mu-item-msg { font-size: 12.5px; color: var(--mu-muted); }
+.mu-item-msg { font-size: 12.5px; color: var(--mu-muted); white-space: pre-line; overflow-wrap: anywhere; }
 .mu-item-msg:empty { display: none; }
 .mu-msg-error { color: var(--mu-danger) !important; }
 .mu-msg-ok { color: var(--mu-ok) !important; }
@@ -251,6 +251,8 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
 .mu-file-name { font-weight: 600; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mu-file-meta { font-size: 11.5px; color: var(--mu-muted); }
 .mu-file .mu-actions { margin-top: 0; gap: 4px; }
+.mu-share { display: contents; }
+.mu-share a.mu-btn { color: var(--mu-text); }
 .mu-preview { position: relative; display: flex; align-items: center; justify-content: center; min-height: 110px; border-radius: 8px; background: var(--mu-sunk); overflow: hidden; color: var(--mu-muted); font-size: 12px; }
 .mu-preview img, .mu-preview video { display: block; width: 100%; max-height: 200px; object-fit: contain; }
 .mu-preview audio { width: 100%; margin: 8px; }
@@ -499,6 +501,9 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     POST   /assets?email=                                 upload: raw file bytes, or JSON {url}
     GET    /assets/{assetId}                              download a file (previews and Download buttons)
     DELETE /assets/{assetId}                              delete a file
+    GET    /assets/{assetId}?format=pdf                   a document as PDF (Download PDF)
+    POST   /assets/{assetId}/share                        publish a web app on a public link (Share)
+    DELETE /assets/{assetId}/share                        stop sharing it
     GET    /files?email=&path=                            list a folder of the account's Muse workspace (Workspace view)
     GET    /files/content?email=&path=                    download a workspace file (previews and Download)
     GET    /files/search?email=&name=&extensions=&path=   find workspace files by name and extension
@@ -773,6 +778,77 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
     }
   };
 
+  /* GET /assets/{assetId}?format=pdf: Muse converts a Markdown, text or HTML document to PDF; saved as <name>.pdf */
+  const PDF_FROM = ['md', 'txt', 'html', 'htm'];
+  const downloadPdf = async (asset, name, button, msg) => {
+    setBusy(button, true);
+    showMsg(msg, 'Converting to PDF…');
+    try {
+      const res = await fetch(`${API}/assets/${pathId(asset.assetId)}?format=pdf`, { headers: authHeaders() });
+      if (!res.ok) await readJson(res);
+      const url = URL.createObjectURL(await res.blob());
+      const link = el('a', { href: url, download: `${name.replace(/\.[^.]+$/, '')}.pdf` });
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      showMsg(msg, '');
+    } catch (err) {
+      showMsg(msg, err.message, 'error');
+    } finally {
+      setBusy(button, false);
+    }
+  };
+
+  /* A web app's public link: POST /assets/{assetId}/share publishes it (anyone with the link can open it, signed in or not;
+     Muse reviews it first, about 15 s), DELETE …/share stops sharing. Publishing asks for a second click. */
+  const shareControls = (asset, name, msg) => {
+    const box = el('span', { class: 'mu-share' });
+    const change = async (method, button) => {
+      setBusy(button, true);
+      showMsg(msg, method === 'POST' ? 'Muse is reviewing and publishing the app…' : 'Stopping sharing…');
+      try {
+        const res = await fetch(`${API}/assets/${pathId(asset.assetId)}/share`, { method, headers: authHeaders() });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(`${res.status}: ${data.error || res.statusText}${data.errorDetails ? `\n${data.errorDetails}` : ''}`);
+        asset.shareUrl = data.shareUrl || null;
+        showMsg(msg, asset.shareUrl ? `Published: ${asset.shareUrl}` : 'No longer shared.', 'ok');
+        render();
+      } catch (err) {
+        showMsg(msg, err.message, 'error');
+        setBusy(button, false);
+      }
+    };
+    const render = () => {
+      box.textContent = '';
+      if (asset.shareUrl) {
+        box.append(
+          el('a', { class: 'mu-btn mu-btn-sm', href: asset.shareUrl, target: '_blank', rel: 'noopener', text: 'Open public link' }),
+          el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Copy link', onclick: async () => {
+            try {
+              await navigator.clipboard.writeText(asset.shareUrl);
+              showMsg(msg, 'Link copied.', 'ok');
+            } catch (err) {
+              showMsg(msg, asset.shareUrl);
+            }
+          } }),
+          el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Stop sharing', onclick: ev => change('DELETE', ev.currentTarget) })
+        );
+        return;
+      }
+      const share = el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Share', 'aria-label': `Publish ${name} on a public link` });
+      share.addEventListener('click', () => {
+        if (share.dataset.confirm) return change('POST', share);
+        share.dataset.confirm = '1';
+        share.textContent = 'Publish publicly';
+        showMsg(msg, 'Anyone with the link will be able to open this app. Click "Publish publicly" to go ahead.');
+      });
+      box.append(share);
+    };
+    render();
+    return box;
+  };
+
   /* ======================================================================
      4. Media previews and file cards (chat Files panel and Files tab)
      ====================================================================== */
@@ -874,6 +950,8 @@ html, body { margin: 0; height: 100%; background: #f6f7fb; }
       ...(media ? [el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: options.tab ? 'Use in chat' : 'Use in next message', title: 'Attach this file to your next message', onclick: () => useInMessage({ ref: asset.assetId, name, type: kind }, msg) })] : [])
     ] : []);
     const card = el('div', { class: 'mu-file', role: 'listitem' }, [preview(asset), el('div', { class: 'mu-file-name', title: name, text: name }), el('div', { class: 'mu-file-meta', text: meta }), actions, msg]);
+    if (options.tab && asset.assetId && kind === 'document' && PDF_FROM.includes(String(asset.format || '').toLowerCase())) actions.append(el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Download PDF', title: 'Muse converts the document to PDF (about 10 s)', onclick: ev => downloadPdf(asset, name, ev.currentTarget, msg) }));
+    if (options.tab && asset.assetId && kind === 'web') actions.append(shareControls(asset, name, msg));
     if (options.tab && asset.assetId) {
       actions.append(
         el('button', { type: 'button', class: 'mu-btn mu-btn-sm', text: 'Copy id', onclick: () => copyId(asset.assetId, msg) }),
