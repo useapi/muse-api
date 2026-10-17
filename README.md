@@ -8,7 +8,7 @@ Runnable examples for the [Muse API](https://useapi.net/docs/api-muse-v1?utm_sou
 | [`demo/`](./demo) | **Live chat app**: one self-contained HTML page that chats with the Muse agent through the API, with answers streamed live, files and cards, approvals, several live chats at once, workspace files and the agent's permissions. Open the [live demo](https://useapi.net/demos/muse/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) or open `demo/index.html` locally. Vanilla JS, no build | [Chat Streaming Guide](https://useapi.net/docs/api-muse-v1/chat-streaming-guide?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) | October 12, 2026 |
 | [`skills/muse-video/`](./skills/muse-video) | **Agent skill** for Claude Code, Codex and other coding agents: ask for an image or a clip and the agent makes it with Muse (text to image, photo compositing, old-photo restoration, talking photos, person swap in a video) and downloads the `.webp` or `.mp4`, never paying twice for a request. Install: `npx skills add useapi/muse-api --skill muse-video`. Bash, curl, jq | [SKILL.md](./skills/muse-video/SKILL.md) | October 12, 2026 |
 | [`n8n/`](./n8n) | **n8n app**: upload an old photo, Muse restores and colorizes it, you pick or redo, then the person in it says your line in a 10-second video with sound. 1 or 2 takes, the real share of the week used on the result page, optional Google Drive save, and a Google Sheet batch mode. Core n8n nodes, no community nodes | [n8n template #20989](https://n8n.io/workflows/20989) | October 15, 2026 |
-| [MCP server](#mcp-server) | **Hosted MCP server**: connect Claude Code, Cursor, VS Code or Windsurf to `https://api.useapi.net/v1/muse/mcp` and the assistant gets 27 tools for Muse images, videos, chat, files and permissions. Nothing to install or host | [MCP Server](https://useapi.net/docs/api-muse-v1/mcp?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) | October 13, 2026 |
+| [MCP server](#mcp-server) | **Hosted MCP server**: connect Claude Code, Cursor, VS Code or Windsurf to `https://api.useapi.net/v1/muse/mcp` and the assistant gets 37 tools for Muse images, videos, chat, files and permissions. Nothing to install or host | [MCP Server](https://useapi.net/docs/api-muse-v1/mcp?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) | October 13, 2026 |
 
 ## Quick start
 
@@ -28,7 +28,7 @@ Each example's README lists its options. Every endpoint is documented in the [Mu
 
 ## MCP server
 
-useapi.net also runs a hosted [Model Context Protocol](https://modelcontextprotocol.io) server for Muse, so an AI assistant such as Claude Code, Cursor or VS Code Copilot can use Muse on your own Muse account. It has 27 tools: generate images and videos, chat with the Muse agent, answer its permission requests, and manage the account's files. Each tool calls the Muse API, so the same rules, limits and allowance apply. Nothing needs to be installed or hosted.
+useapi.net also runs a hosted [Model Context Protocol](https://modelcontextprotocol.io) server for Muse, so an AI assistant such as Claude Code, Cursor or VS Code Copilot can use Muse on your own Muse account. It has 37 tools: generate images and videos, chat with the Muse agent, answer its permission requests, and manage the account's files. Each tool calls the Muse API, so the same rules, limits and allowance apply. Nothing needs to be installed or hosted.
 
 - Endpoint: `https://api.useapi.net/v1/muse/mcp`
 - Transport: Streamable HTTP
@@ -71,7 +71,7 @@ VS Code (`.vscode/mcp.json`):
 }
 ```
 
-Windsurf setup, a curl test, the full list of 27 tools and how long-running videos and chats are handled: [Muse MCP Server](https://useapi.net/docs/api-muse-v1/mcp?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api).
+Windsurf setup, a curl test, the full list of 37 tools and how long-running videos and chats are handled: [Muse MCP Server](https://useapi.net/docs/api-muse-v1/mcp?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api).
 
 ## Common questions
 
