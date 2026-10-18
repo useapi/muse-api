@@ -1,0 +1,8 @@
+{
+  "narrator": "Narration: one off-screen narrator only, the same voice throughout: a calm, deep, middle-aged British male documentary narrator, measured pace, warm and authoritative, like a nature documentary. Nobody on screen speaks. No music.",
+  "script": "Write a script for a {seconds}-second faceless YouTube Short about: \"{topic}\". Exactly {scenes} scenes. Reply with ONLY a JSON object, no prose, no markdown code fences, in this exact shape: {\"title\": string, \"scenes\": [{shape}]}. \"line\" is what the off-screen narrator says (at most 25 words, about 9 seconds spoken). \"visual\" is a one-sentence description of the 10-second shot, no people talking on camera. Do not create any files, images or videos.",
+  "scene": "Vertical 9:16 video, about 10 seconds. {visual} Slow cinematic camera move, photoreal. {narrator} The narrator says exactly: \"{line}\"",
+  "join": "Concatenate {videos} in order into one MP4 with ffmpeg, keep the audio, save it to workspace/your_files/{file} and attach it here. No public links.",
+  "tts": "Generate one mp3 file with text to speech: single speaker, voice {voice}, speed 100, language en, clean narration only: no music, no sound effects. Read exactly this text, do not change any word:\n\"{line}\"\nSave it directly in workspace/your_files/ (not in a subfolder) as {file} and attach it here. No public links and no uploads to remote storage.",
+  "sceneWithVoice": "Vertical 9:16 video, about 10 seconds, no people on screen and nobody speaking on camera. {visual} Slow cinematic camera move, photoreal. Use audio_1 as the narration soundtrack exactly as it is: the off-screen narrator's voice in audio_1, word for word, with no other voice and no new speech. Quiet ambient sound under it is fine."
+}
