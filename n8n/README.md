@@ -3,7 +3,7 @@
 Two ready-to-import [n8n](https://n8n.io) apps built from core n8n nodes, with no community nodes:
 
 - [Old photo to talking video](#old-photo-to-talking-video): [`muse-photo-talks.json`](./muse-photo-talks.json)
-- [Faceless Shorts factory](#faceless-shorts-factory): [`muse-faceless-shorts.json`](./muse-faceless-shorts.json)
+- [Create narrated faceless Shorts from any topic with the Meta Muse API](#create-narrated-faceless-shorts-from-any-topic-with-the-meta-muse-api): [`muse-faceless-shorts.json`](./muse-faceless-shorts.json)
 
 ## Old photo to talking video
 
@@ -68,7 +68,7 @@ To turn it on: set the sheet id and the other options in the **Settings** node, 
 
 Every endpoint is documented in the [Muse API reference](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api).
 
-## Faceless Shorts factory
+## Create narrated faceless Shorts from any topic with the Meta Muse API
 
 [`muse-faceless-shorts.json`](./muse-faceless-shorts.json) is a ready-to-import n8n app that **turns a topic into a narrated vertical Short** of one to three 10-second scenes, with Meta's Muse agent (muse.ai) on your own Muse account, through the [useapi.net Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api), a third-party API, not affiliated with Meta. Muse writes the script, makes the clips with narration and joins them into one MP4. Google Drive is optional.
 
