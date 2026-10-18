@@ -2,6 +2,8 @@
 
 Runnable examples for the [Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) by [useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api): make images and 10-second videos with sound using **Muse (muse.ai)**, Meta's AI agent, through a REST API that runs on your own Muse account. Combine up to 9 photos into one picture, restore and colorize old photos, animate a still with spoken dialogue, and replace a person in a video. Every file Muse makes is an asset id the next job takes as an input, so edits chain with no downloads or re-uploads. The free Muse plan works.
 
+Demo on YouTube: [Meta Muse API Demo: Images, Talking Photos, Video with Sound, Chat & MCP (third-party, useapi.net)](https://www.youtube.com/watch?v=OMUGbfRIO5E)
+
 | Example | What it does | Tutorial | Tutorial date |
 |---|---|---|---|
 | [`images-videos/`](./images-videos) | Three photos become one picture of a rider on a vintage motorcycle in the surf, the picture becomes a 10-second video in which she shouts a line, and a woman from a fourth photo replaces her in that video. Also two images from text, and a hundred-year-old portrait restored, colorized and brought to life. Node.js and Python | [How to Generate AI Videos and Images with the Meta Muse API](https://useapi.net/docs/articles/muse-images-videos?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) | October 12, 2026 |
