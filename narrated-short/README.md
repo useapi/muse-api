@@ -14,7 +14,7 @@ Give it a topic and it makes a vertical 9:16 Short of 30 seconds with an off-scr
 
 ## Example output
 
-[Watch the Short](https://demo.useapi.net/discord-cdn-proxy/?https://cdn.discordapp.com/attachments/1239264794394234985/1561461244727398401/muse-narrated-short-tambora.mp4) made from the topic `how a single volcano cooled the whole planet in 1816`: 720×1280, 30 seconds, three scenes about the 1815 eruption of Mount Tambora and the "year without a summer" that followed. The script Muse wrote for it:
+[Watch the Short on YouTube](https://youtube.com/shorts/1e8f7dHTkzs) ([MP4](https://demo.useapi.net/discord-cdn-proxy/?https://cdn.discordapp.com/attachments/1239264794394234985/1561461244727398401/muse-narrated-short-tambora.mp4)) made from the topic `how a single volcano cooled the whole planet in 1816`: 720×1280, 30 seconds, three scenes about the 1815 eruption of Mount Tambora and the "year without a summer" that followed. The script Muse wrote for it:
 
 | Scene | The narrator says | The shot |
 |---|---|---|
