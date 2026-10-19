@@ -1,0 +1,22 @@
+{
+  "name": "useapi-muse",
+  "version": "1.0.0",
+  "description": "Hosted Muse MCP server by useapi.net (37 tools): make Muse images and videos, chat with the Muse agent and answer its permission requests, use the agent's browser and manage the Library, on your own Muse (muse.ai) account. Third-party paid service, not affiliated with Meta.",
+  "contextFileName": "GEMINI.md",
+  "settings": [
+    {
+      "name": "useapi.net API token",
+      "description": "Your useapi.net API token, from https://useapi.net/docs/start-here/setup-useapi",
+      "envVar": "USEAPI_TOKEN",
+      "sensitive": true
+    }
+  ],
+  "mcpServers": {
+    "useapi-muse": {
+      "httpUrl": "https://api.useapi.net/v1/muse/mcp",
+      "headers": {
+        "Authorization": "Bearer ${USEAPI_TOKEN}"
+      }
+    }
+  }
+}

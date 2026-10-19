@@ -1,0 +1,30 @@
+{
+  "name": "muse",
+  "displayName": "Muse (useapi.net)",
+  "description": "Hosted Muse MCP server by useapi.net (37 tools): make Muse images and videos, chat with the Muse agent and answer its permission requests, use the agent's browser and manage the Library, on your own Muse (muse.ai) account. Third-party paid service, not affiliated with Meta. Includes the repo's agent skill.",
+  "author": {
+    "name": "useapi.net",
+    "url": "https://useapi.net"
+  },
+  "homepage": "https://useapi.net/docs/api-muse-v1/mcp",
+  "repository": "https://github.com/useapi/muse-api",
+  "license": "MIT",
+  "keywords": [
+    "muse",
+    "meta",
+    "video",
+    "image",
+    "agent",
+    "mcp",
+    "useapi"
+  ],
+  "mcpServers": {
+    "useapi-muse": {
+      "type": "http",
+      "url": "https://api.useapi.net/v1/muse/mcp",
+      "headers": {
+        "Authorization": "Bearer ${USEAPI_TOKEN}"
+      }
+    }
+  }
+}

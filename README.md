@@ -76,12 +76,41 @@ VS Code (`.vscode/mcp.json`):
 
 Windsurf setup, a curl test, the full list of 37 tools and how long-running videos and chats are handled: [Muse MCP Server](https://useapi.net/docs/api-muse-v1/mcp?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api).
 
+## Use with Claude Code
+
+This repo is also a Claude Code plugin marketplace. The plugin adds the hosted Muse MCP server and the `muse-video` agent skill, and reads your token from the `USEAPI_TOKEN` environment variable, so set it before you start Claude Code:
+
+```bash
+export USEAPI_TOKEN=user:12345-...      # your useapi.net API token
+```
+
+Then, inside Claude Code:
+
+```
+/plugin marketplace add useapi/muse-api
+/plugin install muse@useapi-muse
+```
+
+On Claude Code 2.1.275 or later, `/plugin install muse --marketplace useapi/muse-api` does both in one step. Run `/mcp` to check that `useapi-muse` is connected.
+
+## Use with Gemini CLI
+
+This repo is also a Gemini CLI extension with the same MCP server and the `muse-video` agent skill:
+
+```bash
+gemini extensions install https://github.com/useapi/muse-api
+```
+
+The install asks for your useapi.net API token and keeps it in the system keychain. Change it later with `gemini extensions config useapi-muse`, and check the connection with `gemini mcp list`. The `muse-video` skill's scripts read `USEAPI_TOKEN` from your shell, so export it as well if you use the skill.
+
 ## Common questions
 
-- **Does Muse have an API?** Not for what the Muse agent does. Meta sells its Muse Image model on the Meta Model API at about $0.01 per image, but it has no video API and no API for the Muse agent at muse.ai, where images, 10-second videos with sound, photo edits and person swaps are made. useapi.net drives your own Muse account instead, so every job comes out of that account's Muse allowance.
-- **Is there an official Meta Muse video API?** No. Meta's Model API sells the Muse Image model and the Muse Wonder and Muse Spark text models, and none of them outputs video. useapi.net, a third-party API not affiliated with Meta, makes 10-second Muse videos with sound on your own Muse account. Meta's API, muse2api, per-request resellers and useapi.net are compared in [Is There a Meta Muse Video API?](https://useapi.net/docs/articles/meta-muse-video-api?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)
+<!-- Official API figures in these answers, verified 2026-10-18: https://dev.meta.ai/docs/pricing-rate-limits (muse-image-1.0 $0.01 per image, no video model). -->
+
+- **Does Muse have an API?** Yes, through useapi.net, for what the Muse agent does: useapi.net drives your own Muse account, so images, 10-second videos with sound, photo edits and person swaps come out of that account's Muse allowance. Meta sells its Muse Image model on the Meta Model API at about $0.01 per image, but it has no video API and no API for the Muse agent at muse.ai (as of October 2026).
+- **Is there an official Meta Muse video API?** No, and useapi.net, a third-party API not affiliated with Meta, makes 10-second Muse videos with sound on your own Muse account. Meta's Model API sells the Muse Image model and the Muse Wonder and Muse Spark text models, and none of them outputs video. Meta's API, muse2api, per-request resellers and useapi.net are compared in [Is There a Meta Muse Video API?](https://useapi.net/docs/articles/meta-muse-video-api?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)
 - **Does the free Muse plan work?** Yes. Muse meters each account weekly, as a percent used. On the free plan a video used 2 to 3 percent of the week and an image 0 to 1 percent in our tests, so one free account makes roughly 30 to 50 videos or several hundred images a week. Paid Muse plans have larger allowances. See [usage limits](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api#usage-limits).
-- **What does it cost?** A flat [$15/month](https://useapi.net/docs/subscription?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) to useapi.net, which covers every useapi.net API and adds 3 Muse accounts per subscription. There is no per-image or per-video charge from us.
+- **What does it cost?** A flat [$15/month](https://useapi.net/docs/subscription?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) to useapi.net, which covers every useapi.net API and adds 3 Muse accounts per subscription. There is no per-image or per-video charge from us. A free Muse account makes roughly 30 to 50 videos a week, and Meta's own Model API sells no video (as of October 2026).
 - **How do I set the aspect ratio, length or resolution?** In the prompt: there are no parameters for them. Write `in exactly 16:9 aspect ratio`. Every video is about 10 seconds at about 720p, with sound, and lines written in quotes are spoken.
 - **Can I use my own photos and videos?** Yes. Upload them (up to 50 MB each) and pass the `assetId` as `image_1`..`image_9`; video jobs also take `video_1`..`video_3` and `audio_1`..`audio_3`. All inputs of one job must be on the same Muse account.
 - **Where does Muse work?** Only in the US and Canada ([Meta](https://about.fb.com/news/2026/09/introducing-muse-small-business/)), so create the Muse account there. Once it is added, you can call the API from anywhere.

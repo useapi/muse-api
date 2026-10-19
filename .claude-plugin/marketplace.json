@@ -1,0 +1,24 @@
+{
+  "name": "useapi-muse",
+  "description": "useapi.net Muse plugin for Claude Code: the hosted MCP server and agent skill.",
+  "owner": {
+    "name": "useapi.net",
+    "url": "https://useapi.net"
+  },
+  "plugins": [
+    {
+      "name": "muse",
+      "source": "./",
+      "description": "Hosted Muse MCP server by useapi.net (37 tools): make Muse images and videos, chat with the Muse agent and answer its permission requests, use the agent's browser and manage the Library, on your own Muse (muse.ai) account. Third-party paid service, not affiliated with Meta. Includes the repo's agent skill.",
+      "category": "media",
+      "tags": [
+        "muse",
+        "meta",
+        "video",
+        "image",
+        "agent",
+        "mcp"
+      ]
+    }
+  ]
+}
