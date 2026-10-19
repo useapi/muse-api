@@ -7,7 +7,7 @@ Two ready-to-import [n8n](https://n8n.io) apps built from core n8n nodes, with n
 
 ## Old photo to talking video
 
-📖 Published on n8n: [Restore and animate old photos into talking videos with Muse](https://n8n.io/workflows/20989)
+Published on n8n: [Restore and animate old photos into talking videos with Muse](https://n8n.io/workflows/20989)
 
 [`muse-photo-talks.json`](./muse-photo-talks.json) is a ready-to-import [n8n](https://n8n.io) app that **restores an old photo and makes the person in it speak a line**, with Meta's Muse agent (muse.ai) on your own Muse account, through the [useapi.net Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api), a third-party API, not affiliated with Meta. It is built from core n8n nodes, with no community nodes. Google Sheets and Google Drive are optional.
 
@@ -69,6 +69,8 @@ To turn it on: set the sheet id and the other options in the **Settings** node, 
 Every endpoint is documented in the [Muse API reference](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api).
 
 ## Create narrated faceless Shorts from any topic with the Meta Muse API
+
+Published on n8n: [Create narrated faceless Shorts from any topic with the Meta Muse API and Google Drive](https://n8n.io/workflows/21207)
 
 [`muse-faceless-shorts.json`](./muse-faceless-shorts.json) is a ready-to-import n8n app that **turns a topic into a narrated vertical Short** of one to three 10-second scenes, with Meta's Muse agent (muse.ai) on your own Muse account, through the [useapi.net Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api), a third-party API, not affiliated with Meta. Muse writes the script, makes the clips with narration and joins them into one MP4. Google Drive is optional.
 
