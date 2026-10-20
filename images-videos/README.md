@@ -2,7 +2,7 @@
 
 📖 Full walkthrough: **[How to Generate AI Videos and Images with the Meta Muse API](https://useapi.net/docs/articles/muse-images-videos?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)** — October 12, 2026
 
-Videos made with this API, on YouTube: [3 photos in, 1 talking video out: Meta Muse API from REST](https://youtube.com/shorts/v_7mREyFSWk) · [This old portrait just spoke: one API call (Meta Muse API, third-party)](https://youtube.com/shorts/GLHoINX_ozE)
+Videos made with this API, on YouTube: [3 photos in, 1 talking video out: Meta Muse API from REST](https://youtube.com/shorts/v_7mREyFSWk) · [This old portrait just spoke: one API call (Meta Muse API, third-party)](https://youtube.com/shorts/GLHoINX_ozE) · [Replace the person in a video, keep everything else: Meta Muse API](https://youtube.com/shorts/XDCY1XIsd5Y)
 
 Make images and 10-second videos with sound with Muse (muse.ai), Meta's AI agent, through the [Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) by [useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api): three photos (a vintage BMW motorcycle, a red-haired rider, the beach below the Golden Gate Bridge) become one picture of her riding through the surf, the picture becomes a video in which she shouts a line, and a woman from a fourth photo then replaces her in that video. Along the way it makes two images from text, and restores and colorizes a hundred-year-old portrait that then looks up and speaks.
 
