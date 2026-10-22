@@ -2,7 +2,7 @@
 
 Script version 1.0, October 12, 2026
 
-Script to make images and 10-second videos with sound with Meta's Muse agent using the Muse API v1 by useapi.net 🚀
+Script to make images and 10-second videos with sound with Meta's Muse agent using the Muse API by useapi.net
 
 Runs the pipeline of the tutorial https://useapi.net/docs/articles/muse-images-videos
 1. Uploads the tutorial's five photos with POST /assets: a motorcycle, a rider, a beach, an old portrait, a second rider.
@@ -348,7 +348,7 @@ const execute = async (email, promptsFile, only) => {
         console.log(`📤 ${input.name} — uploaded (${asset.mime}, ${asset.bytes} bytes)`);
     }
 
-    // Steps 2+ — one job each. image_N / video_N / audio_N name an input or an earlier step, swapped for its assetId:
+    // Steps 2 and on — one job each. image_N / video_N / audio_N name an input or an earlier step, swapped for its assetId:
     // a file Muse made is already in the account's workspace, so it goes into the next job with no download or upload.
     const assetOf = (name) => state.uploads[name] ?? state.steps[name]?.assetId;
     let percentUsed = quota?.percentUsed;

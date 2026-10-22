@@ -1,6 +1,6 @@
 # Narrated 30-second Shorts from a topic with Meta Muse — Muse API (Node.js & Python)
 
-Full walkthrough: **[Make a 30-second narrated Short (script, three scenes, one join)](https://useapi.net/docs/articles/muse-images-videos?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api#make-a-30-second-narrated-short-script-three-scenes-one-join)** — October 18, 2026
+Full walkthrough: [Make a 30-second narrated Short (script, three scenes, one join)](https://useapi.net/docs/articles/muse-images-videos?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api#make-a-30-second-narrated-short-script-three-scenes-one-join) — October 18, 2026
 
 Give it a topic and it makes a vertical 9:16 Short of 30 seconds with an off-screen narrator, using Muse (muse.ai), Meta's AI agent, through the [Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) by [useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api). A Muse video is always about 10 seconds, so the Short is three clips joined into one:
 
@@ -67,7 +67,7 @@ From the test run that made the Tambora Short on October 16, 2026:
 | Three clips, side by side | POST /jobs/video | 75, 75 and 87 s |
 | Join | POST /chats | 20 s |
 
-So a Short takes about 2 to 3 minutes. The chats use about 0 percent of the weekly allowance. That run was on a paid Muse plan, where the four videos of the test session moved the weekly reading by 2 points in all (Muse reports whole percents). On the free plan a video uses 2 to 3 percent of the week, so a three-scene Short costs about 6 to 9 percent there, and one free account makes roughly 11 to 16 Shorts a week.
+So a Short takes about 2 to 3 minutes. The chats use about 0 percent of the weekly allowance. That run was on a paid Muse plan, where the four videos of the test session moved the weekly reading by 2 points in all (Muse reports whole percents). On the free plan a video uses 2 to 3 percent of the week, so a three-scene Short uses about 6 to 9 percent there.
 
 ## prompts.json
 
@@ -124,4 +124,4 @@ The same calls are tools on the hosted [Muse MCP server](https://useapi.net/docs
 
 ---
 
-useapi.net is a third-party API, not affiliated with or endorsed by Meta. It runs on a Muse account you own and add yourself.
+useapi.net is a third-party API, not affiliated with or endorsed by Meta. It runs on your Muse subscription, the free plan included.

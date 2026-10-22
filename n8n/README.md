@@ -7,9 +7,9 @@ Two ready-to-import [n8n](https://n8n.io) apps built from core n8n nodes, with n
 
 ## Old photo to talking video
 
-Published on n8n: [Restore and animate old photos into talking videos with Muse](https://n8n.io/workflows/20989)
+Published on n8n: [Restore and animate old photos into talking videos with Muse and Google Drive](https://n8n.io/workflows/20989)
 
-[`muse-photo-talks.json`](./muse-photo-talks.json) is a ready-to-import [n8n](https://n8n.io) app that **restores an old photo and makes the person in it speak a line**, with Meta's Muse agent (muse.ai) on your own Muse account, through the [useapi.net Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api), a third-party API, not affiliated with Meta. It is built from core n8n nodes, with no community nodes. Google Sheets and Google Drive are optional.
+[`muse-photo-talks.json`](./muse-photo-talks.json) is a ready-to-import [n8n](https://n8n.io) app that restores an old photo and makes the person in it speak a line, with Meta's Muse agent (muse.ai) on your Muse subscription, through the [useapi.net Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api), a third-party API, not affiliated with Meta. It is built from core n8n nodes, with no community nodes. Google Sheets and Google Drive are optional.
 
 ![The form](./muse-photo-talks-01-form.png)
 
@@ -29,9 +29,9 @@ Every page carries a resume link, so you can close the tab and come back.
 
 **Errors.** "Nothing was made" answers (`429` busy, `503` Muse could not make it this time) are sent again after 30 seconds, up to 5 and 3 times. A job that may already have used the allowance (`500`, `502`, `504`, or no answer) is never sent again: the page stops with its job id, to check with `GET /jobs/{jobid}?history=true`. Other answers stop with a page that says what to fix: the token (`401`), the account (`404`, `596`), the allowance with its reset time (`412`), or a link that is not an image (`400`).
 
-**The token stays in n8n, and the links can't be guessed.** Pictures, players and download links go through the workflow's own **Media file** webhook, which fetches each file with your credential. Each link carries a ticket signed with a random secret that the workflow makes once, with the **New secret** node (n8n's Crypto node), and keeps in its static data. A ticket names one file and expires: after 24 hours on the pages, and after `linkHours` (default 7 days) for the links written into the sheet. The webhook never takes an asset id or a URL from the address, and answers 404 to an unknown, edited or expired ticket.
+The token stays in n8n, and the links can't be guessed. Pictures, players and download links go through the workflow's own **Media file** webhook, which fetches each file with your credential. Each link carries a ticket signed with a random secret that the workflow makes once, with the **New secret** node (n8n's Crypto node), and keeps in its static data. A ticket names one file and expires: after 24 hours on the pages, and after `linkHours` (default 7 days) for the links written into the sheet. The webhook never takes an asset id or a URL from the address, and answers 404 to an unknown, edited or expired ticket.
 
-**Asset ids are private to your account.** The result page lists them so you can reuse the files in other Muse jobs. Anyone who has an asset id and your API token can download that file, so share the MP4, not the ids.
+Asset ids are private to your account. The result page lists them so you can reuse the files in other Muse jobs. Anyone who has an asset id and your API token can download that file, so share the MP4, not the ids.
 
 ### Google Sheet batch mode (off by default)
 
@@ -72,7 +72,7 @@ Every endpoint is documented in the [Muse API reference](https://useapi.net/docs
 
 Published on n8n: [Create narrated faceless Shorts from any topic with the Meta Muse API and Google Drive](https://n8n.io/workflows/21207)
 
-[`muse-faceless-shorts.json`](./muse-faceless-shorts.json) is a ready-to-import n8n app that **turns a topic into a narrated vertical Short** of one to three 10-second scenes, with Meta's Muse agent (muse.ai) on your own Muse account, through the [useapi.net Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api), a third-party API, not affiliated with Meta. Muse writes the script, makes the clips with narration and joins them into one MP4. Google Drive is optional.
+[`muse-faceless-shorts.json`](./muse-faceless-shorts.json) is a ready-to-import n8n app that turns a topic into a narrated vertical Short of one to three 10-second scenes, with Meta's Muse agent (muse.ai) on your Muse subscription, through the [useapi.net Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api), a third-party API, not affiliated with Meta. Muse writes the script, makes the clips with narration and joins them into one MP4. Google Drive is optional.
 
 ![The form](./muse-faceless-shorts-01-form.png)
 
@@ -89,7 +89,7 @@ Every page carries a resume link, so you can close the tab and come back.
 
 **Errors.** "Nothing was made" answers (`429` busy, `503` Muse could not make it this time) are sent again after 30 seconds, up to 5 and 3 times. A video job that may already have used the allowance (`500`, `502`, `504`, or no answer) is never sent again: the page shows its job id, to check with `GET /jobs/{jobid}?history=true`. A script that can't be read as JSON gets one new chat. Muse's permission requests are denied: none of these chats needs the web or a public link.
 
-**The token stays in n8n, and the links can't be guessed.** Players and download links go through the workflow's own **Media file** webhook, which fetches each file with your credential. Each link carries a ticket that names one file, expires after 24 hours, and is signed with a random secret made once by the **New secret** node (n8n's Crypto node) and kept in the workflow's static data. The webhook never takes an asset id or a URL from the address, and answers 404 to anything else.
+The token stays in n8n, and the links can't be guessed. Players and download links go through the workflow's own **Media file** webhook, which fetches each file with your credential. Each link carries a ticket that names one file, expires after 24 hours, and is signed with a random secret made once by the **New secret** node (n8n's Crypto node) and kept in the workflow's static data. The webhook never takes an asset id or a URL from the address, and answers 404 to anything else.
 
 **Files.** Every run makes chats and files in your Muse workspace (they also show in the muse.ai app) under names unique to the run. With the locked voice, each finished clip is copied at once with a free upload, so a later clip saved under the same name can't replace it.
 

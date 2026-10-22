@@ -1,11 +1,11 @@
 # Meta Muse chat in the browser — Muse API demo app (one HTML file)
 
-▶️ Live: **[useapi.net/demos/muse](https://useapi.net/demos/muse/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)** — this exact file, full screen, also on phones
+Live: [useapi.net/demos/muse](https://useapi.net/demos/muse/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) — this exact file, full screen, also on phones
 
-A complete chat client for **Muse (muse.ai)**, Meta's AI agent, built on the [Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) by [useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api). It is a single `index.html` of plain HTML, CSS and JavaScript: no framework, no build step, no dependencies. Read it top to bottom to see how each feature maps to one API call.
+A complete chat client for Muse (muse.ai), Meta's AI agent, built on the [Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) by [useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api). It is a single `index.html` of plain HTML, CSS and JavaScript: no framework, no build step, no dependencies. Read it top to bottom to see how each feature maps to one API call.
 
 - **Chat**: your chats on the left, the conversation in the middle, the chat's files on the right (drag the dividers to resize, and on a phone both side panels open as drawers). Muse's answer streams in live, images and videos show inline, quick-reply choices become buttons, Muse's charts and cards (html widgets) render in a sandboxed frame, and when the agent asks for permission a card with its options and a countdown appears in the conversation.
-- **Browser tasks**: when Muse works in a web browser on its computer, a card in the conversation shows the task's status, its current step, the page it is on (a link you can open), who has control and how long a finished browser stays open (parked). **Refresh** reads the latest state, **Give back** returns control to Muse, **Stop** closes the browser. The live view is not available yet: open the chat in Muse's app to watch.
+- **Browser tasks**: when Muse works in a web browser on its computer, a card in the conversation shows the task's status, its current step, the page it is on (a link you can open), who has control and how long a finished browser stays open (parked). **Watch live** opens a single-use live view of the browser in a new tab, where you watch it and take control with mouse and keyboard (to sign in to a site for the agent, for example), **Refresh** reads the latest state, **Give back** returns control to Muse, **Stop** closes the browser. The [Live Browser Guide](https://useapi.net/docs/api-muse-v1/live-browser-guide?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) walks through the flow.
 - **Live chats**: the last few chats you opened (5 by default, 1 to 10 with the **Live chats** setting) stay connected in the background, so switching between them is instant and they keep updating. Other chats show their status as of the last list check, greyed with a clock. A chat you come back to resumes exactly where it left off.
 - **Account usage**: under the account picker, the share of the weekly Muse allowance used and when it resets, checked from Muse when you pick the account, while an answer runs, shortly after an answer ends, and on **↻**.
 - **Files**: two views. **Media** shows every image, video and audio file on the account, filtered by type and origin, with previews, download, delete, copy id, and upload from disk or from a link. **Workspace** browses every file in the account's Muse workspace folder by folder, previews text files (as plain text), images, videos and audio, searches by name and extension, and uploads, downloads or deletes files. Any file can go into your next message.
@@ -52,6 +52,7 @@ Base URL `https://api.useapi.net/v1/muse`, header `Authorization: Bearer <API to
 | Delete a chat | [DELETE /chats/{chatId}](https://useapi.net/docs/api-muse-v1/delete-muse-chats-chatId?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) |
 | Quick-reply buttons and "Or type your own answer" | [POST /chats/{chatId}/widgets/{widgetId}](https://useapi.net/docs/api-muse-v1/post-muse-chats-chatId-widgets-widgetId?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) `{option}` or `{text}` |
 | Approval card buttons | [POST /chats/{chatId}/approvals/{approvalId}](https://useapi.net/docs/api-muse-v1/post-muse-chats-chatId-approvals-approvalId?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) `{decision}` |
+| Browser card: Watch live | [POST /chats/{chatId}/browser/{taskId}/viewer](https://useapi.net/docs/api-muse-v1/post-muse-chats-chatId-browser-taskId-viewer?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) `{mode: 'control'}`, a single-use link to the live view (409 while one is open) |
 | Browser card: Refresh | `GET /chats/{chatId}/browser/{taskId}` |
 | Browser card: Give back | `POST /chats/{chatId}/browser/{taskId}/release` (409 when you do not hold control) |
 | Browser card: Stop | `POST /chats/{chatId}/browser/{taskId}/stop` (409 when it is already closed) |
@@ -149,6 +150,7 @@ sequenceDiagram
     participant API as api.useapi.net/v1/muse
     API-->>UI: browser {taskId, status, stepTitle, site, url, controlOwner, previewAvailable, parkedExpiresAt, ended}
     Note over UI: one card per taskId, updated in place
+    UI->>API: POST /chats/{chatId}/browser/{taskId}/viewer (Watch live, a single-use live view link)
     UI->>API: GET /chats/{chatId}/browser/{taskId} (Refresh)
     UI->>API: POST /chats/{chatId}/browser/{taskId}/release (Give back, 409 if you do not hold control)
     UI->>API: POST /chats/{chatId}/browser/{taskId}/stop (Stop, 409 if already closed)
@@ -157,7 +159,7 @@ sequenceDiagram
 
 - A browser task is state, not a message: every stream open sends its latest state again, and `GET /chats/{chatId}` lists every task of the chat in `browsers`. The card ignores an update older than the one it shows.
 - A finished task can stay open for a while (parked) so you could look at it: the card shows until when.
-- The live view (watching or taking over the browser) is not in the API yet. Open the chat in Muse's app for that.
+- The live view opens on api.useapi.net with its own Take control and Release buttons, and only one viewer per browser task can be open at a time.
 
 ## Good to know
 
@@ -170,6 +172,6 @@ sequenceDiagram
 
 ## About useapi.net
 
-[useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) is an experimental REST API for AI services. The Muse API drives your own Muse account for a flat [$15/month](https://useapi.net/docs/subscription?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api), with no per-image or per-video charge. It is an independent, third-party API, not affiliated with or endorsed by Meta.
+[useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) is a third-party REST API for AI services, not affiliated with or endorsed by Meta. The Muse API runs on your Muse subscription for a flat [$15/month](https://useapi.net/docs/subscription?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api), with no per-image or per-video charge.
 
 Visit our [Discord Server](https://discord.gg/w28uK3cnmF) or [Telegram Channel](https://t.me/use_api) for support.

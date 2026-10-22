@@ -1,6 +1,6 @@
 ---
 name: muse-video
-description: Make AI images and 10-second videos with sound using Meta's Muse agent (muse.ai) through the useapi.net Muse API, on the user's own Muse account (the free plan works). Text to image, combining up to 9 photos into one picture, editing an image, restoring and colorizing an old photo, image to video with spoken dialogue (make a photo talk), and video to video such as replacing a person in a clip. Files chain by assetId with no re-upload. Downloads the .webp or .mp4. Use when the user asks for a Muse or Meta Muse image or video, a talking photo, an old photo restored or animated, a face or person swapped in a video, or a short AI video with dialogue from the command line. Needs curl, jq and a USEAPI_TOKEN environment variable.
+description: Make AI images and 10-second videos with sound using Meta's Muse agent (muse.ai) through the useapi.net Muse API, on the user's Muse subscription (the free plan works). Text to image, combining up to 9 photos into one picture, editing an image, restoring and colorizing an old photo, image to video with spoken dialogue (make a photo talk), and video to video such as replacing a person in a clip. Files chain by assetId with no re-upload. Downloads the .webp or .mp4. Use when the user asks for a Muse or Meta Muse image or video, a talking photo, an old photo restored or animated, a face or person swapped in a video, or a short AI video with dialogue from the command line. Needs curl, jq and a USEAPI_TOKEN environment variable.
 license: MIT
 compatibility: Needs bash, curl, jq and network access to api.useapi.net. Requires a useapi.net API token (USEAPI_TOKEN) and a Muse account (muse.ai, free or paid) added to useapi.net with the Muse setup.
 metadata:
@@ -10,11 +10,11 @@ metadata:
 
 # Images and 10-second videos with Meta Muse via the useapi.net Muse API
 
-These scripts call the [useapi.net Muse API](https://useapi.net/docs/api-muse-v1), a third-party REST API that drives the user's own account on Muse (muse.ai), Meta's AI agent. useapi.net is not affiliated with Meta. Every job uses part of the account's **weekly** Muse allowance. Every script is in `scripts/` next to this file. Run them with bash.
+These scripts call the [useapi.net Muse API](https://useapi.net/docs/api-muse-v1), a third-party REST API that runs on the user's subscription to Muse (muse.ai), Meta's AI agent. useapi.net is not affiliated with Meta. Every job uses part of the account's **weekly** Muse allowance. Every script is in `scripts/` next to this file. Run them with bash.
 
 ## Before you start
 
-1. `USEAPI_TOKEN` must be set. If it is missing, ask the user for their useapi.net API token (setup: https://useapi.net/docs/start-here/setup-useapi). Their Muse account must already be added (https://useapi.net/docs/start-here/setup-muse). **Never print the token, echo it, or write it to a file.**
+1. `USEAPI_TOKEN` must be set. If it is missing, ask the user for their useapi.net API token (setup: https://useapi.net/docs/start-here/setup-useapi). Their Muse account must already be added (https://useapi.net/docs/start-here/setup-muse). Never print the token, echo it, or write it to a file.
 2. `USEAPI_EMAIL` is optional: the added Muse account to use. Leave it unset and the API picks a healthy account with allowance left. All inputs of one job must be on the same account, and a job runs on the account that holds its inputs, so set it when the user has several accounts and you upload files.
 3. `curl` and `jq` must be installed.
 
@@ -62,14 +62,14 @@ Muse meters each account per week, as a whole percent used. `scripts/account.sh`
 | Upload, download, reading a job or the account | nothing |
 | A failed job (`503`, `403` refusal) | nothing made |
 
-So one free account makes roughly 30 to 50 videos or several hundred images a week. Paid Muse plans (Power, Maximum) have larger allowances. When it runs out, a job on that account answers `412` until `resetsAt`. useapi.net itself is a flat $15/month subscription with no per-image or per-video charge. Tell the user the cost before more than two or three videos.
+Paid Muse plans (Power $20 or Maximum $100 a month, as of October 2026) have larger allowances. When it runs out, a job on that account answers `412` until `resetsAt`. useapi.net itself charges nothing per image or video (one $15/month subscription covers every useapi.net API). Tell the user the cost before more than two or three videos.
 
 ## Writing prompts that work
 
-- **There are no parameters for model, aspect ratio, resolution or length.** Say it in the prompt.
-- **Aspect ratio: write `in exactly 16:9 aspect ratio`** (or 9:16, 1:1, 4:5, 3:4, 21:9 ...). "Cinematic 16:9 landscape photo" once came back 3:2. Image to video keeps the start image's shape unless the prompt asks for another ratio.
-- **Every video is about 10 seconds at about 720p, with sound.** Asking for 5 seconds still gives 10; asking for 1080p or 4K adds no detail.
-- **Spoken lines go in quotes**: `she says softly: "..."`. One or two short sentences.
+- **No parameters**: there are none for model, aspect ratio, resolution or length. Say it in the prompt.
+- **Aspect ratio**: write `in exactly 16:9 aspect ratio` (or 9:16, 1:1, 4:5, 3:4, 21:9 ...). "Cinematic 16:9 landscape photo" once came back 3:2. Image to video keeps the start image's shape unless the prompt asks for another ratio.
+- **Length and resolution**: every video is about 10 seconds at about 720p, with sound. Asking for 5 seconds still gives 10; asking for 1080p or 4K adds no detail.
+- **Dialogue**: spoken lines go in quotes, `she says softly: "..."`. One or two short sentences.
 - **Name the inputs** in the prompt: `the woman from image_2 riding the motorcycle from image_1`. A prompt that names an input you did not pass answers `400`.
 - **Say what must stay the same**: "keep her face exactly as in image_1", "use the beach from image_3 exactly as photographed: same position, not mirrored or redrawn".
 - **Animate**: `Animate image_1 ...` makes a clip that starts from that picture. **Edit a video**: `Edit video_1: replace the rider with the woman from image_1, keep everything else the same`.

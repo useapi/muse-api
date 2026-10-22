@@ -1,6 +1,6 @@
 # Meta Muse images and 10-second videos with sound — Muse API (Node.js & Python)
 
-📖 Full walkthrough: **[How to Generate AI Videos and Images with the Meta Muse API](https://useapi.net/docs/articles/muse-images-videos?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)** — October 12, 2026
+Full walkthrough: [How to Generate AI Videos and Images with the Meta Muse API](https://useapi.net/docs/articles/muse-images-videos?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) — October 12, 2026
 
 Videos made with this API, on YouTube: [3 photos in, 1 talking video out: Meta Muse API from REST](https://youtube.com/shorts/v_7mREyFSWk) · [This old portrait just spoke: one API call (Meta Muse API, third-party)](https://youtube.com/shorts/GLHoINX_ozE) · [Replace the person in a video, keep everything else: Meta Muse API](https://youtube.com/shorts/XDCY1XIsd5Y)
 
@@ -36,7 +36,7 @@ Before it spends anything, the script checks `prompts.json`, reads the account's
 | Upload the five photos | [POST /assets](https://useapi.net/docs/api-muse-v1/post-muse-assets?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) | | (asset ids in the state file) |
 | 1. `portrait`: text to image, 9:16 | [POST /jobs/image](https://useapi.net/docs/api-muse-v1/post-muse-jobs-image?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) | | `portrait.webp` |
 | 2. `bmw-noir`: text to image, exactly 16:9 | [POST /jobs/image](https://useapi.net/docs/api-muse-v1/post-muse-jobs-image?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) | | `bmw-noir.webp` |
-| 3. `beach-ride`: rider + motorcycle + beach in one picture | [POST /jobs/image](https://useapi.net/docs/api-muse-v1/post-muse-jobs-image?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) | `image_1` bmw, `image_2` rider, `image_3` beach | `beach-ride.webp` |
+| 3. `beach-ride`: rider, motorcycle and beach in one picture | [POST /jobs/image](https://useapi.net/docs/api-muse-v1/post-muse-jobs-image?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) | `image_1` bmw, `image_2` rider, `image_3` beach | `beach-ride.webp` |
 | 4. `surf`: the picture as a 10-second video with a spoken line | [POST /jobs/video](https://useapi.net/docs/api-muse-v1/post-muse-jobs-video?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) | `image_1` beach-ride | `surf.mp4` |
 | 5. `restored`: restore and colorize the old portrait | [POST /jobs/image](https://useapi.net/docs/api-muse-v1/post-muse-jobs-image?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) | `image_1` old-photo | `restored.webp` |
 | 6. `portrait-video`: the portrait looks up and speaks | [POST /jobs/video](https://useapi.net/docs/api-muse-v1/post-muse-jobs-video?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) | `image_1` restored | `portrait-video.mp4` |

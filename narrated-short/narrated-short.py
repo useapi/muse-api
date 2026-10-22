@@ -2,7 +2,7 @@
 
 Script version 1.0, October 18, 2026
 
-Script to make a 30-second narrated vertical Short from a topic with Meta's Muse agent, using the Muse API v1 by useapi.net
+Script to make a 30-second narrated vertical Short from a topic with Meta's Muse agent, using the Muse API by useapi.net
 
 Runs the workflow of the tutorial section
 https://useapi.net/docs/articles/muse-images-videos#make-a-30-second-narrated-short-script-three-scenes-one-join

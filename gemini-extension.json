@@ -1,7 +1,7 @@
 {
   "name": "useapi-muse",
   "version": "1.0.0",
-  "description": "Hosted Muse MCP server by useapi.net (37 tools): make Muse images and videos, chat with the Muse agent and answer its permission requests, use the agent's browser and manage the Library, on your own Muse (muse.ai) account. Third-party paid service, not affiliated with Meta.",
+  "description": "Hosted Muse MCP server by useapi.net (37 tools): make Muse images and videos, chat with the Muse agent and answer its permission requests, use the agent's browser and manage the Library, on your Muse (muse.ai) subscription, the free plan included. Third-party paid service, not affiliated with Meta.",
   "contextFileName": "GEMINI.md",
   "settings": [
     {

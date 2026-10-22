@@ -1,8 +1,8 @@
 # Meta Muse images and videos: an agent skill
 
-An [Agent Skill](https://agentskills.io) that lets Claude Code, Codex and other coding agents make images and 10-second videos with sound using **Muse (muse.ai)**, Meta's AI agent: text to image, combining up to 9 photos into one picture, restoring and colorizing old photos, making a photo talk, and replacing a person in a video, then downloading the `.webp` or `.mp4`. Ask your agent "restore this old photo of my grandmother, then make her look up and say she missed me" and it runs the scripts in this folder.
+An [Agent Skill](https://agentskills.io) that lets Claude Code, Codex and other coding agents make images and 10-second videos with sound using Muse (muse.ai), Meta's AI agent: text to image, combining up to 9 photos into one picture, restoring and colorizing old photos, making a photo talk, and replacing a person in a video, then downloading the `.webp` or `.mp4`. Ask your agent "restore this old photo of my grandmother, then make her look up and say she missed me" and it runs the scripts in this folder.
 
-It calls the [Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=skill&utm_campaign=muse-skill) by [useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=skill&utm_campaign=muse-skill), a third-party REST API (not affiliated with Meta) that runs on your own Muse account. The free Muse plan works: each job uses part of the account's weekly Muse allowance, about 2 to 3 percent per video and 0 to 1 percent per image on the free plan.
+It calls the [Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=skill&utm_campaign=muse-skill) by [useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=skill&utm_campaign=muse-skill), a third-party REST API (not affiliated with Meta) that runs on your Muse subscription. The free Muse plan works: each job uses part of the account's weekly Muse allowance, about 2 to 3 percent per video and 0 to 1 percent per image on the free plan.
 
 ## Install
 

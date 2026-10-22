@@ -9,7 +9,7 @@
     {
       "name": "muse",
       "source": "./",
-      "description": "Hosted Muse MCP server by useapi.net (37 tools): make Muse images and videos, chat with the Muse agent and answer its permission requests, use the agent's browser and manage the Library, on your own Muse (muse.ai) account. Third-party paid service, not affiliated with Meta. Includes the repo's agent skill.",
+      "description": "Hosted Muse MCP server by useapi.net (37 tools): make Muse images and videos, chat with the Muse agent and answer its permission requests, use the agent's browser and manage the Library, on your Muse (muse.ai) subscription, the free plan included. Third-party paid service, not affiliated with Meta. Includes the repo's agent skill.",
       "category": "media",
       "tags": [
         "muse",
