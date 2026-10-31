@@ -74,6 +74,8 @@ Every endpoint is documented in the [Muse API reference](https://useapi.net/docs
 
 Also on n8n.io: [Create narrated faceless Shorts from any topic with the Muse API and Google Drive](https://n8n.io/workflows/21207)
 
+A Short this workflow made, published as it came out: [The Great Pyramid was once bright white](https://youtube.com/shorts/D-Nk0x9aJMo)
+
 ![The form](./muse-faceless-shorts-01-form.png)
 
 1. **The form.** Type a topic, pick 1, 2 or 3 scenes (about 10 seconds each), optionally describe the look, and choose the voice: **Muse narrates** (describe the narrator, by default a calm, deep British male documentary voice), or **Locked voice** (Muse text to speech reads every line in one voice, by default Aria).
