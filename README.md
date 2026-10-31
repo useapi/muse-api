@@ -109,7 +109,7 @@ The install asks for your useapi.net API token and keeps it in the system keycha
 - [How to Generate AI Videos and Images with the Meta Muse API](https://useapi.net/docs/articles/muse-images-videos?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)
 - [Chinese-language tutorial (中文教程): AI images and videos with dialogue](https://useapi.net/docs/articles/muse-api-zh?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)
 - [Japanese-language tutorial (日本語チュートリアル): AI images and videos with dialogue, including Japanese speech](https://useapi.net/docs/articles/muse-api-ja?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)
-- YouTube: [Meta Muse API demo](https://www.youtube.com/watch?v=OMUGbfRIO5E), [a narrated 30-second Short made only with Muse API calls](https://www.youtube.com/shorts/1e8f7dHTkzs), [3 photos in, 1 talking video out](https://www.youtube.com/shorts/v_7mREyFSWk)
+- YouTube: [Meta Muse API demo](https://www.youtube.com/watch?v=OMUGbfRIO5E), [a narrated 30-second Short made only with Muse API calls](https://www.youtube.com/shorts/1e8f7dHTkzs), [3 photos in, 1 talking video out](https://www.youtube.com/shorts/v_7mREyFSWk), [The Great Pyramid was once bright white (made by the n8n Faceless Shorts workflow)](https://youtube.com/shorts/D-Nk0x9aJMo)
 
 ## Common questions
 
@@ -133,6 +133,19 @@ The install asks for your useapi.net API token and keeps it in the system keycha
 - useapi.net 是独立的第三方 API，与 Meta 无关联。
 
 中文教程（多图合成、老照片修复、视频换人，含 curl 示例）：[如何通过 Muse API 用 Meta Muse 生成 AI 图片和带配音的视频](https://useapi.net/docs/articles/muse-api-zh?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)。完整文档：[Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)。
+
+## 日本語の説明
+
+[useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) の Muse API のサンプルコードです。Meta のパーソナル AI エージェント Muse（muse.ai）を REST API から呼び出し、画像と、音声・セリフ付きの10秒の動画を生成します。複数の写真の合成、古い写真の復元とカラー化、写真の人物を話させる動画、動画の人物の差し替えができます。生成したファイルにはすべて assetId が付き、ダウンロードし直さずに次のジョブの入力に使えます。
+
+- 契約中の Muse のプランで動きます：Free、Power（月額20ドル）、Maximum（月額100ドル）（2026年10月時点）。無料プランでも使えます。Muse の利用枠は週単位で、無料プランでは動画1本で週間利用枠の約2〜3%、画像1枚で約0〜1%を消費しました。
+- アスペクト比・長さ・解像度のパラメーターはなく、プロンプトに書きます（例：`in exactly 16:9 aspect ratio`）。動画は約10秒・約720p で、引用符で囲んだセリフは登場人物が話します。日本語のセリフも話せます。
+- 料金：useapi.net は月額15ドル（すべての API を含む）で、画像や動画ごとの課金はありません。
+- 2026年10月時点で Muse は米国、カナダ、[日本](https://about.fb.com/ja/news/2026/10/muse-personal-ai-agent-launches-in-japan/)、シンガポールで提供されています。日本で作成したアカウントもそのまま追加でき、追加後はどこからでも API を呼び出せます。
+- MCP サーバー：Claude Code、Cursor、VS Code、Windsurf からホスト型 MCP サーバー `https://api.useapi.net/v1/muse/mcp`（Streamable HTTP、`Authorization: Bearer` に useapi.net の API トークン）に接続すると、画像・動画の生成、Muse との対話、権限リクエストの処理、ファイル管理など37個のツールが使えます。説明：[Muse MCP Server](https://useapi.net/docs/api-muse-v1/mcp?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)。
+- useapi.net は独立したサードパーティの API で、Meta とは提携していません。
+
+日本語チュートリアル（写真の合成、古い写真の復元、動画の人物差し替え、日本語のセリフ、curl の例付き）：[Muse API で Meta Muse の AI 画像とセリフ付き動画を生成する方法](https://useapi.net/docs/articles/muse-api-ja?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)。ドキュメント：[Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)。
 
 ## About useapi.net
 
