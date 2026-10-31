@@ -60,7 +60,7 @@ To turn it on: set the sheet id and the other options in the **Settings** node, 
 5. Optional: connect Google Drive to **Upload to Drive** and set the folder at the top of **Read the form**.
 6. Publish (activate) the workflow, open the form URL and sign in with that username and password.
 
-**Requirements:** a useapi.net subscription and a Muse account created in the US or Canada (as of October 2026). The free Muse plan works: in our tests a restore used 0 to 1% of the week and each take 2 to 3%.
+**Requirements:** a useapi.net subscription and a Muse account created in the US, Canada, Japan or Singapore (as of October 2026). The free Muse plan works: in our tests a restore used 0 to 1% of the week and each take 2 to 3%.
 
 **Customize:** the restore and talk prompts, the default motion and the Drive folder are at the top of **Read the form**; the batch options and the same prompts are in **Settings**. The aspect ratio is part of the prompt (`in exactly 9:16 aspect ratio`), and the line in quotes is the one that is spoken. Muse follows the requested shape most of the time, but it can keep the photo's own shape; the takes page shows what you got before you keep it.
 
@@ -102,7 +102,7 @@ The token stays in n8n, and the links can't be guessed. Players and download lin
 5. Optional: connect Google Drive to **Upload to Drive** and set the folder at the top of **Read the form**.
 6. Publish (activate) the workflow, open the form URL and sign in with that username and password.
 
-**Requirements:** a useapi.net subscription and a Muse account created in the US or Canada (as of October 2026). The free Muse plan works: in our tests each 10-second video used 2 to 3% of the week on the free plan, and the script, voice and join chats used 0%.
+**Requirements:** a useapi.net subscription and a Muse account created in the US, Canada, Japan or Singapore (as of October 2026). The free Muse plan works: in our tests each 10-second video used 2 to 3% of the week on the free plan, and the script, voice and join chats used 0%.
 
 **Customize:** the prompts (script, narrated clip, voiced clip, text to speech, join), the default look, narrator and voice, and the Drive folder are at the top of **Read the form**. Any of Muse's text-to-speech voices works in the form: its name with its id, for example `Discreet Key (avocado_v2:vd2_r82_rep5k_2434_v068_28k_g5k)`, a calm British male voice.
 
