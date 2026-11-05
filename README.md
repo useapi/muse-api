@@ -109,7 +109,7 @@ The install asks for your useapi.net API token and keeps it in the system keycha
 - [How to Generate AI Videos and Images with the Meta Muse API](https://useapi.net/docs/articles/muse-images-videos?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)
 - [Chinese-language tutorial (中文教程): AI images and videos with dialogue](https://useapi.net/docs/articles/muse-api-zh?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)
 - [Japanese-language tutorial (日本語チュートリアル): AI images and videos with dialogue, including Japanese speech](https://useapi.net/docs/articles/muse-api-ja?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)
-- YouTube: [Meta Muse API demo](https://www.youtube.com/watch?v=OMUGbfRIO5E), [a narrated 30-second Short made only with Muse API calls](https://www.youtube.com/shorts/1e8f7dHTkzs), [3 photos in, 1 talking video out](https://www.youtube.com/shorts/v_7mREyFSWk), [The Great Pyramid was once bright white (made by the n8n Faceless Shorts workflow)](https://youtube.com/shorts/D-Nk0x9aJMo)
+- YouTube: [Meta Muse API demo](https://www.youtube.com/watch?v=OMUGbfRIO5E), [a narrated 30-second Short made only with Muse API calls](https://www.youtube.com/shorts/1e8f7dHTkzs), [3 photos in, 1 talking video out](https://www.youtube.com/shorts/v_7mREyFSWk), [The Great Pyramid was once bright white](https://youtube.com/shorts/D-Nk0x9aJMo) and [Why honey never spoils](https://youtube.com/shorts/bYLsJIqerSM) (both made by the n8n Faceless Shorts workflow)
 
 ## Common questions
 

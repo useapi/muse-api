@@ -74,7 +74,7 @@ Every endpoint is documented in the [Muse API reference](https://useapi.net/docs
 
 Also on n8n.io: [Create narrated faceless Shorts from any topic with the Muse API and Google Drive](https://n8n.io/workflows/21207)
 
-A Short this workflow made, published as it came out: [The Great Pyramid was once bright white](https://youtube.com/shorts/D-Nk0x9aJMo)
+Shorts this workflow made, published as they came out: [The Great Pyramid was once bright white](https://youtube.com/shorts/D-Nk0x9aJMo) and [Why honey never spoils](https://youtube.com/shorts/bYLsJIqerSM) (voiced with Muse text to speech)
 
 ![The form](./muse-faceless-shorts-01-form.png)
 
