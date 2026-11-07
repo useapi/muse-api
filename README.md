@@ -1,5 +1,7 @@
 # Meta Muse API examples (useapi.net): AI video, images and agent chat on muse.ai
 
+English · [中文](#中文说明) · [日本語](#日本語の説明)
+
 Runnable examples for the [Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) by [useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api): make images and 10-second videos with sound using Muse (muse.ai), Meta's AI agent, through a REST API that runs on your [Muse subscription](https://www.meta.com/help/subscriptions/1021145227643680/): Free, Power $20 or Maximum $100 a month (as of October 2026). Combine up to 9 photos into one picture, restore and colorize old photos, animate a still with spoken dialogue, and replace a person in a video. Every file Muse makes is an asset id the next job takes as an input, so edits chain with no downloads or re-uploads.
 
 Demo on YouTube: [Meta Muse API Demo: Images, Talking Photos, Video with Sound, Chat & MCP (third-party, useapi.net)](https://www.youtube.com/watch?v=OMUGbfRIO5E)
@@ -106,9 +108,7 @@ The install asks for your useapi.net API token and keeps it in the system keycha
 ## Articles and videos
 
 - [Is There a Meta Muse Video API? Official API, Free Tools and a Hosted API (2026)](https://useapi.net/docs/articles/meta-muse-video-api?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)
-- [How to Generate AI Videos and Images with the Meta Muse API](https://useapi.net/docs/articles/muse-images-videos?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)
-- [Chinese-language tutorial (中文教程): AI images and videos with dialogue](https://useapi.net/docs/articles/muse-api-zh?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)
-- [Japanese-language tutorial (日本語チュートリアル): AI images and videos with dialogue, including Japanese speech](https://useapi.net/docs/articles/muse-api-ja?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)
+- [How to Generate AI Videos and Images with the Meta Muse API](https://useapi.net/docs/articles/muse-images-videos?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) · Also in [中文](https://useapi.net/docs/articles/muse-api-zh?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) · [日本語](https://useapi.net/docs/articles/muse-api-ja?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)
 - YouTube: [Meta Muse API demo](https://www.youtube.com/watch?v=OMUGbfRIO5E), [a narrated 30-second Short made only with Muse API calls](https://www.youtube.com/shorts/1e8f7dHTkzs), [3 photos in, 1 talking video out](https://www.youtube.com/shorts/v_7mREyFSWk), [The Great Pyramid was once bright white](https://youtube.com/shorts/D-Nk0x9aJMo) and [Why honey never spoils](https://youtube.com/shorts/bYLsJIqerSM) (both made by the n8n Faceless Shorts workflow)
 
 ## Common questions
