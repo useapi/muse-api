@@ -2,23 +2,23 @@
   "inputs": [
     {
       "name": "bmw",
-      "url": "https://demo.useapi.net/discord-cdn-proxy/?https://media.discordapp.net/attachments/1239264794394234985/1559040377594314903/muse-input-motorcycle.jpeg"
+      "url": "https://media.useapi.net/articles/2026-10-12-muse-api-zh/muse-input-motorcycle.jpg"
     },
     {
       "name": "rider",
-      "url": "https://demo.useapi.net/discord-cdn-proxy/?https://media.discordapp.net/attachments/1239264794394234985/1559040401510240267/muse-input-redhead.jpeg"
+      "url": "https://media.useapi.net/articles/2026-10-12-muse-api-zh/muse-input-redhead.jpg"
     },
     {
       "name": "beach",
-      "url": "https://demo.useapi.net/discord-cdn-proxy/?https://media.discordapp.net/attachments/1239264794394234985/1559040372041187328/muse-input-beach.jpeg"
+      "url": "https://media.useapi.net/articles/2026-10-12-muse-api-zh/muse-input-beach.jpg"
     },
     {
       "name": "old-photo",
-      "url": "https://demo.useapi.net/discord-cdn-proxy/?https://media.discordapp.net/attachments/1239264794394234985/1559040387203731456/muse-input-oldphoto.jpeg"
+      "url": "https://media.useapi.net/articles/2026-10-12-muse-api-zh/muse-input-oldphoto.jpg"
     },
     {
       "name": "pink-hair",
-      "url": "https://demo.useapi.net/discord-cdn-proxy/?https://media.discordapp.net/attachments/1239264794394234985/1559040392316325888/muse-input-pinkhair.jpeg"
+      "url": "https://media.useapi.net/articles/2026-10-12-muse-api-zh/muse-input-pinkhair.webp"
     }
   ],
   "steps": [
