@@ -33,6 +33,8 @@ Each example's README lists its options. Every endpoint is documented in the [Mu
 
 ## MCP server
 
+[![Muse MCP connector](https://glama.ai/mcp/connectors/net.useapi/muse/badges/score.svg)](https://glama.ai/mcp/connectors/net.useapi/muse)
+
 useapi.net also runs a hosted [Model Context Protocol](https://modelcontextprotocol.io) server for Muse, so an AI assistant such as Claude Code, Cursor or VS Code Copilot can use Muse on your Muse subscription. It has 37 tools: generate images and videos, chat with the Muse agent, answer its permission requests, open a live view of its web browser, manage the account's Library and files, and reset the account. Each tool calls the Muse API, so the same rules, limits and allowance apply. Nothing needs to be installed or hosted.
 
 - Endpoint: `https://api.useapi.net/v1/muse/mcp`
