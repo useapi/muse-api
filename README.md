@@ -107,6 +107,16 @@ gemini extensions install https://github.com/useapi/muse-api
 
 The install asks for your useapi.net API token and keeps it in the system keychain. Change it later with `gemini extensions config useapi-muse`, and check the connection with `gemini mcp list`. The `muse-video` skill's scripts read `USEAPI_TOKEN` from your shell, so export it as well if you use the skill.
 
+## Use in Dify
+
+The [`dify-plugin/`](./dify-plugin) folder is a [Dify](https://dify.ai) tool plugin, "Meta Muse by useapi.net", with 13 tools for [workflows, chatflows](https://docs.dify.ai/en/cloud/use-dify/build/workflow-chatflow) and [agents](https://docs.dify.ai/en/cloud/use-dify/build/new-agent/overview): 10-second Meta Muse videos with sound, images, chats with the Muse agent (with permission answers), uploads and the muse.ai Library. Connect several Muse accounts and useapi.net spreads the jobs across them.
+
+1. Download the `.difypkg` from [Releases](https://github.com/useapi/muse-api/releases) and upload it under Plugins > Install plugin > Local package file.
+2. In Tools, authorize "Meta Muse by useapi.net" with your useapi.net [API token](https://useapi.net/docs/start-here/setup-useapi?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api), and optionally a default Muse account email.
+3. Add "Generate video" or "Generate image" to a workflow: finished files come back to Dify.
+
+The labels are in English, Simplified Chinese, Japanese and Brazilian Portuguese. Setup, every tool with its endpoint, and workflow and agent examples: [Dify plugin README](./dify-plugin).
+
 ## Articles and videos
 
 - [Is There a Meta Muse Video API? Official API, Free Tools and a Hosted API (2026)](https://useapi.net/docs/articles/meta-muse-video-api?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)
