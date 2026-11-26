@@ -11,4 +11,6 @@ First release.
 - Generations submit the job and wait up to 120 seconds for images and 180 for videos by default (up to 420 in workflows), under Dify's 600-second limit; a job still running returns its `jobid` for Get job status.
 - Results come back as readable text, JSON, workflow variables (`jobid`, `status`, `asset_ids`, `reply`, `chat_id`, `approval_ids`) and files.
 - Muse's refusals are explained by code: a repeated request (409), a refusal (403), the weekly allowance (412) and the 24-hour video limit (429).
+- `answer_approval` answers once (`allow_once`) or denies (`deny`); a lasting "always allow" can only be given by the user in muse.ai.
+- Documents are attached as plain text (HTML as `.html.txt`, with a PDF version available through Download a Muse file); only inert image, video, audio, PDF and text types are attached as they are, anything else (SVG, unknown) as an opaque `.bin` file.
 - Interface in English, Simplified Chinese, Japanese and Brazilian Portuguese.

@@ -370,7 +370,6 @@ ORIGINS = [
 ]
 DECISIONS = [
     opt("allow_once", L("Allow once", "允许一次", "1 回だけ許可", "Permitir uma vez")),
-    opt("allow_always", L("Always allow this site", "始终允许此网站", "このサイトを常に許可", "Sempre permitir este site")),
     opt("deny", L("Deny", "拒绝", "拒否", "Negar")),
 ]
 
@@ -742,7 +741,7 @@ tool(
         "Muse が許可を求めている操作（Web サイトへの情報送信など）を許可または拒否し、続きの回答を読み取ります。",
         "Permite ou nega o que o Muse pede permissão para fazer (por exemplo, compartilhar dados com um site) e lê o resto da resposta.",
     ),
-    "Answer Muse's permission request (status waiting_for_approval). allow_once: allow this request; allow_always: allow this site from now on for the whole Muse account; deny: refuse, Muse goes on without it. Ask the user first. Then waits for the rest of the answer.",
+    "Answer Muse's permission request (status waiting_for_approval). allow_once: allow this one request; deny: refuse, Muse goes on without it. This plugin never grants a lasting permission. Ask the user first. Then waits for the rest of the answer.",
     [
         CHAT_ID,
         param(
@@ -761,13 +760,13 @@ tool(
             "decision",
             L("Decision", "决定", "回答", "Decisão"),
             L(
-                "Allow once, always allow this site, or deny.",
-                "允许一次、始终允许此网站或拒绝。",
-                "1 回だけ許可、このサイトを常に許可、拒否。",
-                "Permitir uma vez, sempre permitir este site ou negar.",
+                "Allow once or deny.",
+                "允许一次或拒绝。",
+                "1 回だけ許可、または拒否。",
+                "Permitir uma vez ou negar.",
             ),
             DECISIONS,
-            "allow_once, allow_always or deny.",
+            "allow_once or deny.",
         )
         | {"required": True},
         CHAT_WAIT,

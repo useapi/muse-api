@@ -133,7 +133,8 @@ Then ask, for example: "Research three facts about paper boats, write them as a 
 - **Timing.** In useapi.net's tests an image took 20 to 60 seconds and a video 60 to 140. A chat answer depends on what Muse does; a running answer comes back with its `chat_id` for **Get Muse chat**.
 - **Job slots.** Each Muse account runs at most `maxJobs` jobs at once (10 by default, 1 to 50, set at useapi.net). Chats and uploads take no slot.
 - **Video limit.** Besides the weekly allowance, Muse limits the videos an account makes over the last 24 hours. Video jobs then skip that account for an hour; image jobs still work.
-- **Permission requests.** Before some actions, such as sharing information with a website, the agent asks. The chat returns `waiting_for_approval` with an `approval_id`: answer with **Answer a Muse permission request** before it expires.
+- **Permission requests.** Before some actions, such as sharing information with a website, the agent asks. The chat returns `waiting_for_approval` with an `approval_id`: answer with **Answer a Muse permission request** before it expires. The plugin answers once (`allow_once`) or denies (`deny`); to allow a site for good, answer "always" in muse.ai.
+- **Attached files.** Images, video, audio, PDF, plain text and Markdown are attached as they are. An HTML document is attached as plain text (`.html.txt`); use **Download a Muse file** with the PDF format for a PDF version. SVG and unknown types are attached as opaque `.bin` files.
 
 ## Troubleshooting
 

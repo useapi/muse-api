@@ -454,7 +454,7 @@ def test_chat_stops_at_a_permission_request():
     ctx, _, clock = make_ctx([("POST", "chats", {"chatId": CHAT, "messageId": "m-1"}), ("GET", "chats/", waiting)])
     items = run(HANDLERS["chat"], ctx, {"message": "make an image"})
     body = outs(items, "text")[0].value
-    assert "asks for permission" in body and "87c8850c" in body and "answer_approval" in body and "allow_once, allow_always, deny" in body
+    assert "asks for permission" in body and "87c8850c" in body and "answer_approval" in body and "allow_once, deny" in body
     assert vars_of(items)["status"] == "waiting_for_approval" and vars_of(items)["approval_ids"] == ["87c8850c"]
     assert clock.sleeps == []
 
@@ -501,8 +501,10 @@ def test_answer_approval_needs_an_id_with_several_requests():
     with pytest.raises(UseapiError, match="'approval_id' is required"):
         run(HANDLERS["answer_approval"], ctx, {"chat_id": CHAT, "decision": "deny"})
     assert not [c for c in session.calls if c.method == "POST"]
-    with pytest.raises(UseapiError, match="allow_once, allow_always or deny"):
+    with pytest.raises(UseapiError, match="allow_once or deny"):
         run(HANDLERS["answer_approval"], ctx, {"chat_id": CHAT, "decision": "approve"})
+    with pytest.raises(UseapiError, match="once only.*muse.ai"):
+        run(HANDLERS["answer_approval"], ctx, {"chat_id": CHAT, "decision": "allow_always"})
 
 
 def test_list_chats_and_jobs_text():
@@ -547,3 +549,35 @@ def test_answer_approval_waits_for_muse_to_go_on():
     items = run(HANDLERS["answer_approval"], ctx, {"chat_id": CHAT, "decision": "deny", "max_wait_seconds": 20, "return_file": False})
     assert sum(clock.sleeps) == 20  # kept reading until the wait ran out: no new message after the answer
     assert "Get Muse chat" in outs(items, "text")[0].value
+
+
+@pytest.mark.parametrize(
+    ("served", "attached", "filename", "note"),
+    [
+        ("image/png", "image/png", "muse-file.png", None),
+        ("text/markdown", "text/markdown", "muse-file.md", None),
+        ("text/html; charset=utf-8", "text/plain", "muse-file.html.txt", "PDF"),
+        ("application/xhtml+xml", "text/plain", "muse-file.html.txt", "PDF"),
+        ("image/svg+xml", "application/octet-stream", "muse-file.bin", ".bin"),
+        ("application/x-whatever", "application/octet-stream", "muse-file.bin", ".bin"),
+    ],
+)
+def test_get_asset_attaches_only_inert_types(served, attached, filename, note):
+    ctx, _, _ = make_ctx([("GET", "assets/", FakeResponse(200, content=b"<x/>", headers={"Content-Type": served}))])
+    items = run(HANDLERS["get_asset"], ctx, {"asset_id": f"user:12345-email:{HEX}-document:a.html"})
+    assert outs(items, "blob")[0].meta == {"mime_type": attached, "filename": filename}
+    body = outs(items, "text")[0].value
+    assert (note in body) if note else ("PDF" not in body and ".bin" not in body)
+
+
+def test_files_out_forces_inert_type_for_html_and_svg():
+    from useapi_muse.handlers import files_out
+
+    for served, attached, filename in [
+        ("text/html", "text/plain", "muse-doc.html.txt"),
+        ("image/svg+xml", "application/octet-stream", "muse-doc.bin"),
+    ]:
+        ctx, _, _ = make_ctx([("GET", "assets/", FakeResponse(200, content=b"<script/>", headers={"Content-Type": served}))])
+        items = list(files_out(ctx, [{"assetId": VID, "mime": served}], "muse-doc"))
+        assert outs(items, "blob")[0].meta == {"mime_type": attached, "filename": filename}
+        assert outs(items, "text")

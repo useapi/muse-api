@@ -342,12 +342,58 @@ def compose_prompt(p: dict[str, Any]) -> str:
 # --------------------------------------------------------------------------- file outputs
 
 
+SAFE_ATTACH_TYPES = frozenset(
+    {
+        "image/png",
+        "image/jpeg",
+        "image/webp",
+        "image/gif",
+        "video/mp4",
+        "video/webm",
+        "video/quicktime",
+        "audio/mpeg",
+        "audio/wav",
+        "audio/x-wav",
+        "audio/mp4",
+        "audio/x-m4a",
+        "audio/ogg",
+        "application/pdf",
+        "text/plain",
+        "text/markdown",
+    }
+)
+HTML_TYPES = frozenset({"text/html", "application/xhtml+xml"})
+PDF_HINT = "A PDF version is available: use 'Download a Muse file' with the asset id and Format = PDF."
+
+
+def safe_attachment(mime: str) -> tuple[str, str | None, str | None]:
+    """(MIME type to attach, extra file suffix, note) so that no file served by Dify can run active content."""
+    base = (mime or "").split(";")[0].strip().lower()
+    if base in SAFE_ATTACH_TYPES:
+        return base, None, None
+    if base in HTML_TYPES:
+        return (
+            "text/plain",
+            ".html.txt",
+            f"An HTML document is attached as plain text (.html.txt) so it cannot run in the browser. {PDF_HINT}",
+        )
+    return (
+        "application/octet-stream",
+        ".bin",
+        f"A file of type {base or 'unknown'} is attached as an opaque .bin file; its type is not one Dify can show safely.",
+    )
+
+
 def file_name(stem: str, n: int, count: int, mime: str, server_name: str | None) -> str:
-    ext = FILE_EXT.get(mime)
+    """Name of the attached file, consistent with the type actually attached (see safe_attachment)."""
+    _, suffix, _ = safe_attachment(mime)
+    base = f"{stem}-{n}" if count > 1 else stem
+    if suffix:
+        return base + suffix
+    ext = FILE_EXT.get((mime or "").split(";")[0].strip().lower())
     if not ext and server_name and "." in server_name:
-        ext = server_name.rsplit(".", 1)[-1][:8]
-    ext = ext or "bin"
-    return f"{stem}-{n}.{ext}" if count > 1 else f"{stem}.{ext}"
+        ext = re.sub(r"[^A-Za-z0-9]", "", server_name.rsplit(".", 1)[-1])[:8]
+    return f"{base}.{ext or 'bin'}"
 
 
 def files_out(ctx: Ctx, assets: list[dict[str, Any]], stem: str) -> Iterator[Out]:
@@ -374,7 +420,10 @@ def files_out(ctx: Ctx, assets: list[dict[str, Any]], stem: str) -> Iterator[Out
             yield text(f"File {n} could not be attached: {e} Its asset id is {asset['assetId']}.")
             continue
         mime = mime if mime and mime != "application/octet-stream" else (asset.get("mime") or "application/octet-stream")
-        yield Out("blob", blob, meta={"mime_type": mime, "filename": file_name(stem, n, len(assets), mime, server_name)})
+        safe_mime, _, note = safe_attachment(mime)
+        if note:
+            yield text(f"File {n}: {note}")
+        yield Out("blob", blob, meta={"mime_type": safe_mime, "filename": file_name(stem, n, len(assets), mime, server_name)})
 
 
 def asset_lines(assets: list[dict[str, Any]]) -> list[str]:
@@ -712,10 +761,13 @@ def get_asset(ctx: Ctx, p: dict[str, Any]) -> Iterator[Out]:
         raise UseapiError(f"The file is {size_text(e.size)}, larger than the 150 MB this plugin attaches.") from e
     kind = kind_of(ref) or "file"
     name = file_name(f"muse-{kind}", 1, 1, mime, server_name)
-    yield text(f"Downloaded the {kind} ({mime}, {size_text(len(blob)) or '0 KB'}). The file is attached as {name}.")
+    safe_mime, _, note = safe_attachment(mime)
+    yield text(
+        f"Downloaded the {kind} ({mime}, {size_text(len(blob)) or '0 KB'}). The file is attached as {name}." + (f" {note}" if note else "")
+    )
     yield js({"assetId": ref, "mime": mime, "bytes": len(blob), "filename": server_name})
     yield var("mime_type", mime)
-    yield Out("blob", blob, meta={"mime_type": mime, "filename": name})
+    yield Out("blob", blob, meta={"mime_type": safe_mime, "filename": name})
 
 
 # --------------------------------------------------------------------------- Muse chat
@@ -816,9 +868,8 @@ def chat_out(
         elif w.get("fallbackText") or w.get("text"):
             lines.append(f"Muse shows a {w.get('kind') or 'card'}: {w.get('fallbackText') or w.get('text')}")
     for a in pending:
-        choices = (
-            ", ".join(str(o.get("decision")) for o in a.get("options") or [] if isinstance(o, dict)) or "allow_once, allow_always, deny"
-        )
+        offered = [str(o.get("decision")) for o in a.get("options") or [] if isinstance(o, dict) and o.get("decision") != "allow_always"]
+        choices = ", ".join(offered) or "allow_once, deny"
         lines.append(
             f"Muse asks for permission: {a.get('question') or a.get('title') or ''} (approval_id {a.get('approvalId')}, choices {choices}"
             + (f", expires {a['expires']}" if a.get("expires") else "")
@@ -897,8 +948,13 @@ def answer_approval(ctx: Ctx, p: dict[str, Any]) -> Iterator[Out]:
     started = ctx.clock()
     chat_id = P.required(p, "chat_id")
     decision = P.required(p, "decision")
-    if decision not in ("allow_once", "allow_always", "deny"):
-        raise UseapiError("Parameter 'decision' must be allow_once, allow_always or deny.")
+    if decision == "allow_always":
+        raise UseapiError(
+            "This plugin answers a permission request once only (allow_once) or denies it (deny). "
+            "To allow a site for good, the user answers 'always' in muse.ai."
+        )
+    if decision not in ("allow_once", "deny"):
+        raise UseapiError("Parameter 'decision' must be allow_once or deny.")
     before = _read_chat(ctx, chat_id)
     pending = _pending(before)
     approval_id = P.text(p, "approval_id")

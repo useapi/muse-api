@@ -13,7 +13,7 @@ description:
     zh_Hans: 允许或拒绝 Muse 请求的操作（例如向某个网站发送信息），然后读取它后续的回答。
     ja_JP: Muse が許可を求めている操作（Web サイトへの情報送信など）を許可または拒否し、続きの回答を読み取ります。
     pt_BR: Permite ou nega o que o Muse pede permissão para fazer (por exemplo, compartilhar dados com um site) e lê o resto da resposta.
-  llm: 'Answer Muse''s permission request (status waiting_for_approval). allow_once: allow this request; allow_always: allow this site from now on for the whole Muse account; deny: refuse, Muse goes on without it. Ask the user first. Then waits for the rest of the answer.'
+  llm: 'Answer Muse''s permission request (status waiting_for_approval). allow_once: allow this one request; deny: refuse, Muse goes on without it. This plugin never grants a lasting permission. Ask the user first. Then waits for the rest of the answer.'
 parameters:
 - name: chat_id
   type: string
@@ -54,11 +54,11 @@ parameters:
     ja_JP: 回答
     pt_BR: Decisão
   human_description:
-    en_US: Allow once, always allow this site, or deny.
-    zh_Hans: 允许一次、始终允许此网站或拒绝。
-    ja_JP: 1 回だけ許可、このサイトを常に許可、拒否。
-    pt_BR: Permitir uma vez, sempre permitir este site ou negar.
-  llm_description: allow_once, allow_always or deny.
+    en_US: Allow once or deny.
+    zh_Hans: 允许一次或拒绝。
+    ja_JP: 1 回だけ許可、または拒否。
+    pt_BR: Permitir uma vez ou negar.
+  llm_description: allow_once or deny.
   form: llm
   options:
   - value: allow_once
@@ -67,12 +67,6 @@ parameters:
       zh_Hans: 允许一次
       ja_JP: 1 回だけ許可
       pt_BR: Permitir uma vez
-  - value: allow_always
-    label:
-      en_US: Always allow this site
-      zh_Hans: 始终允许此网站
-      ja_JP: このサイトを常に許可
-      pt_BR: Sempre permitir este site
   - value: deny
     label:
       en_US: Deny
