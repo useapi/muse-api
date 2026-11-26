@@ -62,7 +62,7 @@ Muse meters each account per week, as a whole percent used. `scripts/account.sh`
 | Upload, download, reading a job or the account | nothing |
 | A failed job (`503`, `403` refusal) | nothing made |
 
-Paid Muse plans (Power $20 or Maximum $100 a month, as of October 2026) have larger allowances. When it runs out, a job on that account answers `412` until `resetsAt`. useapi.net itself charges nothing per image or video (one $15/month subscription covers every useapi.net API). Tell the user the cost before more than two or three videos.
+Paid Muse plans (Power $20 or Maximum $100 a month, as of November 2026) have larger allowances. When it runs out, a job on that account answers `412` until `resetsAt`. useapi.net itself charges nothing per image or video (one $15/month subscription covers every useapi.net API). Tell the user the cost before more than two or three videos.
 
 ## Writing prompts that work
 

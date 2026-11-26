@@ -2,7 +2,7 @@
 
 English · [中文](#中文说明) · [日本語](#日本語の説明) · [Português](#sobre-este-repositório) · [Tiếng Việt](#về-repo-này) · [Bahasa Indonesia](#tentang-repo-ini) · [ไทย](#เกี่ยวกับ-repo-นี้)
 
-Runnable examples for the [Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) by [useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api): make images and 10-second videos with sound using Muse (muse.ai), Meta's AI agent, through a REST API that runs on your [Muse subscription](https://www.meta.com/help/subscriptions/1021145227643680/): Free, Power $20 or Maximum $100 a month (as of October 2026). Combine up to 9 photos into one picture, restore and colorize old photos, animate a still with spoken dialogue, and replace a person in a video. Every file Muse makes is an asset id the next job takes as an input, so edits chain with no downloads or re-uploads.
+Runnable examples for the [Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) by [useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api): make images and 10-second videos with sound using Muse (muse.ai), Meta's AI agent, through a REST API that runs on your [Muse subscription](https://www.meta.com/help/subscriptions/1021145227643680/): Free, Power $20 or Maximum $100 a month (as of November 2026). Combine up to 9 photos into one picture, restore and colorize old photos, animate a still with spoken dialogue, and replace a person in a video. Every file Muse makes is an asset id the next job takes as an input, so edits chain with no downloads or re-uploads.
 
 Demo on YouTube: [Meta Muse API Demo: Images, Talking Photos, Video with Sound, Chat & MCP (third-party, useapi.net)](https://www.youtube.com/watch?v=OMUGbfRIO5E)
 
@@ -115,11 +115,11 @@ The install asks for your useapi.net API token and keeps it in the system keycha
 
 ## Common questions
 
-<!-- Official API figures in these answers, re-read 2026-10-20 (useapi.net/docs/api-muse-v1 sources): https://dev.meta.ai/docs/pricing-rate-limits (Muse Image $0.01 per image, no video model, no API for the Muse agent). Plans: https://www.meta.com/help/subscriptions/1021145227643680/ (Free, Power $20, Maximum $100 a month). Allowance figures: our tests on the free plan, 2026-10-12. -->
+<!-- Official API figures in these answers, re-read 2026-10-20 and again in a Playwright browser 2026-11-25 (useapi.net/docs/api-muse-v1 sources): https://dev.meta.ai/docs/models and https://dev.meta.ai/docs/pricing-rate-limits (Muse Image $0.01 per image, no video model, no API for the Muse agent or the muse.ai Library). Plans: https://www.meta.com/help/subscriptions/1021145227643680/ (Free, Power $20, Maximum $100 a month, re-read 2026-11-25). Regions: Meta newsroom (Japan 2026-10-23, Singapore 2026-10-27, Australia 2026-11-17). Allowance figures: our tests on the free plan, 2026-10-12. -->
 
-- **Is there a Meta Muse API?** Yes, through useapi.net: the useapi.net Muse API makes 10-second videos with sound and spoken dialogue, images, photo edits, person swaps and live chat with the Muse agent, on your Muse subscription. Meta sells no Muse video API: its [Model API](https://dev.meta.ai/docs/models) has the Muse Image model at $0.01 per image, but no video model and no API for the Muse agent (as of October 2026). [Is There a Meta Muse Video API?](https://useapi.net/docs/articles/meta-muse-video-api?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) compares the options.
-- **How much does it cost?** Through useapi.net, an image or a video has no price of its own: it uses the weekly allowance of your Muse subscription, and the free plan works. In our tests on the free plan, a video used 2 to 3 percent of the week and an image 0 to 1 percent, and a paid plan gets a bigger allowance ([usage limits](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api#usage-limits)). Meta's Model API sells no Muse video at any price (as of October 2026).
-- **Is there a Muse API key?** Through useapi.net, one useapi.net [API token](https://useapi.net/docs/start-here/setup-useapi?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) is all the key you need, for the REST API and the [MCP server](https://useapi.net/docs/api-muse-v1/mcp?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) alike. Add your muse.ai email and password once with [Setup Muse](https://useapi.net/docs/start-here/setup-muse?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api), and we keep the account signed in, with no cookies to copy. Create the account in the US, Canada, [Japan](https://about.fb.com/ja/news/2026/10/muse-personal-ai-agent-launches-in-japan/) or [Singapore](https://about.fb.com/news/2026/10/muse-is-now-available-in-singapore-the-worlds-first-personal-ai-agent-built-for-everyone/), where Muse is available (as of October 2026), then call the API from anywhere.
+- **Is there a Meta Muse video API?** Yes, through useapi.net: the useapi.net Muse API makes 10-second videos with sound and spoken dialogue, images, photo edits, person swaps and live chat with the Muse agent, on your Muse subscription, over REST or MCP. Meta sells no Muse video API: its [Model API](https://dev.meta.ai/docs/models) has the Muse Image model at $0.01 per image, but no video model and no API for the Muse agent (as of November 2026). [Is There a Meta Muse Video API?](https://useapi.net/docs/articles/meta-muse-video-api?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) compares the options.
+- **How much does it cost?** Through useapi.net, an image or a video has no price of its own: it uses the weekly allowance of your Muse subscription, and the free plan works. In our tests on the free plan, a video used 2 to 3 percent of the week and an image 0 to 1 percent, and a paid plan gets a bigger allowance ([usage limits](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api#usage-limits)). Meta's Model API sells no Muse video at any price (as of November 2026).
+- **Is there a Muse API key?** Through useapi.net, one useapi.net [API token](https://useapi.net/docs/start-here/setup-useapi?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) is all the key you need, for the REST API and the [MCP server](https://useapi.net/docs/api-muse-v1/mcp?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) alike. Add your muse.ai email and password once with [Setup Muse](https://useapi.net/docs/start-here/setup-muse?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api), and we keep the account signed in, with no cookies to copy. Create the account in the US, Canada, [Japan](https://about.fb.com/ja/news/2026/10/muse-personal-ai-agent-launches-in-japan/), [Singapore](https://about.fb.com/news/2026/10/muse-is-now-available-in-singapore-the-worlds-first-personal-ai-agent-built-for-everyone/) or [Australia](https://about.fb.com/news/2026/11/muse-is-now-available-in-australia/), where Muse is available (as of November 2026), then call the API from anywhere.
 - **How do I set the aspect ratio, length or resolution?** Through useapi.net, in the prompt: the Muse API has no parameters for them, because Muse picks its own model. Write `in exactly 16:9 aspect ratio`. Every video is about 10 seconds at about 720p, with sound, and lines written in quotes are spoken.
 - **Can I use my own photos and videos?** Through useapi.net, yes: upload them with the Muse API (up to 50 MB each) and pass the `assetId` as `image_1`..`image_9`; video jobs also take `video_1`..`video_3` and `audio_1`..`audio_3`. All inputs of one job must be on the same Muse account, and uploads use none of the weekly allowance.
 
@@ -127,10 +127,10 @@ The install asks for your useapi.net API token and keeps it in the system keycha
 
 这是 [useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) 的 Muse API 示例代码。通过 REST API 调用 Meta 的 AI 助手 Muse（muse.ai），生成图片和带声音、带对白的 10 秒视频：多张照片合成一张图、老照片修复上色、让照片开口说话、视频换人。每个生成的文件都有一个 assetId，可以直接作为下一个任务的输入，无需下载再上传。
 
-- 使用你的 Muse 订阅：免费版、Power 每月 20 美元或 Maximum 每月 100 美元（截至 2026 年 10 月），免费版即可。Muse 按周计算额度：免费版每个视频约占每周额度的 2% 到 3%，每张图片约 0% 到 1%。
+- 使用你的 Muse 订阅：免费版、Power 每月 20 美元或 Maximum 每月 100 美元（截至 2026 年 11 月），免费版即可。Muse 按周计算额度：免费版每个视频约占每周额度的 2% 到 3%，每张图片约 0% 到 1%。
 - 没有画幅、时长、分辨率参数，全部写在提示词里，例如 `in exactly 16:9 aspect ratio`。视频约 10 秒、约 720p，引号里的台词会被说出来。
 - 价格：useapi.net 每月 15 美元（含所有 API），不按图片或视频计费。
-- 截至 2026 年 10 月，Muse 在美国、加拿大、[日本](https://about.fb.com/ja/news/2026/10/muse-personal-ai-agent-launches-in-japan/)和[新加坡](https://about.fb.com/news/2026/10/muse-is-now-available-in-singapore-the-worlds-first-personal-ai-agent-built-for-everyone/)开放，账号需要在这四个国家之一注册；绑定后可以在任何地方调用 API。
+- 截至 2026 年 11 月，Muse 在美国、加拿大、[日本](https://about.fb.com/ja/news/2026/10/muse-personal-ai-agent-launches-in-japan/)、[新加坡](https://about.fb.com/news/2026/10/muse-is-now-available-in-singapore-the-worlds-first-personal-ai-agent-built-for-everyone/)和[澳大利亚](https://about.fb.com/news/2026/11/muse-is-now-available-in-australia/)开放，账号需要在这五个国家之一注册；绑定后可以在任何地方调用 API。
 - MCP 服务器：在 Claude Code、Cursor、VS Code 或 Windsurf 中连接托管的 MCP 服务器 `https://api.useapi.net/v1/muse/mcp`（Streamable HTTP，`Authorization: Bearer` 填 useapi.net API token），即可获得 37 个工具：生成图片和视频、与 Muse 对话、处理权限请求、管理文件。说明：[Muse MCP Server](https://useapi.net/docs/api-muse-v1/mcp?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)。
 - useapi.net 是独立的第三方 API，与 Meta 无关联。
 
@@ -140,10 +140,10 @@ The install asks for your useapi.net API token and keeps it in the system keycha
 
 [useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) の Muse API のサンプルコードです。Meta のパーソナル AI エージェント Muse（muse.ai）を REST API から呼び出し、画像と、音声・セリフ付きの10秒の動画を生成します。複数の写真の合成、古い写真の復元とカラー化、写真の人物を話させる動画、動画の人物の差し替えができます。生成したファイルにはすべて assetId が付き、ダウンロードし直さずに次のジョブの入力に使えます。
 
-- 契約中の Muse のプランで動きます：Free、Power（月額20ドル）、Maximum（月額100ドル）（2026年10月時点）。無料プランでも使えます。Muse の利用枠は週単位で、無料プランでは動画1本で週間利用枠の約2〜3%、画像1枚で約0〜1%を消費しました。
+- 契約中の Muse のプランで動きます：Free、Power（月額20ドル）、Maximum（月額100ドル）（2026年11月時点）。無料プランでも使えます。Muse の利用枠は週単位で、無料プランでは動画1本で週間利用枠の約2〜3%、画像1枚で約0〜1%を消費しました。
 - アスペクト比・長さ・解像度のパラメーターはなく、プロンプトに書きます（例：`in exactly 16:9 aspect ratio`）。動画は約10秒・約720p で、引用符で囲んだセリフは登場人物が話します。日本語のセリフも話せます。
 - 料金：useapi.net は月額15ドル（すべての API を含む）で、画像や動画ごとの課金はありません。
-- 2026年10月時点で Muse は米国、カナダ、[日本](https://about.fb.com/ja/news/2026/10/muse-personal-ai-agent-launches-in-japan/)、シンガポールで提供されています。日本で作成したアカウントもそのまま追加でき、追加後はどこからでも API を呼び出せます。
+- 2026年11月時点で Muse は米国、カナダ、[日本](https://about.fb.com/ja/news/2026/10/muse-personal-ai-agent-launches-in-japan/)、シンガポール、オーストラリアで提供されています。日本で作成したアカウントもそのまま追加でき、追加後はどこからでも API を呼び出せます。
 - MCP サーバー：Claude Code、Cursor、VS Code、Windsurf からホスト型 MCP サーバー `https://api.useapi.net/v1/muse/mcp`（Streamable HTTP、`Authorization: Bearer` に useapi.net の API トークン）に接続すると、画像・動画の生成、Muse との対話、権限リクエストの処理、ファイル管理など37個のツールが使えます。説明：[Muse MCP Server](https://useapi.net/docs/api-muse-v1/mcp?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)。
 - useapi.net は独立したサードパーティの API で、Meta とは提携していません。
 
@@ -153,10 +153,10 @@ The install asks for your useapi.net API token and keeps it in the system keycha
 
 Exemplos da Muse API da [useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api), que controla por REST o Muse (muse.ai), o agente de IA da Meta, para gerar imagens e vídeos de 10 segundos com som e diálogo: várias fotos em uma imagem, restauração e colorização de fotos antigas, fotos que falam e troca de pessoa em um vídeo.
 
-- Roda na sua assinatura do Muse: gratuita, Power $20 ou Maximum $100 por mês (outubro de 2026), e o plano gratuito funciona.
+- Roda na sua assinatura do Muse: gratuita, Power $20 ou Maximum $100 por mês (novembro de 2026), e o plano gratuito funciona.
 - Sem chave de API da Meta: você chama a API com o token da useapi.net. Proporção, duração e resolução vão no prompt, por exemplo `in exactly 16:9 aspect ratio`.
-- A conta é adicionada com o e-mail e a senha da conta Muse, e a API mantém a sessão conectada. Em outubro de 2026, o Muse está disponível nos EUA, no Canadá, no Japão e em Singapura, então crie a conta em um desses lugares. Depois de adicionada, a API funciona de qualquer lugar.
-- Custo: a useapi.net custa $15 por mês, com todas as APIs, sem cobrança por imagem ou vídeo. No plano gratuito do Muse, um vídeo gastou de 2 a 3% da cota semanal e uma imagem de 0 a 1% (outubro de 2026).
+- A conta é adicionada com o e-mail e a senha da conta Muse, e a API mantém a sessão conectada. Em novembro de 2026, o Muse está disponível nos EUA, no Canadá, no Japão, em Singapura e na Austrália, então crie a conta em um desses lugares. Depois de adicionada, a API funciona de qualquer lugar.
+- Custo: a useapi.net custa $15 por mês, com todas as APIs, sem cobrança por imagem ou vídeo. No plano gratuito do Muse, um vídeo gastou de 2 a 3% da cota semanal e uma imagem de 0 a 1% (testes de outubro de 2026).
 - Os exemplos transformam três fotos em uma imagem e depois em um vídeo falado, trocam a pessoa do vídeo, restauram um retrato de cem anos que depois fala, e montam um Short narrado de 30 segundos a partir de um tema.
 - A useapi.net é uma API de terceiros independente, sem afiliação com a Meta.
 
@@ -166,9 +166,9 @@ Artigo em português: [Como gerar vídeos e imagens com IA pela API do Meta Muse
 
 Ví dụ cho Muse API của [useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api), điều khiển Muse (muse.ai), agent AI của Meta, qua REST để tạo ảnh và video 10 giây có âm thanh và lời thoại: ghép nhiều ảnh thành một, phục hồi và tô màu ảnh cũ, cho ảnh biết nói và thay người trong video.
 
-- Chạy trên gói Muse của bạn: Maximum $100, Power $20 mỗi tháng hoặc gói miễn phí (tháng 10/2026), và gói miễn phí cũng dùng được.
+- Chạy trên gói Muse của bạn: Maximum $100, Power $20 mỗi tháng hoặc gói miễn phí (tháng 11/2026), và gói miễn phí cũng dùng được.
 - Không cần API key của Meta: bạn gọi API bằng token của useapi.net. Tỷ lệ khung hình, độ dài và độ phân giải được viết trong prompt, ví dụ `in exactly 16:9 aspect ratio`.
-- Tài khoản được thêm bằng email và mật khẩu của tài khoản Muse, và API giữ phiên đăng nhập. Tính đến tháng 10/2026, Muse có ở Mỹ, Canada, Nhật Bản và Singapore, nên hãy tạo tài khoản ở một trong các nước đó. Khi đã thêm, bạn gọi API được từ bất cứ đâu.
+- Tài khoản được thêm bằng email và mật khẩu của tài khoản Muse, và API giữ phiên đăng nhập. Tính đến tháng 11/2026, Muse có ở Mỹ, Canada, Nhật Bản, Singapore và Úc, nên hãy tạo tài khoản ở một trong các nước đó. Khi đã thêm, bạn gọi API được từ bất cứ đâu.
 - Chi phí: useapi.net giá $15 mỗi tháng, gồm mọi API, không tính phí theo ảnh hay video. Trên gói Muse miễn phí, một video dùng 2 đến 3% hạn mức hằng tuần và một ảnh 0 đến 1%, tức khoảng 30 đến 50 video mỗi tuần cho một tài khoản (tháng 10/2026).
 - Các ví dụ biến ba bức ảnh thành một bức ảnh rồi thành video có lời thoại, thay người trong video, phục hồi một bức chân dung trăm năm tuổi rồi cho nó cất lời, và làm một Short 30 giây có thuyết minh từ một chủ đề.
 - useapi.net là API độc lập của bên thứ ba, không liên kết với Meta.
@@ -179,9 +179,9 @@ Bài viết tiếng Việt: [Cách tạo video và ảnh AI bằng Meta Muse API
 
 Ini adalah contoh kode Muse API dari [useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api), API pihak ketiga yang menjalankan Muse (muse.ai), agen AI pribadi milik Meta, lewat REST API: gambar dan video 10 detik dengan suara dan dialog, penggabungan beberapa foto menjadi satu gambar, restorasi dan pewarnaan foto lama, foto yang berbicara, dan penggantian orang di video.
 
-- Berjalan di langganan Muse Anda: Free, Power $20 atau Maximum $100 per bulan (per Oktober 2026), dan paket gratis pun bisa. Muse memakai kuota mingguan: di paket gratis, satu video memakai sekitar 2 sampai 3 persen kuota mingguan dan satu gambar 0 sampai 1 persen.
-- Tanpa API key Meta: satu API token useapi.net cukup untuk REST API dan [MCP server](https://useapi.net/docs/api-muse-v1/mcp?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api). Model API resmi Meta tidak punya model video maupun API untuk agen Muse (per Oktober 2026).
-- Akun ditambahkan sekali dengan email dan password muse.ai lewat [Setup Muse](https://useapi.net/docs/start-here/setup-muse?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api), dan kami menjaganya tetap login, tanpa menyalin cookie. Buat akunnya di AS, Kanada, Jepang atau Singapura, tempat Muse tersedia, lalu panggil API dari mana saja.
+- Berjalan di langganan Muse Anda: Free, Power $20 atau Maximum $100 per bulan (per November 2026), dan paket gratis pun bisa. Muse memakai kuota mingguan: di paket gratis, satu video memakai sekitar 2 sampai 3 persen kuota mingguan dan satu gambar 0 sampai 1 persen.
+- Tanpa API key Meta: satu API token useapi.net cukup untuk REST API dan [MCP server](https://useapi.net/docs/api-muse-v1/mcp?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api). Model API resmi Meta tidak punya model video maupun API untuk agen Muse (per November 2026).
+- Akun ditambahkan sekali dengan email dan password muse.ai lewat [Setup Muse](https://useapi.net/docs/start-here/setup-muse?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api), dan kami menjaganya tetap login, tanpa menyalin cookie. Buat akunnya di AS, Kanada, Jepang, Singapura atau Australia, tempat Muse tersedia (per November 2026), lalu panggil API dari mana saja.
 - Harga: langganan useapi.net $15 per bulan untuk semua API, tanpa biaya per gambar atau per video. Setiap file buatan Muse punya assetId yang bisa langsung dipakai job berikutnya, tanpa unduh dan upload ulang.
 - Contoh di repo: `images-videos/` menggabungkan tiga foto menjadi satu gambar, mengubahnya menjadi video bersuara dan mengganti pengendaranya, `narrated-short/` membuat Short 30 detik bernarasi dari satu topik, ditambah aplikasi chat `demo/`, aplikasi n8n dan agent skill untuk Claude Code dan Codex.
 
@@ -191,9 +191,9 @@ Artikel bahasa Indonesia: [Cara Membuat Video dan Gambar AI dengan Meta Muse API
 
 นี่คือตัวอย่างโค้ด Node.js และ Python สำหรับ Muse API ของ [useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) ซึ่งเป็น API ของบุคคลที่สาม ไม่มีส่วนเกี่ยวข้องกับ Meta ใช้เรียก Muse (muse.ai) เอเจนต์ AI ของ Meta ผ่าน REST API เพื่อสร้างภาพ และวิดีโอยาว 10 วินาทีพร้อมเสียงและบทพูด ทั้งรวมหลายรูปเป็นภาพเดียว บูรณะและลงสีภาพเก่า ทำให้รูปถ่ายพูดได้ และเปลี่ยนคนในวิดีโอ
 
-- ใช้แพ็กเกจ Muse ของคุณเอง: ฟรี, Power $20 หรือ Maximum $100 ต่อเดือน (ข้อมูล ณ ตุลาคม 2026) แพ็กเกจฟรีก็ใช้ได้
+- ใช้แพ็กเกจ Muse ของคุณเอง: ฟรี, Power $20 หรือ Maximum $100 ต่อเดือน (ข้อมูล ณ พฤศจิกายน 2026) แพ็กเกจฟรีก็ใช้ได้
 - ไม่ต้องตั้งค่าอะไรเพิ่มนอกจาก API token ของ useapi.net ไม่มีพารามิเตอร์อัตราส่วนภาพ ความยาว หรือความละเอียด ให้เขียนไว้ในพรอมต์ เช่น `in exactly 16:9 aspect ratio`
-- เพิ่มบัญชี Muse ผ่าน[หน้าตั้งค่า Muse](https://useapi.net/docs/start-here/setup-muse?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) บัญชีต้องสมัครในประเทศที่มี Muse (สหรัฐฯ แคนาดา ญี่ปุ่น หรือสิงคโปร์ ณ ตุลาคม 2026) เมื่อเพิ่มแล้วเรียก API จากที่ไหนก็ได้
+- เพิ่มบัญชี Muse ผ่าน[หน้าตั้งค่า Muse](https://useapi.net/docs/start-here/setup-muse?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) บัญชีต้องสมัครในประเทศที่มี Muse (สหรัฐฯ แคนาดา ญี่ปุ่น สิงคโปร์ หรือออสเตรเลีย ณ พฤศจิกายน 2026) เมื่อเพิ่มแล้วเรียก API จากที่ไหนก็ได้
 - ราคา: Muse นับโควตาเป็นรายสัปดาห์ บนแพ็กเกจฟรีวิดีโอหนึ่งคลิปใช้ราว 2 ถึง 3% ของโควตาสัปดาห์ และภาพหนึ่งภาพราว 0 ถึง 1% (ข้อมูล ณ ตุลาคม 2026) ค่าบริการ useapi.net คือ $15 ต่อเดือน รวมทุก API ไม่คิดเงินต่อภาพหรือต่อวิดีโอ
 - ตัวอย่างใน repo: `images-videos/` รวมสามรูปเป็นภาพเดียว เปลี่ยนภาพเป็นวิดีโอ 10 วินาที และเปลี่ยนคนในวิดีโอ `narrated-short/` สร้าง Short ยาว 30 วินาทีพร้อมเสียงบรรยายจากหัวข้อเดียว และยังมีแอปแชตสด agent skill แอป n8n และ MCP server แบบโฮสต์ (37 เครื่องมือ)
 
@@ -201,7 +201,7 @@ Artikel bahasa Indonesia: [Cara Membuat Video dan Gambar AI dengan Meta Muse API
 
 ## About useapi.net
 
-[useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) is a third-party REST API for AI services, not affiliated with or endorsed by Meta. The Muse API runs on your Muse subscription, so each image or video uses that account's weekly Muse allowance, with no price per image or video. One [$15/month subscription](https://useapi.net/docs/subscription?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) covers every useapi.net API and 3 Muse accounts.
+[useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) is a third-party REST API for AI services, not affiliated with or endorsed by Meta. The Muse API runs on your Muse subscription, so each image or video uses that account's weekly Muse allowance, with no price per image or video. One [$15/month subscription](https://useapi.net/docs/subscription?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) covers every useapi.net API and 3 Muse accounts. The same subscription also runs Google's video models on your Google AI plan: see the [Google Flow](https://github.com/useapi/google-flow-api) (Veo 3.1 and Omni Flash) and [Google Vids](https://github.com/useapi/google-vids-api) (Omni Flash with talking avatars) examples.
 
 Visit our [Discord Server](https://discord.gg/w28uK3cnmF) or [Telegram Channel](https://t.me/use_api) for any support questions and concerns.
 
