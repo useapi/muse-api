@@ -111,7 +111,7 @@ The install asks for your useapi.net API token and keeps it in the system keycha
 
 The [`dify-plugin/`](./dify-plugin) folder is a [Dify](https://dify.ai) tool plugin, "Meta Muse by useapi.net", with 13 tools for [workflows, chatflows](https://docs.dify.ai/en/cloud/use-dify/build/workflow-chatflow) and [agents](https://docs.dify.ai/en/cloud/use-dify/build/new-agent/overview): 10-second Meta Muse videos with sound, images, chats with the Muse agent (with permission answers), uploads and the muse.ai Library. Connect several Muse accounts and useapi.net spreads the jobs across them.
 
-1. Download the `.difypkg` from [Releases](https://github.com/useapi/muse-api/releases) and upload it under Plugins > Install plugin > Local package file.
+1. Download the `.difypkg` from [Releases](https://github.com/useapi/muse-api/releases) and upload it under Plugins > Install plugin > Local package file. The Dify Marketplace listing is in review ([PR #3981](https://github.com/langgenius/dify-plugins/pull/3981)).
 2. In Tools, authorize "Meta Muse by useapi.net" with your useapi.net [API token](https://useapi.net/docs/start-here/setup-useapi?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api), and optionally a default Muse account email.
 3. Add "Generate video" or "Generate image" to a workflow: finished files come back to Dify.
 
