@@ -119,8 +119,8 @@ The labels are in English, Simplified Chinese, Japanese and Brazilian Portuguese
 
 ## Articles and videos
 
-- [Is There a Meta Muse Video API? Official API, Free Tools and a Hosted API (2026)](https://useapi.net/docs/articles/meta-muse-video-api?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)
-- [How to Generate AI Videos and Images with the Meta Muse API](https://useapi.net/docs/articles/muse-images-videos?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) · Also in [中文](https://useapi.net/docs/articles/muse-api-zh?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) · [日本語](https://useapi.net/docs/articles/muse-api-ja?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)
+- [Is There a Meta Muse Video API? Official API, Free Tools and a Hosted API (2026)](https://useapi.net/docs/articles/meta-muse-video-api?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) · Also in [中文](https://useapi.net/docs/articles/meta-muse-video-api-zh?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) · [日本語](https://useapi.net/docs/articles/meta-muse-video-api-ja?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) · [Español](https://useapi.net/docs/articles/meta-muse-video-api-es?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) · [Português](https://useapi.net/docs/articles/meta-muse-video-api-pt?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) · [Bahasa Indonesia](https://useapi.net/docs/articles/meta-muse-video-api-id?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) · [Tiếng Việt](https://useapi.net/docs/articles/meta-muse-video-api-vi?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) · [ไทย](https://useapi.net/docs/articles/meta-muse-video-api-th?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)
+- [How to Generate AI Videos and Images with the Meta Muse API](https://useapi.net/docs/articles/muse-images-videos?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) · Also in [中文](https://useapi.net/docs/articles/muse-api-zh?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) · [日本語](https://useapi.net/docs/articles/muse-api-ja?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) · [Español](https://useapi.net/docs/articles/muse-images-videos-es?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) · [Português](https://useapi.net/docs/articles/muse-images-videos-pt?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) · [Bahasa Indonesia](https://useapi.net/docs/articles/muse-images-videos-id?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) · [Tiếng Việt](https://useapi.net/docs/articles/muse-images-videos-vi?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) · [ไทย](https://useapi.net/docs/articles/muse-images-videos-th?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)
 - YouTube: [Meta Muse API demo](https://www.youtube.com/watch?v=OMUGbfRIO5E), [a narrated 30-second Short made only with Muse API calls](https://www.youtube.com/shorts/1e8f7dHTkzs), [3 photos in, 1 talking video out](https://www.youtube.com/shorts/v_7mREyFSWk), [The Great Pyramid was once bright white](https://youtube.com/shorts/D-Nk0x9aJMo) and [Why honey never spoils](https://youtube.com/shorts/bYLsJIqerSM) (both made by the n8n Faceless Shorts workflow)
 
 ## Common questions
@@ -146,6 +146,10 @@ The labels are in English, Simplified Chinese, Japanese and Brazilian Portuguese
 
 中文教程（多图合成、老照片修复、视频换人，含 curl 示例）：[如何通过 Muse API 用 Meta Muse 生成 AI 图片和带配音的视频](https://useapi.net/docs/articles/muse-api-zh?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)。完整文档：[Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)。
 
+官方 API、muse2api 和托管 API 的对比：[Meta Muse 有官方视频 API 吗？](https://useapi.net/docs/articles/meta-muse-video-api-zh?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)。
+
+Muse 现在能用吗？查看[状态页面](https://useapi.net/status?api=muse&utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)。昨天所有客户的成功率和任务耗时：[每日统计](https://useapi.net/docs/account-management/get-stats-daily?type=muse&utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)。
+
 ## 日本語の説明
 
 [useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) の Muse API のサンプルコードです。Meta のパーソナル AI エージェント Muse（muse.ai）を REST API から呼び出し、画像と、音声・セリフ付きの10秒の動画を生成します。複数の写真の合成、古い写真の復元とカラー化、写真の人物を話させる動画、動画の人物の差し替えができます。生成したファイルにはすべて assetId が付き、ダウンロードし直さずに次のジョブの入力に使えます。
@@ -158,6 +162,10 @@ The labels are in English, Simplified Chinese, Japanese and Brazilian Portuguese
 - useapi.net は独立したサードパーティの API で、Meta とは提携していません。
 
 日本語チュートリアル（写真の合成、古い写真の復元、動画の人物差し替え、日本語のセリフ、curl の例付き）：[Muse API で Meta Muse の AI 画像とセリフ付き動画を生成する方法](https://useapi.net/docs/articles/muse-api-ja?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)。ドキュメント：[Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)。
+
+公式 API、無料ツール、ホスト型 API の比較：[Meta Muse に動画 API はある？](https://useapi.net/docs/articles/meta-muse-video-api-ja?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)。
+
+Muse は今動いていますか？[ステータスページ](https://useapi.net/status?api=muse&utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)をご覧ください。昨日の全顧客の成功率とジョブ時間：[日次統計](https://useapi.net/docs/account-management/get-stats-daily?type=muse&utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)。
 
 ## Sobre este repositório
 
@@ -172,6 +180,10 @@ Exemplos da Muse API da [useapi.net](https://useapi.net/?utm_source=github.com&u
 
 Artigo em português: [Como gerar vídeos e imagens com IA pela API do Meta Muse](https://useapi.net/docs/articles/muse-images-videos-pt?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api). Documentação completa: [Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api).
 
+Comparação entre a API oficial, ferramentas grátis e uma API hospedada: [Existe API de vídeo do Meta Muse?](https://useapi.net/docs/articles/meta-muse-video-api-pt?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api).
+
+O Muse está funcionando agora? Veja a [página de status](https://useapi.net/status?api=muse&utm_source=github.com&utm_medium=referral&utm_campaign=muse-api). Taxas de sucesso e tempos dos jobs de ontem, somando todos os clientes: [estatísticas diárias](https://useapi.net/docs/account-management/get-stats-daily?type=muse&utm_source=github.com&utm_medium=referral&utm_campaign=muse-api).
+
 ## Về repo này
 
 Ví dụ cho Muse API của [useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api), điều khiển Muse (muse.ai), agent AI của Meta, qua REST để tạo ảnh và video 10 giây có âm thanh và lời thoại: ghép nhiều ảnh thành một, phục hồi và tô màu ảnh cũ, cho ảnh biết nói và thay người trong video.
@@ -185,6 +197,10 @@ Ví dụ cho Muse API của [useapi.net](https://useapi.net/?utm_source=github.c
 
 Bài viết tiếng Việt: [Cách tạo video và ảnh AI bằng Meta Muse API](https://useapi.net/docs/articles/muse-images-videos-vi?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api). Tài liệu đầy đủ: [Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api).
 
+So sánh API chính thức, công cụ miễn phí và API host sẵn: [Meta Muse có API video không?](https://useapi.net/docs/articles/meta-muse-video-api-vi?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api).
+
+Muse hiện có đang hoạt động không? Xem [trang trạng thái](https://useapi.net/status?api=muse&utm_source=github.com&utm_medium=referral&utm_campaign=muse-api). Tỷ lệ thành công và thời gian job của hôm qua trên toàn bộ khách hàng: [thống kê hằng ngày](https://useapi.net/docs/account-management/get-stats-daily?type=muse&utm_source=github.com&utm_medium=referral&utm_campaign=muse-api).
+
 ## Tentang repo ini
 
 Ini adalah contoh kode Muse API dari [useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api), API pihak ketiga yang menjalankan Muse (muse.ai), agen AI pribadi milik Meta, lewat REST API: gambar dan video 10 detik dengan suara dan dialog, penggabungan beberapa foto menjadi satu gambar, restorasi dan pewarnaan foto lama, foto yang berbicara, dan penggantian orang di video.
@@ -196,6 +212,10 @@ Ini adalah contoh kode Muse API dari [useapi.net](https://useapi.net/?utm_source
 - Contoh di repo: `images-videos/` menggabungkan tiga foto menjadi satu gambar, mengubahnya menjadi video bersuara dan mengganti pengendaranya, `narrated-short/` membuat Short 30 detik bernarasi dari satu topik, ditambah aplikasi chat `demo/`, aplikasi n8n dan agent skill untuk Claude Code dan Codex.
 
 Artikel bahasa Indonesia: [Cara Membuat Video dan Gambar AI dengan Meta Muse API](https://useapi.net/docs/articles/muse-images-videos-id?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api). Dokumentasi lengkap: [Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api).
+
+Perbandingan API resmi, tools gratis dan API yang di-hosting: [Apakah Ada API Video Meta Muse?](https://useapi.net/docs/articles/meta-muse-video-api-id?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api).
+
+Apakah Muse sedang berfungsi sekarang? Lihat [halaman status](https://useapi.net/status?api=muse&utm_source=github.com&utm_medium=referral&utm_campaign=muse-api). Tingkat keberhasilan dan waktu job kemarin dari semua pelanggan: [statistik harian](https://useapi.net/docs/account-management/get-stats-daily?type=muse&utm_source=github.com&utm_medium=referral&utm_campaign=muse-api).
 
 ## เกี่ยวกับ repo นี้
 
@@ -209,9 +229,15 @@ Artikel bahasa Indonesia: [Cara Membuat Video dan Gambar AI dengan Meta Muse API
 
 บทความภาษาไทย: [วิธีสร้างวิดีโอและภาพ AI ด้วย Meta Muse API](https://useapi.net/docs/articles/muse-images-videos-th?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) เอกสารฉบับเต็ม: [Muse API](https://useapi.net/docs/api-muse-v1?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)
 
+เปรียบเทียบ API ทางการ เครื่องมือฟรี และ API แบบโฮสต์: [Meta Muse มี API วิดีโอไหม?](https://useapi.net/docs/articles/meta-muse-video-api-th?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)
+
+Muse ใช้งานได้ตอนนี้ไหม ดู[หน้าสถานะ](https://useapi.net/status?api=muse&utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) อัตราสำเร็จและเวลาของงานเมื่อวานจากลูกค้าทั้งหมด: [สถิติรายวัน](https://useapi.net/docs/account-management/get-stats-daily?type=muse&utm_source=github.com&utm_medium=referral&utm_campaign=muse-api)
+
 ## About useapi.net
 
 [useapi.net](https://useapi.net/?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) is a third-party REST API for AI services, not affiliated with or endorsed by Meta. The Muse API runs on your Muse subscription, so each image or video uses that account's weekly Muse allowance, with no price per image or video. One [$15/month subscription](https://useapi.net/docs/subscription?utm_source=github.com&utm_medium=referral&utm_campaign=muse-api) covers every useapi.net API and 3 Muse accounts. The same subscription also runs Google's video models on your Google AI plan: see the [Google Flow](https://github.com/useapi/google-flow-api) (Veo 3.1 and Omni Flash) and [Google Vids](https://github.com/useapi/google-vids-api) (Omni Flash with talking avatars) examples.
+
+Is Muse working right now? See the [status page](https://useapi.net/status?api=muse&utm_source=github.com&utm_medium=referral&utm_campaign=muse-api). Yesterday's success rates and job times across all customers are in the [daily stats](https://useapi.net/docs/account-management/get-stats-daily?type=muse&utm_source=github.com&utm_medium=referral&utm_campaign=muse-api).
 
 Visit our [Discord Server](https://discord.gg/w28uK3cnmF) or [Telegram Channel](https://t.me/use_api) for any support questions and concerns.
 
